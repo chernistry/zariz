@@ -18,11 +18,11 @@ struct OrderDetailView: View {
                 Text("Pickup: \(o.pickupAddress)")
                 Text("Delivery: \(o.deliveryAddress)")
                 HStack {
-                    Button("Claim") { Task { try? await OrdersService.shared.claim(id: orderId, context: ctx) } }
+                    Button("Claim") { Task { try? await OrdersService.shared.claim(id: orderId) } }
                         .disabled(o.status != "new")
-                    Button("Picked up") { Task { try? await OrdersService.shared.updateStatus(id: orderId, status: "picked_up", context: ctx) } }
+                    Button("Picked up") { Task { try? await OrdersService.shared.updateStatus(id: orderId, status: "picked_up") } }
                         .disabled(o.status != "claimed")
-                    Button("Delivered") { Task { try? await OrdersService.shared.updateStatus(id: orderId, status: "delivered", context: ctx) } }
+                    Button("Delivered") { Task { try? await OrdersService.shared.updateStatus(id: orderId, status: "delivered") } }
                         .disabled(o.status != "picked_up")
                 }
                 .buttonStyle(.borderedProminent)
@@ -34,4 +34,3 @@ struct OrderDetailView: View {
         }
     }
 }
-

@@ -47,31 +47,32 @@ final class OrdersService {
         try? context.save()
     }
 
-    func sync(context: ModelContext) async {
+    func sync() async {
         do {
             var req = authorizedRequest(path: "orders")
             let (data, resp) = try await URLSession.shared.data(for: req)
             if let http = resp as? HTTPURLResponse, http.statusCode >= 400 { return }
             let list = try JSONDecoder().decode([OrderDTO].self, from: data)
             await MainActor.run {
-                for o in list { upsert(o, in: context) }
+                if let context = ModelContextHolder.shared.context {
+                    for o in list { upsert(o, in: context) }
+                }
             }
         } catch {
             // ignore for MVP
         }
     }
 
-    func claim(id: Int, context: ModelContext) async throws {
+    func claim(id: Int) async throws {
         let req = authorizedRequest(path: "orders/\(id)/claim", method: "POST", body: nil, idempotencyKey: UUID().uuidString)
         let _ = try await URLSession.shared.data(for: req)
-        await sync(context: context)
+        await sync()
     }
 
-    func updateStatus(id: Int, status: String, context: ModelContext) async throws {
+    func updateStatus(id: Int, status: String) async throws {
         let body = try JSONSerialization.data(withJSONObject: ["status": status], options: [])
         let req = authorizedRequest(path: "orders/\(id)/status", method: "POST", body: body, idempotencyKey: UUID().uuidString)
         let _ = try await URLSession.shared.data(for: req)
-        await sync(context: context)
+        await sync()
     }
 }
-

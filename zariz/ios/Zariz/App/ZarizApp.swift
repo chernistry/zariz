@@ -28,9 +28,7 @@ struct ZarizApp: App {
         .modelContainer(for: [OrderEntity.self])
         .environmentObject(session)
         .backgroundTask(.appRefresh("app.zariz.orderUpdates")) {
-            if let ctx = ModelContextHolder.shared.context {
-                await OrdersService.shared.sync(context: ctx)
-            }
+            await OrdersService.shared.sync()
         }
     }
 }

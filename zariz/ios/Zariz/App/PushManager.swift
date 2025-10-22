@@ -23,11 +23,7 @@ final class PushManager: NSObject, ObservableObject, UNUserNotificationCenterDel
     }
 
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        if let ctx = ModelContextHolder.shared.context {
-            Task { await OrdersService.shared.sync(context: ctx); completionHandler(.newData) }
-        } else {
-            completionHandler(.noData)
-        }
+        Task { await OrdersService.shared.sync(); completionHandler(.newData) }
     }
 
     private func authHeader() -> String? {

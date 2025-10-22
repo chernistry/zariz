@@ -16,8 +16,10 @@ struct OrdersListView: View {
         }
         .navigationDestination(for: Int.self) { id in OrderDetailView(orderId: id) }
         .navigationTitle("Orders")
-        .task { await OrdersService.shared.sync(context: ctx) }
+        .task {
+            ModelContextHolder.shared.context = ctx
+            await OrdersService.shared.sync()
+        }
         .onAppear { ModelContextHolder.shared.context = ctx }
     }
 }
-
