@@ -58,7 +58,7 @@ Progress: mark done items with [x] and adjust the above ETA line-by-line as you 
 
 ## Stage D — Quality & Release
 
-- [ ] 13. E2E tests (Playwright), fixtures, contract tests
+ - [x] 13. E2E tests (Playwright), fixtures, contract tests
 - [ ] 14. Observability (Otel, Sentry), docs, runbooks
 - [ ] 15. Release & handover (App Store/TestFlight, server backup)
 

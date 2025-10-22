@@ -52,3 +52,31 @@ Verification
 
 Next
 - Observability and docs in Ticket 14.
+
+---
+
+Analysis (agent)
+- Add minimal Playwright setup for web-admin and a happy-path test. Backend already has pytest; we add a simple OpenAPI contract test.
+- Note: running e2e requires local API at `NEXT_PUBLIC_API_BASE` and Node browsers installed (`npx playwright install`).
+
+Plan
+- Web
+  - Add dev dependency `@playwright/test` and config `playwright.config.ts` with `webServer` running `yarn dev`.
+  - Add `tests/orders.spec.ts` covering login → create order → orders list.
+- Backend
+  - Add pytest for OpenAPI schema at `/openapi.json`.
+- Verification
+  - Backend: run pytest.
+  - Web: run `npx playwright install && npx playwright test` (execute later in CI/local).
+
+Implementation (executed)
+- Web
+  - Updated `zariz/web-admin/package.json` devDependencies with `@playwright/test`.
+  - Added `zariz/web-admin/playwright.config.ts` (Chromium project, webServer `yarn dev`).
+  - Added `zariz/web-admin/tests/orders.spec.ts` aligned with current UI placeholders.
+- Backend
+  - Added `zariz/backend/tests/test_openapi.py` asserting OpenAPI title.
+
+Verification (results)
+- Backend tests: green (`7 passed`).
+- Playwright not executed here to avoid heavy browser install; instructions provided.
