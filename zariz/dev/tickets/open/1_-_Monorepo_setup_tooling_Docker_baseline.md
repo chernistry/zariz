@@ -176,3 +176,27 @@ Verification
 
 Next
 - Proceed to Ticket 2 (Backend scaffold).
+
+---
+
+Implementation log (executed)
+- Added root hygiene files:
+  - `.editorconfig` with 2-space indentation and LF newlines.
+  - Preserved existing `.gitignore` (already comprehensive for iOS/Python/Next.js) — not overwritten.
+- Added environment template: `.env.example` with Postgres, API, and `NEXT_PUBLIC_API_BASE`.
+- Added Docker Compose at `docker-compose.yml` with services: `postgres` (16) and `nginx` (Caddy) mapping `zariz/dev/ops/nginx/Caddyfile`.
+- Added Caddy reverse-proxy stub: `zariz/dev/ops/nginx/Caddyfile` responding with "Zariz dev reverse proxy up" on :80.
+- Added Makefile with `up`, `down`, `logs` targets.
+- Created base repo layout with placeholders:
+  - `zariz/backend/app/__init__.py`
+  - `zariz/backend/alembic/README.md`
+  - `zariz/backend/tests/.gitkeep`
+  - `zariz/ios/Zariz/.gitkeep`
+  - `zariz/web-admin/src/.gitkeep`, `zariz/web-admin/tests/.gitkeep`
+- CI scaffold:
+  - Copied iOS CI baseline from `DeliveryApp-iOS/.github/workflows/CI.yml` to `.github/workflows/ios.yml` (left scheme/workspace names as-is; will adjust in Ticket 9).
+
+How to verify (execute when ready)
+- `cp .env.example .env`
+- `make up`
+- Open `http://localhost:8080` and confirm the Caddy response.
