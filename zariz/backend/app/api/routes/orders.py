@@ -8,6 +8,9 @@ from ..schemas import OrderCreate, OrderRead, StatusUpdate
 from ..deps import get_db, require_role, find_idempotency, save_idempotency
 from ...db.models.order import Order
 from ...db.models.order_event import OrderEvent
+from ...db.models.device import Device
+from ...services.events import events_bus
+from ...worker.push import send_silent
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -66,6 +69,16 @@ def create_order(
     ev = OrderEvent(order_id=o.id, type="created")
     db.add(ev)
     db.commit()
+    # Emit event (SSE) and silent push
+    events_bus.publish({"type": "order.created", "order_id": o.id, "store_id": o.store_id})
+    # Push to all devices (MVP); refine targeting later
+    try:
+        tokens = [t for (t,) in db.query(Device.token).all()]
+        for t in tokens:
+            send_silent(t, {"type": "order.created", "order_id": o.id})
+    except Exception:
+        # Don't fail API on push errors
+        pass
     result = OrderRead(
         id=o.id,
         store_id=o.store_id,
@@ -114,6 +127,13 @@ def claim_order(
         raise HTTPException(status_code=409, detail="Order already claimed or not found")
     db.add(OrderEvent(order_id=order_id, type="claimed"))
     db.commit()
+    events_bus.publish({"type": "order.claimed", "order_id": order_id, "courier_id": courier_id})
+    try:
+        tokens = [t for (t,) in db.query(Device.token).all()]
+        for t in tokens:
+            send_silent(t, {"type": "order.claimed", "order_id": order_id})
+    except Exception:
+        pass
     out = {"ok": True}
     if idem:
         save_idempotency(db, idem, request.method, request.url.path, 200, out)
@@ -163,6 +183,13 @@ def update_status(
         o.courier_id = courier_id
     db.add(OrderEvent(order_id=o.id, type=next_status))
     db.commit()
+    events_bus.publish({"type": "order.status_changed", "order_id": o.id, "status": o.status})
+    try:
+        tokens = [t for (t,) in db.query(Device.token).all()]
+        for t in tokens:
+            send_silent(t, {"type": "order.status_changed", "order_id": o.id, "status": o.status})
+    except Exception:
+        pass
 
     out = {"ok": True, "status": o.status}
     if idem:

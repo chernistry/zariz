@@ -74,7 +74,7 @@ router = APIRouter(prefix="/events", tags=["events"])
 async def event_stream():
     # MVP: simple in-memory queue; replace with Redis pubsub later
     for i in range(5):
-        yield f"data: {{\"ping\": {i}}}\n\n"
+        yield f"data: {\"ping\": {i}}\n\n"
         await asyncio.sleep(5)
 
 @router.get("/sse")
@@ -91,5 +91,58 @@ Verification
 - Curl SSE endpoint and confirm event stream.
 - Call device register and verify device row in DB.
 
+---
+
+Analysis
+- Requirements: maintain a device registry, emit events for order lifecycle changes, expose SSE endpoint for the web admin. APNs worker should be callable without keys (no-op if unset).
+- Reuse: keep worker separated under `app/worker`, and an in-memory event bus for SSE under `app/services` (will swap for Redis later).
+
+Plan
+- SSE
+  - Add `app/services/events.py` with a simple in-memory `EventBus` (publish/subscribe queues).
+  - Add `app/api/routes/events.py` with `GET /v1/events/sse` that streams:
+    - Initial comment line `:ok` then heartbeat lines; supports `?once=1` for tests.
+  - Wire router in `app/api/__init__.py`.
+- APNs worker
+  - Add `app/worker/push.py` with a wrapper around `apns2` (optional dep). No-op if env missing.
+- Emit notifications
+  - In `app/api/routes/orders.py`, after order create/claim/status update: publish SSE event and iterate device tokens to call `send_silent`.
+- Config
+  - Extend `.env.example` with `APNS_KEY_PATH`, `APNS_TEAM_ID`, `APNS_KEY_ID`, `APNS_TOPIC`.
+- Verification
+  - Unit test: request `/v1/events/sse?once=1` and assert `:ok` present to avoid blocking.
+  - Run existing core API tests to ensure no regressions.
+
+Implementation Summary (paths changed)
+- Added: `zariz/backend/app/services/events.py`
+- Added: `zariz/backend/app/api/routes/events.py`
+- Updated: `zariz/backend/app/api/__init__.py` (include events router)
+- Updated: `zariz/backend/app/api/routes/orders.py` (publish SSE + APNs no-op send)
+- Added: `zariz/backend/app/worker/push.py`
+- Updated: `.env.example` (APNs vars)
+- Added test: `zariz/backend/tests/test_events.py`
+
+How to Verify (local)
+- Backend tests
+  - `cd zariz/backend && python3 -m venv .venv && source .venv/bin/activate`
+  - `pip install -e . && pip install pytest httpx`
+  - `pytest -q` → expect `5 passed`.
+- SSE smoke
+  - `uvicorn app.main:app --reload` and in another shell:
+  - `curl -N http://localhost:8000/v1/events/sse` → see `:ok` and periodic `:hb` comments.
+  - Or single-shot: `curl -s http://localhost:8000/v1/events/sse?once=1` → contains `:ok`.
+- Device register
+  - `curl -X POST http://localhost:8000/v1/devices/register -H 'Content-Type: application/json' -d '{"platform":"ios","token":"demo-token-1"}'`
+  - Expect `{ "ok": true }` and a row in `devices` table.
+
+Notes
+- APNs is a no-op unless `APNS_*` env vars are set; safe for dev and CI.
+- Event delivery uses an in-memory bus and will not fan out across processes; plan to replace with Redis pub/sub in a later ticket.
+- Push targeting is broad for MVP (all devices). Will narrow by role/user later.
+
+Status
+- Implemented and verified locally with tests. Ready to mark as complete.
+
 Next
 - CI/CD and deployment in Ticket 5.
+
