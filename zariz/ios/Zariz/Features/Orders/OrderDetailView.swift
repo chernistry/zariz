@@ -4,6 +4,7 @@ import SwiftData
 struct OrderDetailView: View {
     let orderId: Int
     @Environment(\.modelContext) private var ctx
+    @EnvironmentObject private var session: AppSession
     @Query private var items: [OrderEntity]
 
     init(orderId: Int) {
@@ -12,6 +13,26 @@ struct OrderDetailView: View {
     }
 
     var body: some View {
+        content
+            .toolbar {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    if session.isDemoMode {
+                        Button("Home") {
+                            KeychainTokenStore.clear()
+                            session.isAuthenticated = false
+                        }
+                    }
+                    Button("Logout") {
+                        KeychainTokenStore.clear()
+                        session.isAuthenticated = false
+                        session.isDemoMode = false
+                    }
+                }
+            }
+    }
+    
+    @ViewBuilder
+    private var content: some View {
         if let o = items.first {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Order #\(o.id)").font(.title2).bold()

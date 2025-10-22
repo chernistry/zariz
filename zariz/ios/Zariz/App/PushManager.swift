@@ -28,6 +28,7 @@ final class PushManager: NSObject, ObservableObject, UNUserNotificationCenterDel
 
     private func authHeader() -> String? {
         if let token = try? KeychainTokenStore.load(prompt: "Authenticate to register device") {
+            if token.hasPrefix("demo:") { return nil }
             return token
         }
         return nil

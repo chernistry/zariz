@@ -22,7 +22,6 @@ enum KeychainTokenStore {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecAttrAccessControl as String: sac,
-            kSecUseAuthenticationUI as String: kSecUseAuthenticationUIAllow,
             kSecValueData as String: data
         ]
         // Replace if exists
@@ -62,4 +61,3 @@ enum KeychainTokenStore {
         SecItemDelete(query as CFDictionary)
     }
 }
-
