@@ -1,0 +1,86 @@
+# Global OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files (keep examples)
+.env
+.env.*
+!.env.example
+
+# Logs and temp
+*.log
+logs/
+tmp/
+
+# iOS / Xcode
+**/DerivedData/
+**/build/
+*.xcuserstate
+**/xcuserdata/
+.swiftpm/
+.build/
+*.dSYM
+Pods/
+
+# iOS certificates/keys (secrets)
+*.p8
+*.p12
+*.pem
+*.cer
+*.mobileprovision
+
+# fastlane transient outputs
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output/
+fastlane/screenshots/
+fastlane/output/
+fastlane/.env
+fastlane/.env.*
+
+# Python (backend)
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+
+# Node / Next.js (web-admin)
+node_modules/
+.next/
+out/
+.turbo/
+.vercel/
+.eslintcache
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+coverage/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Caddy/Caddy-like runtime dirs (if created)
+caddy/data/
+caddy/config/
+
+# References: ignore heavy artifacts inside reference repos, but keep sources
+zariz/references/**/node_modules/
+zariz/references/**/.gradle/
+zariz/references/**/Pods/
+zariz/references/**/build/
+zariz/references/**/.expo/
+zariz/references/**/.vercel/
