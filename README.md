@@ -80,14 +80,32 @@ The project is designed as a solo development effort with AI assistance. Tickets
 
 ## 🚀 Getting Started
 
-The system follows a structured development approach with the following stages:
+Choose your component to get started:
 
-1. **Foundation**: Backend API and database setup
-2. **iOS App**: Mobile application development with SwiftUI
-3. **Web Panel**: Store dashboard creation
-4. **Quality**: Testing, observability, and release preparation
+- **[iOS App Setup](zariz/dev/docs/ios_getting_started.md)** - Build and run the iOS application
+- **[Backend Setup](zariz/dev/docs/backend_getting_started.md)** - Run the FastAPI backend locally or deploy
+- **[Web Panel Setup](zariz/dev/docs/web_getting_started.md)** - Set up the store dashboard
+- **[Infrastructure & Deployment](zariz/dev/docs/infra_getting_started.md)** - Deploy the complete stack
 
-For detailed implementation instructions, refer to the [technical specification](dev/tech_task.md) and [coding rules](dev/tickets/coding_rules.md).
+### Quick Start (All Components)
+
+```bash
+# Clone and setup
+git clone <repository-url>
+cd zariz
+
+# Backend
+cd backend && python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload
+
+# Web (separate terminal)
+cd web && npm install && npm run dev
+
+# iOS - open in Xcode
+open ios/Zariz.xcodeproj
+```
 
 ## 📚 Resources
 

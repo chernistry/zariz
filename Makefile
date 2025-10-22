@@ -7,6 +7,10 @@ ios-xcodeproj:
 	cd zariz/ios && xcodegen generate
 	@echo "Open the project: zariz/ios/Zariz.xcodeproj"
 
+.PHONY: ios-build-sim
+ios-build-sim:
+	cd zariz/ios && xcodegen generate && xcodebuild -scheme Zariz -destination 'generic/platform=iOS Simulator' -sdk iphonesimulator -derivedDataPath DerivedData build
+
 DOCKER_COMPOSE := $(shell command -v docker-compose >/dev/null 2>&1 && echo docker-compose || echo docker compose)
 
 up:

@@ -30,7 +30,10 @@ struct OrderDetailView: View {
             }
             .padding()
         } else {
-            ProgressView().task { await OrdersService.shared.sync(context: ctx) }
+            ProgressView().task {
+                await MainActor.run { ModelContextHolder.shared.context = ctx }
+                await OrdersService.shared.sync()
+            }
         }
     }
 }

@@ -4,7 +4,7 @@ struct TokenResponse: Decodable {
     let access_token: String
 }
 
-final class AuthService {
+actor AuthService {
     static let shared = AuthService()
 
     func login(subject: String, role: String) async throws -> String {

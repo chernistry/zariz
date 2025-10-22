@@ -10,7 +10,7 @@ struct OrderDTO: Codable {
     let delivery_address: String
 }
 
-final class OrdersService {
+actor OrdersService {
     static let shared = OrdersService()
 
     private func authToken() -> String? {
@@ -49,7 +49,7 @@ final class OrdersService {
 
     func sync() async {
         do {
-            var req = authorizedRequest(path: "orders")
+            let req = authorizedRequest(path: "orders")
             let (data, resp) = try await URLSession.shared.data(for: req)
             if let http = resp as? HTTPURLResponse, http.statusCode >= 400 { return }
             let list = try JSONDecoder().decode([OrderDTO].self, from: data)

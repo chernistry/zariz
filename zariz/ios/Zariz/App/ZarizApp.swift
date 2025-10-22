@@ -5,7 +5,7 @@ import BackgroundTasks
 
 @main
 struct ZarizApp: App {
-    @UIApplicationDelegateAdaptor(PushManager) var pushManager
+    @UIApplicationDelegateAdaptor(PushManager.self) var pushManager
     @StateObject private var session = AppSession()
 
     var body: some Scene {

@@ -26,7 +26,7 @@ struct AuthView: View {
             if let err = vm.error { Text(err).foregroundStyle(.red) }
         }
         .padding()
-        .onChange(of: vm.isAuthenticated) { newValue in
+        .onChange(of: vm.isAuthenticated) { _, newValue in
             if newValue { session.isAuthenticated = true }
         }
     }
