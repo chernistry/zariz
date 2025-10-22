@@ -1,4 +1,3 @@
-import Kingfisher
 import SwiftUI
 
 public struct RemoteAvatarView: View {
@@ -10,33 +9,49 @@ public struct RemoteAvatarView: View {
         self.size = size
     }
 
-    private var imageURL: URL? {
-        guard let encoded = identifier.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else {
-            return URL(string: "https://source.boringavatars.com/beam/\(Int(size * 2))/zariz")
-        }
-        return URL(string: "https://source.boringavatars.com/beam/\(Int(size * 2))/\(encoded)?colors=264653,2a9d8f,e9c46a,f4a261,e76f51")
-    }
-
     public var body: some View {
-        KFImage(imageURL)
-            .placeholder { shimmerPlaceholder }
-            .retry(maxCount: 2, interval: .seconds(2))
-            .onFailureImage(UIImage(systemName: "shippingbox.fill"))
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous))
+        RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous)
+            .fill(backgroundGradient)
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous)
                     .stroke(DS.Color.brandPrimary.opacity(0.12), lineWidth: 1)
             )
+            .overlay(iconOverlay)
+            .frame(width: size, height: size)
             .shadow(color: DS.Color.brandPrimary.opacity(0.08), radius: 8, x: 0, y: 4)
     }
 
-    private var shimmerPlaceholder: some View {
-        RoundedRectangle(cornerRadius: DS.Radius.medium)
-            .fill(DS.Color.surfaceElevated)
-            .frame(width: size, height: size)
-            .shimmer()
+    private var backgroundGradient: LinearGradient {
+        let palette: [Color] = [
+            Color(red: 0.93, green: 0.46, blue: 0.24),
+            Color(red: 0.26, green: 0.62, blue: 0.94),
+            Color(red: 0.31, green: 0.75, blue: 0.51),
+            Color(red: 0.56, green: 0.41, blue: 0.89),
+            Color(red: 0.94, green: 0.36, blue: 0.38)
+        ]
+        let hash = abs(identifier.hashValue)
+        let first = palette[hash % palette.count]
+        let second = palette[(hash / palette.count) % palette.count]
+        return LinearGradient(colors: [first, second.opacity(0.9)], startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+
+    private var iconOverlay: some View {
+        VStack(spacing: size * 0.1) {
+            Image(systemName: "shippingbox.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: size * 0.45, height: size * 0.45)
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.18), radius: size * 0.08, x: 0, y: size * 0.05)
+            Text(monogram)
+                .font(.system(size: size * 0.22, weight: .bold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.9))
+        }
+    }
+
+    private var monogram: String {
+        let allowed = identifier.filter { $0.isLetter || $0.isNumber }
+        guard let first = allowed.first else { return "#" }
+        return String(first).uppercased()
     }
 }

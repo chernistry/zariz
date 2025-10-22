@@ -1,4 +1,3 @@
-import Kingfisher
 import SwiftData
 import SwiftUI
 
@@ -7,8 +6,6 @@ struct OrderDetailView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var items: [OrderEntity]
     @EnvironmentObject private var toast: ToastCenter
-
-    private let heroURL = URL(string: "https://images.unsplash.com/photo-1506617420156-8e4536971650?auto=format&fit=crop&w=1600&q=80")
 
     init(orderId: Int) {
         self.orderId = orderId
@@ -133,8 +130,7 @@ private extension OrderDetailView {
                     Spacer()
                     StatusBadge(text: order.status.localizedStatus.uppercased(), color: order.status.statusColor)
                 }
-                KFImage(heroURL)
-                    .placeholder { heroPlaceholder }
+                Image("OrderDetailHero")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(height: 180)
@@ -174,12 +170,6 @@ private extension OrderDetailView {
         }
     }
 
-    var heroPlaceholder: some View {
-        RoundedRectangle(cornerRadius: DS.Radius.medium)
-            .fill(DS.Color.surfaceElevated)
-            .frame(height: 180)
-            .shimmer()
-    }
 }
 
 private struct SectionRow: View {

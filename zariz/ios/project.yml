@@ -14,9 +14,6 @@ packages:
   Shimmer:
     url: https://github.com/markiv/SwiftUI-Shimmer
     from: 1.5.1
-  Kingfisher:
-    url: https://github.com/onevcat/Kingfisher
-    from: 7.10.2
   Lottie:
     url: https://github.com/airbnb/lottie-spm
     from: 4.4.0
@@ -47,8 +44,6 @@ targets:
         product: AlertToast
       - package: Shimmer
         product: Shimmer
-      - package: Kingfisher
-        product: Kingfisher
       - package: Lottie
         product: Lottie
   ZarizTests:

@@ -29,7 +29,6 @@
 		7026A04CBE57C7AAB19F743D /* Order.swift in Sources */ = {isa = PBXBuildFile; fileRef = E763DE2C85906EDBD48422A3 /* Order.swift */; };
 		7C6ACF5453ABB25037DBC24D /* PushManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDEBF3B6806226144A8EBFE /* PushManager.swift */; };
 		7F217E67C49F4DDF91C065B4 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 085C9579D18A11406FFE1007 /* Haptics.swift */; };
-		8A948646A0B06EBAD70E5C31 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = F0E60C89D34C1C3F5691BB25 /* Lottie */; };
 		9221949AACF5E8F349C3ADC2 /* AppSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2509478F261F4155B34A18E6 /* AppSession.swift */; };
 		9F24442340C119A5B626E5D2 /* OrderDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11BBDBE5EFBCEC508259BD2 /* OrderDetailView.swift */; };
 		9FAA0412FE29CE4F99F5415B /* Shimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3838694143FFCEB35D9FEBE1 /* Shimmer.swift */; };
@@ -39,7 +38,7 @@
 		CA5F1BFEFD4E5896474AC4C2 /* AlertToast in Frameworks */ = {isa = PBXBuildFile; productRef = 16354204D8673CC6D77B771C /* AlertToast */; };
 		CDC803C780900C54B7FD2D2C /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A7F0B0F87BD6EE046A6C2D /* AuthView.swift */; };
 		CE570E8BB81A9691C3CE34E0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 17FE40D53EE7AA2D255F85D4 /* Localizable.strings */; };
-		F034F6E5B6F6A2854FC63002 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 39CEF0FBD0CB3E11E38D891C /* Kingfisher */; };
+		F034F6E5B6F6A2854FC63002 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = F0E60C89D34C1C3F5691BB25 /* Lottie */; };
 		F342316107F076C7844421CD /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 0F4DABB45AA2E65839140A02 /* Popovers */; };
 		F6B5D748CBE46B71D837FE0F /* ZarizApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF5D6D4550CCC35AAFE48876 /* ZarizApp.swift */; };
 /* End PBXBuildFile section */
@@ -110,8 +109,7 @@
 				F342316107F076C7844421CD /* Popovers in Frameworks */,
 				CA5F1BFEFD4E5896474AC4C2 /* AlertToast in Frameworks */,
 				029F1AAC187B31761D4CEA2A /* Shimmer in Frameworks */,
-				F034F6E5B6F6A2854FC63002 /* Kingfisher in Frameworks */,
-				8A948646A0B06EBAD70E5C31 /* Lottie in Frameworks */,
+				F034F6E5B6F6A2854FC63002 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -303,7 +301,7 @@
 			path = Persistence;
 			sourceTree = "<group>";
 		};
-		"TEMP_3AABC333-D272-4FC3-830F-3F22C9DAB182" /* L10n */ = {
+		"TEMP_CA08E77C-6F3C-406A-91AE-6A13C27364F8" /* L10n */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -348,7 +346,6 @@
 				0F4DABB45AA2E65839140A02 /* Popovers */,
 				16354204D8673CC6D77B771C /* AlertToast */,
 				D94D89E7EB33C5A157B3C315 /* Shimmer */,
-				39CEF0FBD0CB3E11E38D891C /* Kingfisher */,
 				F0E60C89D34C1C3F5691BB25 /* Lottie */,
 			);
 			productName = Zariz;
@@ -402,7 +399,6 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				438155481BC4416F74A33AA4 /* XCRemoteSwiftPackageReference "AlertToast" */,
-				DB2DF0437F606EBAF096BF67 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				71815C2D185B80506D50C4CA /* XCRemoteSwiftPackageReference "lottie-spm" */,
 				0138BB366963A02CC695FCE2 /* XCRemoteSwiftPackageReference "Popovers" */,
 				E7FC2D841BC1D9F9A27EACE7 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
@@ -791,14 +787,6 @@
 				minimumVersion = 4.4.0;
 			};
 		};
-		DB2DF0437F606EBAF096BF67 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/onevcat/Kingfisher";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 7.10.2;
-			};
-		};
 		E7FC2D841BC1D9F9A27EACE7 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/markiv/SwiftUI-Shimmer";
@@ -819,11 +807,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 438155481BC4416F74A33AA4 /* XCRemoteSwiftPackageReference "AlertToast" */;
 			productName = AlertToast;
-		};
-		39CEF0FBD0CB3E11E38D891C /* Kingfisher */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DB2DF0437F606EBAF096BF67 /* XCRemoteSwiftPackageReference "Kingfisher" */;
-			productName = Kingfisher;
 		};
 		D94D89E7EB33C5A157B3C315 /* Shimmer */ = {
 			isa = XCSwiftPackageProductDependency;

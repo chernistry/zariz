@@ -1,12 +1,9 @@
-import Kingfisher
 import SwiftUI
 
 struct AuthView: View {
     @StateObject private var vm = AuthViewModel()
     @EnvironmentObject private var session: AppSession
     @FocusState private var isLoginFocused: Bool
-
-    private let heroImageURL = URL(string: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80")
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -57,8 +54,7 @@ struct AuthView: View {
                     }
                     Spacer()
                 }
-                KFImage(heroImageURL)
-                    .placeholder { shimmerPlaceholder }
+                Image("AuthHero")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(height: 140)
@@ -77,13 +73,6 @@ struct AuthView: View {
                     }
             }
         }
-    }
-
-    private var shimmerPlaceholder: some View {
-        RoundedRectangle(cornerRadius: DS.Radius.medium)
-            .fill(DS.Color.surfaceElevated)
-            .frame(height: 140)
-            .shimmer()
     }
 
     private var formCard: some View {

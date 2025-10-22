@@ -1,4 +1,3 @@
-import Kingfisher
 import SwiftData
 import SwiftUI
 
@@ -8,8 +7,6 @@ struct OrdersListView: View {
     @EnvironmentObject private var session: AppSession
     @State private var selectedTab: Int = 0
     @State private var isLoading: Bool = true
-
-    private let heroImageURL = URL(string: "https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1200&q=80")
 
     var body: some View {
         ZStack {
@@ -112,8 +109,7 @@ struct OrdersListView: View {
                     }
                     Spacer()
                 }
-                KFImage(heroImageURL)
-                    .placeholder { heroPlaceholder }
+                Image("OrdersHero")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(height: 120)
@@ -122,25 +118,33 @@ struct OrdersListView: View {
         }
     }
 
-    private var heroPlaceholder: some View {
-        RoundedRectangle(cornerRadius: DS.Radius.medium)
-            .fill(DS.Color.surfaceElevated)
-            .frame(height: 120)
-            .shimmer()
-    }
-
     private var summaryRow: some View {
         let total = orders.count
         let newCount = ordersFiltered(.new).count
         let activeCount = ordersFiltered(.active).count
-        return ScrollView(.horizontal, showsIndicators: false) {
+
+        return ViewThatFits(in: .horizontal) {
             HStack(spacing: DS.Spacing.md) {
-                SummaryChip(titleKey: "orders_summary_total", value: total)
-                SummaryChip(titleKey: "orders_summary_new", value: newCount)
-                SummaryChip(titleKey: "orders_summary_active", value: activeCount)
+                summaryChips(total: total, newCount: newCount, activeCount: activeCount)
             }
+            .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, DS.Spacing.sm)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DS.Spacing.md) {
+                    summaryChips(total: total, newCount: newCount, activeCount: activeCount)
+                }
+                .padding(.horizontal, DS.Spacing.md)
+                .padding(.vertical, DS.Spacing.sm)
+            }
         }
+    }
+
+    @ViewBuilder
+    private func summaryChips(total: Int, newCount: Int, activeCount: Int) -> some View {
+        SummaryChip(titleKey: "orders_summary_total", value: total)
+        SummaryChip(titleKey: "orders_summary_new", value: newCount)
+        SummaryChip(titleKey: "orders_summary_active", value: activeCount)
     }
 
     private var skeletonList: some View {
