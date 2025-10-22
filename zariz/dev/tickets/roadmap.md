@@ -41,7 +41,7 @@ Progress: mark done items with [x] and adjust the above ETA line-by-line as you 
  - [x] 2. Backend scaffold (FastAPI, SQLAlchemy, Alembic, JWT)
  - [x] 3. Core APIs: auth, orders CRUD, claim (atomic), idempotency
  - [x] 4. Notifications: APNs worker, device registry, SSE for web
-- [ ] 5. CI/CD + Deploy: Actions, Docker images, Compose/Nginx
+ - [x] 5. CI/CD + Deploy: Actions, Docker images, Compose/Nginx
 
 ## Stage B — iOS App
 

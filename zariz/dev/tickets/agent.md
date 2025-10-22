@@ -84,4 +84,4 @@ Notes for Codex CLI/CI harnesses
 - Backend: mirror deliver‑backend module boundaries; port Prisma schema fields to SQLAlchemy with Alembic migrations.
 - Web: copy next‑delivery repo to `zariz/web-admin`, strip storefront, keep admin pages/components.
 
-Now go and start executing tickets in /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/open: check if /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/open/1_-_Monorepo_setup_tooling_Docker_baseline.md complete and if not - complete it, if complete - continue with /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/open/2_-_Backend_scaffold_FastAPI_SQLAlchemy_Alembic_JWT.md
+Now go and start executing tickets in /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/open

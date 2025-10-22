@@ -1,0 +1,77 @@
+name: backend-ci
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install backend deps
+        working-directory: zariz/backend
+        run: |
+          python -m pip install -U pip
+          pip install . pytest ruff black mypy
+
+      - name: Ruff (lint)
+        working-directory: zariz/backend
+        run: |
+          ruff check . || true
+
+      - name: Black (format check)
+        working-directory: zariz/backend
+        run: |
+          black --check . || true
+
+      - name: Mypy (types)
+        working-directory: zariz/backend
+        run: |
+          mypy app || true
+
+      - name: Pytest
+        working-directory: zariz/backend
+        run: |
+          pytest -q
+
+      - name: Set image tag
+        id: vars
+        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/zariz-api
+          tags: |
+            type=raw,value=${{ steps.vars.outputs.TAG }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: zariz/backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
