@@ -80,8 +80,8 @@ Copy code
 ### Example 3: Admin Web (Zariz-Admin)
 {{PROJECT_NAME}} → Zariz-Admin
 {{DOMAIN_DESCRIPTION}} → admin/store web panel for orders
-{{PRIMARY_TECHNOLOGY}} → SvelteKit + TypeScript + Tailwind CSS
-{{FRAMEWORK_NAME}} → SvelteKit
+{{PRIMARY_TECHNOLOGY}} → Next.js + TypeScript + Tailwind CSS
+{{FRAMEWORK_NAME}} → Next.js
 {{FLOW_ENGINE}} → minimal client-side state
 {{TOOL_INTEGRATION}} → REST API client
 {{VECTOR_DB}} → remove (not used)
@@ -90,7 +90,7 @@ Copy code
 {{OBSERVABILITY_STACK}} → Web Vitals + Sentry
 {{ORCHESTRATION_TOOL}} → none
 {{BROWSER_AUTOMATION}} → Playwright for E2E
-{{STATE_MANAGEMENT}} → Svelte stores
+{{STATE_MANAGEMENT}} → React context (optional Zustand)
 {{TYPE_SYSTEM}} → strict TypeScript
 {{DOC_FORMAT}} → TSDoc
 {{RESILIENCE_LIBRARIES}} → AbortController + retries

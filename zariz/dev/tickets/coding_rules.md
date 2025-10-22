@@ -65,7 +65,7 @@ Copy code
 ### Example 3: Admin Web (Zariz-Admin)
 {{PROJECT_NAME}} → Zariz-Admin
 {{PRIMARY_RUNTIME}} → Node.js 20 LTS
-{{FRAMEWORK_NAME}} → SvelteKit, TypeScript
+{{FRAMEWORK_NAME}} → Next.js, TypeScript
 {{FLOW_ENGINE}} → minimal client state
 {{TOOL_INTEGRATION}} → REST client
 {{BROWSER_AUTOMATION}} → Playwright for E2E

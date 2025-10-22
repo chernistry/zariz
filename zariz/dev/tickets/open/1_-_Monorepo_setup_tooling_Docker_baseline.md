@@ -5,7 +5,7 @@ When you finish this ticket, mark it in the roadmap: /Users/sasha/IdeaProjects/i
 Title: Monorepo setup, tooling, Docker baseline
 
 Objective
-- Establish the Zariz monorepo structure (iOS app, FastAPI backend, SvelteKit web panel).
+- Establish the Zariz monorepo structure (iOS app, FastAPI backend, Next.js web panel).
 - Add shared tooling: editorconfig, gitignore, pre-commit, base Docker Compose, .env templates.
 - Prepare for fast local dev and simple single-VPS deploy.
 

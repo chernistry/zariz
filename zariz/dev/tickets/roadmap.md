@@ -52,7 +52,7 @@ Progress: mark done items with [x] and adjust the above ETA line-by-line as you 
 
 ## Stage C — Store Web Panel
 
-- [ ] 10. Web panel scaffold (SvelteKit/TS), auth, routes
+- [ ] 10. Web panel scaffold (Next.js/TS), auth, routes
 - [ ] 11. RBAC + security hardening (backend + web)
 - [ ] 12. Realtime status (SSE), list filters, UX polish
 

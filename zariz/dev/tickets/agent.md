@@ -52,6 +52,10 @@ We have full rights to reuse these. Prefer selective, high‑quality reuse:
 - Update the ticket with exact paths changed, commands to run, and how to verify.
 - Mark progress in `zariz/dev/tickets/roadmap.md` (change [ ] → [x]).
 
+7) Committing Changes
+- After completing each ticket, commit your changes with a meaningful commit message that explains what was done.
+- Commit messages should be in imperative mood, concise but descriptive (e.g., "Implement user login with JWT authentication", "Add order tracking UI in SwiftUI").
+
 ## Conventions
 - Paths are relative to repo root. Keep changes minimal and scoped to the ticket.
 - Respect `coding_rules.md` (no hardcoded policies; load from `zariz/dev/policies` via `ZARIZ_POLICY_DIR`).
