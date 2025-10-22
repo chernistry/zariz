@@ -42,7 +42,7 @@ struct Card<Content: View>: View {
     var body: some View {
         content
             .padding(DS.Spacing.lg)
-            .background(RoundedRectangle(cornerRadius: 12).fill(DS.Color.card))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 }
 
@@ -57,4 +57,3 @@ struct StatusBadge: View {
             .foregroundStyle(color)
     }
 }
-

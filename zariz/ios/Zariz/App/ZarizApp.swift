@@ -14,14 +14,15 @@ struct ZarizApp: App {
                 if session.isAuthenticated {
                     TabView {
                         NavigationStack { OrdersListView() }
-                            .tabItem { Label("Orders", systemImage: "list.bullet") }
+                            .tabItem { Label("orders", systemImage: "list.bullet") }
                         NavigationStack { ProfileView() }
-                            .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                            .tabItem { Label("profile", systemImage: "person.crop.circle") }
                     }
                 } else {
                     AuthView()
                 }
             }
+            .id(session.languageCode)
             .onAppear {
                 // Check if token exists (biometric prompt on access)
                 if (try? KeychainTokenStore.load()) != nil {
@@ -32,6 +33,8 @@ struct ZarizApp: App {
         }
         .modelContainer(for: [OrderEntity.self])
         .environmentObject(session)
+        .environment(\.locale, session.locale)
+        .environment(\.layoutDirection, session.isRTL ? .rightToLeft : .leftToRight)
         .backgroundTask(.appRefresh("app.zariz.orderUpdates")) {
             await OrdersService.shared.sync()
         }

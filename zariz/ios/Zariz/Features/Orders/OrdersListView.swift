@@ -5,34 +5,43 @@ struct OrdersListView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \OrderEntity.id) private var orders: [OrderEntity]
     @EnvironmentObject private var session: AppSession
-    @State private var filter: Filter = .new
+    @State private var selectedTab: Int = 0
     @State private var isLoading: Bool = true
 
     var body: some View {
-        Group {
-            if isLoading {
-                ProgressView("Loading orders...")
-            } else if ordersFiltered().isEmpty {
-                ContentUnavailableView("No orders", systemImage: "tray", description: Text("Pull to refresh or check back later"))
-            } else {
-                let list = ordersFiltered()
-                List(list) { o in
-                    NavigationLink(value: o.id) {
-                        OrderRowView(id: o.id, status: o.status, pickup: o.pickupAddress, delivery: o.deliveryAddress)
+        VStack(spacing: 0) {
+            Picker("", selection: $selectedTab) {
+                Text("filter_new").tag(0)
+                Text("filter_active").tag(1)
+                Text("filter_done").tag(2)
+            }
+            .pickerStyle(.segmented)
+            .padding()
+            
+            TabView(selection: $selectedTab) {
+                ordersList(for: .new).tag(0)
+                ordersList(for: .active).tag(1)
+                ordersList(for: .done).tag(2)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+        }
+        .navigationDestination(for: Int.self) { id in OrderDetailView(orderId: id) }
+        .navigationTitle("orders")
+        .toolbar {
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                if session.isDemoMode {
+                    Button("Home") {
+                        KeychainTokenStore.clear()
+                        session.isAuthenticated = false
                     }
-                    .listRowSeparator(.hidden)
                 }
-                .listStyle(.plain)
-                .refreshable {
-                    isLoading = true
-                    await OrdersService.shared.sync()
-                    isLoading = false
+                Button("Logout") {
+                    KeychainTokenStore.clear()
+                    session.isAuthenticated = false
+                    session.isDemoMode = false
                 }
             }
         }
-        .navigationDestination(for: Int.self) { id in OrderDetailView(orderId: id) }
-        .navigationTitle("Orders")
-        .toolbar { ToolbarItem(placement: .principal) { filterPicker } }
         .task {
             await MainActor.run { ModelContextHolder.shared.context = ctx }
             isLoading = true
@@ -40,21 +49,32 @@ struct OrdersListView: View {
             isLoading = false
         }
         .onAppear { ModelContextHolder.shared.context = ctx }
-        .globalNavToolbar()
     }
 
     @ViewBuilder
-    private var filterPicker: some View {
-        Picker("Filter", selection: $filter) {
-            Text("New").tag(Filter.new)
-            Text("Active").tag(Filter.active)
-            Text("Done").tag(Filter.done)
+    private func ordersList(for filter: Filter) -> some View {
+        let list = ordersFiltered(filter)
+        if isLoading {
+            ProgressView()
+        } else if list.isEmpty {
+            ContentUnavailableView("no_orders_title", systemImage: "tray", description: Text("no_orders_subtitle"))
+        } else {
+            List(list) { o in
+                NavigationLink(value: o.id) {
+                    OrderRowView(id: o.id, status: o.status, pickup: o.pickupAddress, delivery: o.deliveryAddress)
+                }
+                .listRowSeparator(.hidden)
+            }
+            .listStyle(.plain)
+            .refreshable {
+                isLoading = true
+                await OrdersService.shared.sync()
+                isLoading = false
+            }
         }
-        .pickerStyle(.segmented)
-        .frame(maxWidth: 320)
     }
 
-    private func ordersFiltered() -> [OrderEntity] {
+    private func ordersFiltered(_ filter: Filter) -> [OrderEntity] {
         switch filter {
         case .new:
             return orders.filter { $0.status == "new" }

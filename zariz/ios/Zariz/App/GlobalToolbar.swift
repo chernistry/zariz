@@ -8,15 +8,30 @@ struct GlobalNavToolbar: ViewModifier {
     func body(content: Content) -> some View {
         content.toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
+                Menu {
+                    Button(action: { session.languageCode = "he" }) {
+                        HStack { Text("HE"); if session.languageCode == "he" { Image(systemName: "checkmark") } }
+                    }
+                    Button(action: { session.languageCode = "ar" }) {
+                        HStack { Text("AR"); if session.languageCode == "ar" { Image(systemName: "checkmark") } }
+                    }
+                    Button(action: { session.languageCode = "en" }) {
+                        HStack { Text("EN"); if session.languageCode == "en" { Image(systemName: "checkmark") } }
+                    }
+                    Button(action: { session.languageCode = "ru" }) {
+                        HStack { Text("RU"); if session.languageCode == "ru" { Image(systemName: "checkmark") } }
+                    }
+                } label: {
+                    Image(systemName: "globe")
+                }
                 if showHomeInDemo && session.isDemoMode {
-                    Button("Home") {
+                    Button(String(localized: "home")) {
                         KeychainTokenStore.clear()
                         session.isAuthenticated = false
-                        // Keep demo flag as is, user can toggle it again on login screen
                     }
                 }
                 if showLogout {
-                    Button("Logout") {
+                    Button(String(localized: "logout")) {
                         KeychainTokenStore.clear()
                         session.isAuthenticated = false
                         session.isDemoMode = false

@@ -6,19 +6,19 @@ struct AuthView: View {
 
     var body: some View {
         VStack(spacing: DS.Spacing.lg) {
-            Text("Welcome to Zariz").font(.largeTitle).bold()
-            TextField("Phone or Email (subject)", text: $vm.login)
+            Text("welcome_title").font(.largeTitle).bold()
+            TextField("phone_or_email", text: $vm.login)
                 .textContentType(.username)
                 .padding(12)
                 .background(RoundedRectangle(cornerRadius: 10).strokeBorder(.quaternary))
                 .keyboardType(.emailAddress)
-            Picker("Role", selection: $vm.role) {
-                Text("Courier").tag("courier")
-                Text("Store").tag("store")
-                Text("Admin").tag("admin")
+            Picker("role", selection: $vm.role) {
+                Text("role_courier").tag("courier")
+                Text("role_store").tag("store")
+                Text("role_admin").tag("admin")
             }
             .pickerStyle(.segmented)
-            Toggle("Demo Mode", isOn: $session.isDemoMode)
+            Toggle("demo_mode", isOn: $session.isDemoMode)
             .tint(.blue)
             Button {
                 Task {
@@ -26,7 +26,7 @@ struct AuthView: View {
                         let input = vm.login.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
                         let allowed = ["courier", "store", "admin"]
                         guard allowed.contains(input) else {
-                            vm.error = "In demo mode, enter: courier, store, or admin"
+                            vm.error = String(localized: "invalid_demo_login")
                             return
                         }
                         let fakeToken = "demo:\(input)"
@@ -40,7 +40,7 @@ struct AuthView: View {
                         await vm.signIn()
                     }
                 }
-            } label: { Text("Sign In").frame(maxWidth: .infinity) }
+            } label: { Text("sign_in").frame(maxWidth: .infinity) }
             .buttonStyle(PrimaryButtonStyle())
             if let err = vm.error { Text(err).foregroundStyle(.red) }
         }
