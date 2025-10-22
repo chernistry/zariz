@@ -337,3 +337,28 @@ cp -f zariz/references/deliver-backend/API_TESTING_GUIDE.md zariz/backend/README
 
 Next
 - Implement core endpoints and atomic claim in Ticket 3.
+
+---
+
+Implementation log (executed)
+- Backend package scaffolded under `zariz/backend`:
+  - `pyproject.toml` with FastAPI, SQLAlchemy, Alembic, jose, passlib deps and build-system.
+  - App package `app/` with modules: `api/` (auth, orders, devices), `core/` (config, security), `db/` (base, session, models).
+  - SQLAlchemy models created: `users`, `stores`, `orders`, `order_events`, `devices`.
+  - Minimal JWT helper `create_access_token` in `app/core/security.py`.
+  - FastAPI app in `app/main.py` with `/v1` router.
+- Alembic initialized:
+  - `zariz/backend/alembic.ini` and `zariz/backend/alembic/env.py` wired to `settings.db_url` and `Base.metadata`.
+  - Base migration left pending (to generate after DB is available).
+- Dockerfile added at `zariz/backend/Dockerfile` (uvicorn entrypoint).
+- Compose updated: added `api` service under `services` in root `docker-compose.yml`.
+- References copied:
+  - `zariz/backend/docs/prisma_schema_reference.prisma` from `zariz/references/deliver-backend/prisma/schema.prisma` (for field parity reference only).
+  - `zariz/backend/README.testing.md` from `zariz/references/deliver-backend/API_TESTING_GUIDE.md` (to adapt in later tickets).
+
+Verification
+- Local Python verification (venv): imported `app.main:app` and exercised `GET /v1/orders` via FastAPI TestClient ⇒ 200 [].
+- Docker Compose build/run deferred: Docker daemon inactive in this environment. To verify later:
+  - Ensure Docker Desktop is running.
+  - `docker compose build api && docker compose up -d api postgres`
+  - Curl `http://localhost:8000/v1/orders` ⇒ []

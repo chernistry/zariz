@@ -1,0 +1,2 @@
+Alembic configuration initialized. Use `alembic revision --autogenerate -m "init"` after DB is available.
+

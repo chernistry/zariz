@@ -1,11 +1,12 @@
 .PHONY: up down logs
 
+DOCKER_COMPOSE := $(shell command -v docker-compose >/dev/null 2>&1 && echo docker-compose || echo docker compose)
+
 up:
-	docker compose up -d
+	$(DOCKER_COMPOSE) up -d
 
 down:
-	docker compose down -v
+	$(DOCKER_COMPOSE) down -v
 
 logs:
-	docker compose logs -f --tail=200
-
+	$(DOCKER_COMPOSE) logs -f --tail=200
