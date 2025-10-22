@@ -49,7 +49,7 @@ def create_order(
     # Simple idempotency handling (if key present)
     idem = request.headers.get("Idempotency-Key") if request else None
     if idem:
-        existing = find_idempotency(db, idem)
+        existing = find_idempotency(db, idem, request.method, request.url.path)
         if existing and existing.status_code == 200:
             # Return cached body
             from fastapi.responses import JSONResponse
@@ -108,7 +108,7 @@ def claim_order(
 ):
     idem = request.headers.get("Idempotency-Key") if request else None
     if idem:
-        existing = find_idempotency(db, idem)
+        existing = find_idempotency(db, idem, request.method, request.url.path)
         if existing and existing.status_code == 200:
             from fastapi.responses import JSONResponse
             import json as _json
@@ -150,7 +150,7 @@ def update_status(
 ):
     idem = request.headers.get("Idempotency-Key") if request else None
     if idem:
-        existing = find_idempotency(db, idem)
+        existing = find_idempotency(db, idem, request.method, request.url.path)
         if existing and existing.status_code == 200:
             from fastapi.responses import JSONResponse
             import json as _json

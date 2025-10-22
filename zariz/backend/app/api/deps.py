@@ -68,8 +68,18 @@ def maybe_current_identity(creds=Depends(bearer)) -> dict | None:
 from ..db.models.idempotency import IdempotencyKey
 
 
-def find_idempotency(db: Session, key: str) -> IdempotencyKey | None:
-    return db.get(IdempotencyKey, key)
+def find_idempotency(db: Session, key: str, method: str, path: str) -> IdempotencyKey | None:
+    """Return idempotency record if key matches same method+path.
+
+    If the key exists but for a different method or path, return an HTTP 409.
+    This prevents cross-endpoint reuse of the same idempotency key.
+    """
+    rec = db.get(IdempotencyKey, key)
+    if rec is None:
+        return None
+    if rec.method == method and rec.path == path:
+        return rec
+    raise HTTPException(status_code=409, detail="Idempotency-Key reused for different request")
 
 
 def save_idempotency(db: Session, key: str, method: str, path: str, status_code: int, body: dict) -> None:
