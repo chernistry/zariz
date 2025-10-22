@@ -36,16 +36,17 @@ public struct RemoteAvatarView: View {
     }
 
     private var iconOverlay: some View {
-        VStack(spacing: size * 0.1) {
-            Image(systemName: "shippingbox.fill")
+        VStack(spacing: size * 0.08) {
+            Image("BoxIcon")
                 .resizable()
+                .renderingMode(.template)
                 .scaledToFit()
-                .frame(width: size * 0.45, height: size * 0.45)
+                .frame(width: size * 0.48, height: size * 0.48)
                 .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.18), radius: size * 0.08, x: 0, y: size * 0.05)
+                .shadow(color: .black.opacity(0.2), radius: size * 0.08, x: 0, y: size * 0.05)
             Text(monogram)
                 .font(.system(size: size * 0.22, weight: .bold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(.white.opacity(0.92))
         }
     }
 
