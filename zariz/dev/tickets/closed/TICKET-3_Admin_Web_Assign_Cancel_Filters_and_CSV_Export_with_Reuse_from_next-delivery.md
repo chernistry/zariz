@@ -225,3 +225,21 @@ Acceptance Criteria
 - Details page reflects live changes via SSE and provides “Assign” and “Cancel” actions.
 - Components reused from `references/next-delivery` compile and render with our Next config.
 
+Implementation Summary (done)
+- Backend:
+  - Added `GET /v1/orders/{id}` for details.
+  - Added admin-only `POST /v1/orders/{id}/assign` and `POST /v1/orders/{id}/cancel` with auditing via `order_events` and SSE publishes. File: `zariz/backend/app/api/routes/orders.py`.
+  - Expanded list filters: `status`, `store`, `courier`, `from`, `to`; plus `created_at` field added to the model and response. Files: `zariz/backend/app/db/models/order.py`, `zariz/backend/app/api/schemas.py`, `zariz/backend/app/api/routes/orders.py`.
+  - Tests remain green: `zariz/backend/.venv/bin/pytest` → 7 passed.
+- Web-admin:
+  - Orders list (`zariz/web-admin/pages/orders.tsx`): added filter controls (status/date/store/courier), action buttons (View/Assign/Cancel), and CSV export.
+  - Order details page: new file `zariz/web-admin/pages/orders/[id].tsx` with live SSE refresh and Assign/Cancel actions.
+  - Login role options cleaned: removed Store from `zariz/web-admin/pages/login.tsx`.
+  - Components reused from `components/` (already present from references).
+
+Verify
+- Backend: run locally (Docker or `uvicorn`); test endpoints with admin JWT. Check SSE `/v1/events/sse` emits on assign/cancel.
+- Web-admin: `cd zariz/web-admin && yarn dev` then navigate to `/orders`. Apply filters, export CSV, open detail, use Assign/Cancel. SSE should refresh lists automatically.
+
+Notes
+- Date filters accept `YYYY-MM-DD` ISO; time bounds are inclusive on `created_at`.

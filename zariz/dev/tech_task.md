@@ -66,8 +66,8 @@ The application allows stores to create orders and couriers to view available on
 
 * Next.js + TypeScript
 * Admin authentication
-* Order monitoring, assign courier, cancel order
-* CSV export of filtered orders
+* Order monitoring, assign courier, cancel order (admin-only)
+* Filters: status/date/store/courier; CSV export of filtered orders
 
 ---
 
@@ -78,6 +78,7 @@ The application allows stores to create orders and couriers to view available on
 * Filtering by store and date
 * Courier updates order status
 * Real-time status reflection in admin panel
+* Store iPad app supports offline order creation (queue and sync when online)
 * No geolocation in MVP
 
 ---
@@ -86,8 +87,9 @@ The application allows stores to create orders and couriers to view available on
 
 * Scalability: up to 100 couriers and 10 stores
 * API latency: <300 ms (p95)
-* UI propagation SLA: ≤30 s from status change to admin panel visibility (silent push + polling)
+* UI propagation SLA: ≤30 s from status change to iOS and admin web visibility (APNs silent push + jittered 30s foreground polling fallback; BGTask refresh for iOS)
 * Reliability: SLA ≥99%
+* Offline queue: unsent store orders must persist locally until connectivity returns
 * Logging/monitoring via Prometheus / Grafana / Sentry
 * Authentication: JWT + HTTPS
 

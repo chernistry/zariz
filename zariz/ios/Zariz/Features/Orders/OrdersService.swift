@@ -137,6 +137,7 @@ actor OrdersService {
         if let idk = idempotencyKey {
             req.addValue(idk, forHTTPHeaderField: "Idempotency-Key")
         }
+        req.timeoutInterval = 20
         return req
     }
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
 from ..base import Base
 
@@ -21,3 +21,5 @@ class Order(Base):
     boxes_count: Mapped[int] = mapped_column(Integer, default=0)
     boxes_multiplier: Mapped[int] = mapped_column(Integer, default=1)
     price_total: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

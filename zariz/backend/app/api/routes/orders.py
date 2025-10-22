@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select, text
@@ -42,6 +43,10 @@ def delivery_address_from_payload(payload: OrderCreate) -> str:
 @router.get("", response_model=list[OrderRead])
 def list_orders(
     status_filter: Optional[str] = Query(default=None, alias="status"),
+    store: Optional[int] = None,
+    courier: Optional[int] = None,
+    from_: Optional[str] = Query(default=None, alias="from"),
+    to: Optional[str] = None,
     db: Session = Depends(get_db),
     identity: dict = Depends(require_role("store", "admin", "courier")),
 ):
@@ -50,7 +55,7 @@ def list_orders(
         if status_filter not in {"new", "claimed", "picked_up", "delivered", "canceled"}:
             raise HTTPException(status_code=400, detail="Invalid status filter")
         q = q.where(Order.status == status_filter)
-    # Object-level access
+    # Object-level access + explicit filters
     role = identity.get("role")
     sub = identity.get("sub")
     if role == "store":
@@ -60,13 +65,31 @@ def list_orders(
             raise HTTPException(status_code=400, detail="Invalid store id")
         q = q.where(Order.store_id == store_id)
     elif role == "courier":
-        # Couriers can only see orders assigned to them or new ones
         try:
             courier_id = int(sub)
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid courier id")
         from sqlalchemy import or_
         q = q.where(or_(Order.courier_id == courier_id, Order.status == "new"))
+    else:
+        # Admin can filter by store/courier
+        if store is not None:
+            q = q.where(Order.store_id == store)
+        if courier is not None:
+            q = q.where(Order.courier_id == courier)
+        # Date filtering by created_at if provided (YYYY-MM-DD)
+        if from_:
+            try:
+                dt_from = datetime.fromisoformat(from_)
+                q = q.where(Order.created_at >= dt_from)
+            except ValueError:
+                pass
+        if to:
+            try:
+                dt_to = datetime.fromisoformat(to)
+                q = q.where(Order.created_at <= dt_to)
+            except ValueError:
+                pass
     rows = db.execute(q).scalars().all()
     result: list[OrderRead] = []
     for o in rows:
@@ -88,6 +111,7 @@ def list_orders(
                 boxes_count=o.boxes_count,
                 boxes_multiplier=o.boxes_multiplier,
                 price_total=o.price_total,
+                created_at=o.created_at.isoformat() if getattr(o, "created_at", None) else None,
             )
         )
     return result
@@ -172,10 +196,103 @@ def create_order(
         boxes_count=o.boxes_count,
         boxes_multiplier=o.boxes_multiplier,
         price_total=o.price_total,
+        created_at=o.created_at.isoformat() if getattr(o, "created_at", None) else None,
     )
     if idem:
         save_idempotency(db, idem, request.method, request.url.path, 200, result.model_dump())
     return result
+
+
+@router.get("/{order_id}", response_model=OrderRead)
+def get_order(order_id: int, db: Session = Depends(get_db), identity: dict = Depends(require_role("store", "admin", "courier"))):
+    o = db.get(Order, order_id)
+    if not o:
+        raise HTTPException(status_code=404, detail="Order not found")
+    role = identity.get("role")
+    sub = identity.get("sub")
+    if role == "store":
+        try:
+            store_id = int(sub)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid store id")
+        if o.store_id != store_id:
+            raise HTTPException(status_code=403, detail="Forbidden")
+    if role == "courier":
+        try:
+            courier_id = int(sub)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid courier id")
+        if o.courier_id not in (None, courier_id) and o.status != "new":
+            raise HTTPException(status_code=403, detail="Forbidden")
+    return OrderRead(
+        id=o.id,
+        store_id=o.store_id,
+        courier_id=o.courier_id,
+        status=o.status,
+        pickup_address=o.pickup_address,
+        delivery_address=o.delivery_address,
+        recipient_first_name=o.recipient_first_name,
+        recipient_last_name=o.recipient_last_name,
+        phone=o.phone,
+        street=o.street,
+        building_no=o.building_no,
+        floor=o.floor,
+        apartment=o.apartment,
+        boxes_count=o.boxes_count,
+        boxes_multiplier=o.boxes_multiplier,
+        price_total=o.price_total,
+        created_at=o.created_at.isoformat() if getattr(o, "created_at", None) else None,
+    )
+
+
+@limiter.limit("30/minute")
+@router.post("/{order_id}/assign")
+def assign_order(
+    order_id: int,
+    payload: dict,
+    db: Session = Depends(get_db),
+    identity: dict = Depends(require_role("admin")),
+    request: Request = None,
+):
+    o = db.get(Order, order_id)
+    if not o:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if o.status in {"delivered", "canceled"}:
+        raise HTTPException(status_code=400, detail="Cannot assign in final state")
+    courier_id = payload.get("courier_id")
+    if not isinstance(courier_id, int):
+        raise HTTPException(status_code=400, detail="courier_id required")
+    o.courier_id = courier_id
+    if o.status == "new":
+        o.status = "claimed"
+        db.add(OrderEvent(order_id=o.id, type="claimed"))
+    db.add(OrderEvent(order_id=o.id, type="assigned"))
+    db.commit()
+    events_bus.publish({"type": "order.assigned", "order_id": o.id, "courier_id": courier_id})
+    return {"ok": True}
+
+
+@limiter.limit("30/minute")
+@router.post("/{order_id}/cancel")
+def cancel_order(
+    order_id: int,
+    payload: dict,
+    db: Session = Depends(get_db),
+    identity: dict = Depends(require_role("admin")),
+    request: Request = None,
+):
+    o = db.get(Order, order_id)
+    if not o:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if o.status == "canceled":
+        return {"ok": True}
+    if o.status == "delivered":
+        raise HTTPException(status_code=400, detail="Cannot cancel delivered order")
+    o.status = "canceled"
+    db.add(OrderEvent(order_id=o.id, type="canceled"))
+    db.commit()
+    events_bus.publish({"type": "order.status_changed", "order_id": o.id, "status": "canceled"})
+    return {"ok": True}
 
 
 def _parse_int(s: str) -> Optional[int]:

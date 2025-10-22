@@ -3,7 +3,7 @@ import { api } from '../libs/api';
 
 export default function Login() {
   const [subject, setSubject] = useState('');
-  const [role, setRole] = useState<'store' | 'courier' | 'admin'>('store');
+  const [role, setRole] = useState<'courier' | 'admin'>('admin');
   const [error, setError] = useState<string | null>(null);
 
   async function submit(e?: React.FormEvent) {
@@ -26,9 +26,8 @@ export default function Login() {
     <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12, width: 320 }}>
         <h1>Zariz Admin Login</h1>
-        <input value={subject} onChange={e=>setSubject(e.target.value)} placeholder="User/Store ID" />
+        <input value={subject} onChange={e=>setSubject(e.target.value)} placeholder="User ID" />
         <select value={role} onChange={e=>setRole(e.target.value as any)}>
-          <option value="store">Store</option>
           <option value="courier">Courier</option>
           <option value="admin">Admin</option>
         </select>

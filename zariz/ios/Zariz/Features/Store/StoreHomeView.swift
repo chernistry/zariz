@@ -28,11 +28,11 @@ struct StoreHomeView: View {
         .navigationTitle("store_home_title")
         .task { await performSyncIfNeeded() }
         .onAppear { ModelContextHolder.shared.context = ctx }
-        .refreshable { await performSyncIfNeeded(force: true) }
+        .refreshable { await performSyncIfNeeded() }
     }
 
-    private func performSyncIfNeeded(force: Bool = false) async {
-        if isSyncing && !force { return }
+    private func performSyncIfNeeded() async {
+        if isSyncing { return }
         isSyncing = true
         await OrdersService.shared.sync()
         isSyncing = false

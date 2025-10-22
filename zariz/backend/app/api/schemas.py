@@ -43,6 +43,7 @@ class OrderRead(BaseModel):
     boxes_count: Optional[int] = None
     boxes_multiplier: Optional[int] = None
     price_total: Optional[int] = None
+    created_at: Optional[str] = None
 
 
 class StatusUpdate(BaseModel):

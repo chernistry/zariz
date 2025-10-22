@@ -16,6 +16,20 @@ Deliverables
 3) Backend schema + API changes (`POST /orders`) to accept new fields and compute boxes-based multiplicity server-side
 4) Update docs (`tech_task.md`)
 
+Implementation Summary (done)
+- iOS Store Mode implemented: `zariz/ios/Zariz/Features/Store/{StoreTabView.swift,StoreHomeView.swift,NewOrderView.swift,StoreOrdersListView.swift}` with SwiftData drafts and autosave. Pricing logic: `zariz/ios/Zariz/Data/Models/OrderPricing.swift`.
+- Backend order model expanded and used: `zariz/backend/app/db/models/order.py` with recipient/address fields plus `boxes_count`, `boxes_multiplier`, `price_total`. `POST /v1/orders` computes multiplicity server-side in `zariz/backend/app/api/routes/orders.py`.
+- DTOs: `zariz/backend/app/api/schemas.py` and iOS `OrderCreateDTO` mapping in `zariz/ios/Zariz/Features/Orders/OrdersService.swift`.
+- Docs updated: `zariz/dev/tech_task.md` clarifies iPad Store creation and ≤30 s SLA.
+
+Verification
+- Backend: `zariz/backend/.venv/bin/pytest` → all tests green (7 passed).
+- iOS: Build iOS 17+ target via `make ios-build-sim` (or Xcode). Create an order in Store mode; verify it appears in Store Orders and via API `GET /v1/orders`.
+- Pricing: change boxes count 1..8→35₪, 9..16→70₪, 17+→105₪ hint in UI; server returns computed `boxes_multiplier` and `price_total`.
+
+Notes
+- Store web creation removed from scope; iPad flow is primary.
+
 Implementation Plan (iOS)
 1. Add Store Mode entry and navigation
 - Introduce a simple Store home for iPad that routes to new-order form and recent orders.
@@ -291,4 +305,3 @@ Acceptance Criteria
 - Offline creation stores draft locally and syncs later without data loss.
 - Server computes and persists boxes multiplicity and price; iOS shows local estimate.
 - tech_task.md updated and consistent with meeting.md and best_practices.md.
-

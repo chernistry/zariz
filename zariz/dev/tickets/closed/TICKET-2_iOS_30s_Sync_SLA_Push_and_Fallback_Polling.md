@@ -125,3 +125,14 @@ Acceptance Criteria
 - With APNs disabled or delayed, foreground polling still delivers ≤ 30 s on active app; no excessive API load (jittered schedule).
 - Background task triggers a sync upon silent push.
 
+Implementation Summary (done)
+- Added `OrdersSyncManager` with jittered 30s foreground polling and NWPathMonitor: `zariz/ios/Zariz/App/OrdersSyncManager.swift`.
+- Integrated into app lifecycle: `zariz/ios/Zariz/App/ZarizApp.swift` starts the loop on appear and ties BGTask to trigger immediate sync.
+- Push delegate now triggers sync via manager: `zariz/ios/Zariz/App/PushManager.swift`.
+- Minimal telemetry: `zariz/ios/Zariz/App/Telemetry.swift` and duration logs from sync manager.
+- Network timeouts set on requests (20s): `authorizedRequest()` in `zariz/ios/Zariz/Features/Orders/OrdersService.swift`.
+- Docs updated: `zariz/dev/tech_task.md` now explicitly states ≤30 s across iOS and web with APNs + polling + BGTask.
+
+Verify
+- Run the app, observe periodic refreshes in foreground (≈25–35s jitter). Silent push (content-available:1) should trigger immediate sync.
+- Offline: manager skips when NWPath is unsatisfied; drafts queue persists and resend when back online.
