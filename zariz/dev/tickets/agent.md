@@ -5,9 +5,12 @@ Execute Zariz MVP tickets with precision and minimal friction, using the agreed 
 - iOS app: SwiftUI + MVVM, Swift 6, SwiftData for cache, Keychain with biometrics.
 - Backend: FastAPI (Python 3.12), SQLAlchemy + Alembic, JWT auth, PostgreSQL.
 - Store web panel: Next.js + TypeScript.
-Prefer verification‑driven delivery: analyze → plan → implement (only when asked) → verify → self‑critique → document.
+Prefer verification‑driven delivery: analyze → plan → implement → verify → self‑critique → document (default Execute mode).
 
-Important: do not execute tickets unless the user explicitly asks to implement. When in “planning/update” mode, only edit tickets/docs and propose patches.
+Modes & Triggers
+- Execute (default): analyze → plan → implement → verify → document for each ticket.
+- Plan/Update only: if the user explicitly says “plan/update only”, or `zariz/dev/tickets/.mode` contains `plan`, or env `ZARIZ_AGENT_MODE=plan`.
+Switching modes: change `.mode` or say it explicitly in chat. When in Plan mode, only edit tickets/docs and propose patches; do not write code.
 
 ## Primary References (allowed to copy)
 We have full rights to reuse these. Prefer selective, high‑quality reuse:
@@ -26,7 +29,7 @@ We have full rights to reuse these. Prefer selective, high‑quality reuse:
 ## Ticket Workflow
 1) Selection
 - Pick the lowest numbered open ticket in `zariz/dev/tickets/open`.
-- If the user says “plan/update only”, do not run code; update tickets with explicit copy/move/integrate instructions.
+- If the user says “plan/update only” or mode is Plan, do not run code; update tickets with explicit copy/move/integrate instructions.
 
 2) Analysis (inside the ticket)
 - Restate requirements and acceptance criteria.
@@ -34,9 +37,9 @@ We have full rights to reuse these. Prefer selective, high‑quality reuse:
 
 3) Plan (inside the ticket)
 - List precise file/folder operations (e.g., `cp -R` from reference to destination), renames, and integration points (imports, module links, env vars).
-- Include verification steps (build/test/smoke), but mark them “execute later” unless requested.
+- Include verification steps (build/test/smoke) and execute them by default in Execute mode. If external secrets/infra are missing or mode is Plan, mark them “execute later”.
 
-4) Implementation (only when asked)
+4) Implementation
 - Backend: FastAPI with typed Pydantic models, atomic claim via single UPDATE, idempotency for writes, OpenAPI docs.
 - iOS: SwiftUI + SwiftData offline cache, URLSession async/await, Keychain AccessControl with biometrics.
 - Web: Next.js pages for login/orders/new; SSE client for realtime.
@@ -55,6 +58,15 @@ We have full rights to reuse these. Prefer selective, high‑quality reuse:
 7) Committing Changes
 - After completing each ticket, commit your changes with a meaningful commit message that explains what was done.
 - Commit messages should be in imperative mood, concise but descriptive (e.g., "Implement user login with JWT authentication", "Add order tracking UI in SwiftUI").
+- Move completed tickets from `zariz/dev/tickets/open` to `zariz/dev/tickets/closed` directory.
+
+Notes for Codex CLI/CI harnesses
+- If the environment forbids `git commit` or moving files, still implement and verify. Report a summary and leave files modified; skip the commit/move step.
+
+## Agent Loop
+- Start with the lowest-numbered ticket in `zariz/dev/tickets/open`.
+- For each ticket (in Execute mode): analyze → plan → implement → verify → document.
+- On completion: update `zariz/dev/tickets/roadmap.md` ([ ] → [x]), commit/move the ticket to `zariz/dev/tickets/closed` when allowed, then continue with the next ticket until none remain.
 
 ## Conventions
 - Paths are relative to repo root. Keep changes minimal and scoped to the ticket.
@@ -72,3 +84,4 @@ We have full rights to reuse these. Prefer selective, high‑quality reuse:
 - Backend: mirror deliver‑backend module boundaries; port Prisma schema fields to SQLAlchemy with Alembic migrations.
 - Web: copy next‑delivery repo to `zariz/web-admin`, strip storefront, keep admin pages/components.
 
+Now go and start executing tickets in /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/open: check if /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/open/1_-_Monorepo_setup_tooling_Docker_baseline.md complete and if not - complete it, if complete - continue with /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/open/2_-_Backend_scaffold_FastAPI_SQLAlchemy_Alembic_JWT.md

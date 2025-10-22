@@ -65,3 +65,4 @@ Progress: mark done items with [x] and adjust the above ETA line-by-line as you 
 Notes:
 - Keep MVP scope: no geolocation. Optimize for reliability and clarity.
 - Ensure OpenAPI spec drives client generation and contract tests.
+- Agent automation: default Execute mode (see `zariz/dev/tickets/agent.md`). Agent loops through lowest-numbered open tickets; set `zariz/dev/tickets/.mode` to `plan` to pause implementation and stay in plan/update-only.
