@@ -34,22 +34,29 @@ struct OrderDetailView: View {
     @ViewBuilder
     private var content: some View {
         if let o = items.first {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Order #\(o.id)").font(.title2).bold()
-                Text("Pickup: \(o.pickupAddress)")
-                Text("Delivery: \(o.deliveryAddress)")
-                HStack {
+            VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+                HStack { Text("Order #\(o.id)").font(.title2).bold(); Spacer(); StatusBadge(text: o.status, color: .gray) }
+                Card {
+                    VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                        HStack(alignment: .top) { Image(systemName: "shippingbox"); Text(o.pickupAddress).font(.subheadline) }
+                        Divider()
+                        HStack(alignment: .top) { Image(systemName: "location"); Text(o.deliveryAddress).font(.subheadline) }
+                    }
+                }
+                VStack(spacing: DS.Spacing.md) {
                     Button("Claim") { Task { try? await OrdersService.shared.claim(id: orderId) } }
+                        .buttonStyle(PrimaryButtonStyle())
                         .disabled(o.status != "new")
                     Button("Picked up") { Task { try? await OrdersService.shared.updateStatus(id: orderId, status: "picked_up") } }
+                        .buttonStyle(PrimaryButtonStyle())
                         .disabled(o.status != "claimed")
                     Button("Delivered") { Task { try? await OrdersService.shared.updateStatus(id: orderId, status: "delivered") } }
+                        .buttonStyle(PrimaryButtonStyle())
                         .disabled(o.status != "picked_up")
                 }
-                .buttonStyle(.borderedProminent)
                 Spacer()
             }
-            .padding()
+            .padding(DS.Spacing.lg)
         } else {
             ProgressView().task {
                 await MainActor.run { ModelContextHolder.shared.context = ctx }

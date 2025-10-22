@@ -5,11 +5,12 @@ struct AuthView: View {
     @EnvironmentObject private var session: AppSession
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Sign In").font(.title).bold()
+        VStack(spacing: DS.Spacing.lg) {
+            Text("Welcome to Zariz").font(.largeTitle).bold()
             TextField("Phone or Email (subject)", text: $vm.login)
                 .textContentType(.username)
-                .textFieldStyle(.roundedBorder)
+                .padding(12)
+                .background(RoundedRectangle(cornerRadius: 10).strokeBorder(.quaternary))
                 .keyboardType(.emailAddress)
             Picker("Role", selection: $vm.role) {
                 Text("Courier").tag("courier")
@@ -39,13 +40,11 @@ struct AuthView: View {
                         await vm.signIn()
                     }
                 }
-            } label: {
-                Text("Sign In").frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
+            } label: { Text("Sign In").frame(maxWidth: .infinity) }
+            .buttonStyle(PrimaryButtonStyle())
             if let err = vm.error { Text(err).foregroundStyle(.red) }
         }
-        .padding()
+        .padding(DS.Spacing.xl)
         .onChange(of: vm.isAuthenticated) { _, newValue in
             if newValue { session.isAuthenticated = true }
         }

@@ -5,37 +5,49 @@ struct OrdersListView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \OrderEntity.id) private var orders: [OrderEntity]
     @EnvironmentObject private var session: AppSession
+    @State private var filter: Filter = .new
 
     var body: some View {
-        List(orders) { o in
+        let list = ordersFiltered()
+        List(list) { o in
             NavigationLink(value: o.id) {
-                HStack {
-                    Text("#\(o.id)").bold()
-                    Text(o.status).foregroundStyle(.secondary)
-                }
+                OrderRowView(id: o.id, status: o.status, pickup: o.pickupAddress, delivery: o.deliveryAddress)
             }
+            .listRowSeparator(.hidden)
         }
+        .listStyle(.plain)
         .navigationDestination(for: Int.self) { id in OrderDetailView(orderId: id) }
         .navigationTitle("Orders")
+        .toolbar { ToolbarItem(placement: .principal) { filterPicker } }
         .task {
             await MainActor.run { ModelContextHolder.shared.context = ctx }
             await OrdersService.shared.sync()
         }
         .onAppear { ModelContextHolder.shared.context = ctx }
-        .toolbar {
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                if session.isDemoMode {
-                    Button("Home") {
-                        KeychainTokenStore.clear()
-                        session.isAuthenticated = false
-                    }
-                }
-                Button("Logout") {
-                    KeychainTokenStore.clear()
-                    session.isAuthenticated = false
-                    session.isDemoMode = false
-                }
-            }
+        .globalNavToolbar()
+    }
+
+    @ViewBuilder
+    private var filterPicker: some View {
+        Picker("Filter", selection: $filter) {
+            Text("New").tag(Filter.new)
+            Text("Active").tag(Filter.active)
+            Text("Done").tag(Filter.done)
+        }
+        .pickerStyle(.segmented)
+        .frame(maxWidth: 320)
+    }
+
+    private func ordersFiltered() -> [OrderEntity] {
+        switch filter {
+        case .new:
+            return orders.filter { $0.status == "new" }
+        case .active:
+            return orders.filter { $0.status == "claimed" || $0.status == "picked_up" }
+        case .done:
+            return orders.filter { $0.status == "delivered" }
         }
     }
+
+    private enum Filter: Hashable { case new, active, done }
 }

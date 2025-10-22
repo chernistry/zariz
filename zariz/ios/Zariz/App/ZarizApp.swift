@@ -12,7 +12,12 @@ struct ZarizApp: App {
         WindowGroup {
             Group {
                 if session.isAuthenticated {
-                    NavigationStack { OrdersListView() }
+                    TabView {
+                        NavigationStack { OrdersListView() }
+                            .tabItem { Label("Orders", systemImage: "list.bullet") }
+                        NavigationStack { ProfileView() }
+                            .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                    }
                 } else {
                     AuthView()
                 }
