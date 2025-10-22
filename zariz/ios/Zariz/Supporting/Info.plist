@@ -27,6 +27,7 @@
         <key>UIApplicationSupportsMultipleScenes</key>
         <false/>
     </dict>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Authenticate to access your secure session.</string>
 </dict>
 </plist>
-
