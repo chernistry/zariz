@@ -41,7 +41,10 @@ struct OrdersListView: View {
     private func ordersList(for filter: Filter) -> some View {
         let list = ordersFiltered(filter)
         if isLoading {
-            ProgressView()
+            List {
+                ForEach(0..<5, id: \.self) { _ in SkeletonOrderRow() }
+            }
+            .listStyle(.plain)
         } else if list.isEmpty {
             ContentUnavailableView("no_orders_title", systemImage: "tray", description: Text("no_orders_subtitle"))
         } else {

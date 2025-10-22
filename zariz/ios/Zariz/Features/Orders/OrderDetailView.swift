@@ -5,6 +5,7 @@ struct OrderDetailView: View {
     let orderId: Int
     @Environment(\.modelContext) private var ctx
     @Query private var items: [OrderEntity]
+    @EnvironmentObject private var toast: ToastCenter
 
     init(orderId: Int) {
         self.orderId = orderId
@@ -14,6 +15,7 @@ struct OrderDetailView: View {
     var body: some View {
         content
             .globalNavToolbar()
+            .safeAreaInset(edge: .bottom) { bottomActionBar }
     }
 
     @ViewBuilder
@@ -38,18 +40,7 @@ struct OrderDetailView: View {
                         }
                     }
                 }
-                VStack(spacing: DS.Spacing.md) {
-                    Button(String(localized: "claim")) { Task { try? await OrdersService.shared.claim(id: orderId) } }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .disabled(o.status != "new")
-                    Button(String(localized: "picked_up")) { Task { try? await OrdersService.shared.updateStatus(id: orderId, status: "picked_up") } }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .disabled(o.status != "claimed")
-                    Button(String(localized: "delivered")) { Task { try? await OrdersService.shared.updateStatus(id: orderId, status: "delivered") } }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .disabled(o.status != "picked_up")
-                }
-                Spacer()
+                
             }
             .padding(DS.Spacing.lg)
         } else {
@@ -61,3 +52,57 @@ struct OrderDetailView: View {
     }
 }
 
+extension OrderDetailView {
+    @ViewBuilder
+    fileprivate var bottomActionBar: some View {
+        if let o = items.first {
+            let (title, action, enabled): (LocalizedStringKey, () -> Void, Bool) = {
+                switch o.status {
+                case "new":
+                    return (LocalizedStringKey("claim"), {
+                        Task {
+                            try? await OrdersService.shared.claim(id: orderId)
+                            await MainActor.run {
+                                Haptics.success()
+                                toast.show("toast_claimed", style: .success, icon: "checkmark.circle")
+                            }
+                        }
+                    }, true)
+                case "claimed":
+                    return (LocalizedStringKey("picked_up"), {
+                        Task {
+                            try? await OrdersService.shared.updateStatus(id: orderId, status: "picked_up")
+                            await MainActor.run {
+                                Haptics.success()
+                                toast.show("toast_picked_up", style: .success, icon: "checkmark.circle")
+                            }
+                        }
+                    }, true)
+                case "picked_up":
+                    return (LocalizedStringKey("delivered"), {
+                        Task {
+                            try? await OrdersService.shared.updateStatus(id: orderId, status: "delivered")
+                            await MainActor.run {
+                                Haptics.success()
+                                toast.show("toast_delivered", style: .success, icon: "checkmark.circle")
+                            }
+                        }
+                    }, true)
+                default:
+                    return (LocalizedStringKey("delivered"), {}, false)
+                }
+            }()
+
+            VStack(spacing: 0) {
+                Divider()
+                Button(title) { action() }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(!enabled)
+                    .padding(.horizontal, DS.Spacing.lg)
+                    .padding(.top, DS.Spacing.md)
+                    .padding(.bottom, DS.Spacing.lg)
+                    .background(.ultraThinMaterial)
+            }
+        }
+    }
+}

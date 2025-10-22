@@ -29,3 +29,6 @@
 "status_canceled" = "Отменен";
 "choose_language" = "Выбор языка";
 "cancel" = "Отмена";
+"toast_claimed" = "Заказ взят";
+"toast_picked_up" = "Заказ забран";
+"toast_delivered" = "Заказ доставлен";

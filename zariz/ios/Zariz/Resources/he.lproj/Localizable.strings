@@ -29,3 +29,6 @@
 "status_canceled" = "בוטל";
 "choose_language" = "בחר שפה";
 "cancel" = "ביטול";
+"toast_claimed" = "הזמנה נתפסה";
+"toast_picked_up" = "הזמנה נאספה";
+"toast_delivered" = "הזמנה נמסרה";

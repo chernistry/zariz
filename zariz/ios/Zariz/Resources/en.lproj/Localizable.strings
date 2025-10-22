@@ -29,3 +29,6 @@
 "status_canceled" = "Canceled";
 "choose_language" = "Choose language";
 "cancel" = "Cancel";
+"toast_claimed" = "Order claimed";
+"toast_picked_up" = "Order picked up";
+"toast_delivered" = "Order delivered";

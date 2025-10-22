@@ -29,3 +29,6 @@
 "status_canceled" = "ملغي";
 "choose_language" = "اختر اللغة";
 "cancel" = "إلغاء";
+"toast_claimed" = "تم استلام الطلب";
+"toast_picked_up" = "تم التقاط الطلب";
+"toast_delivered" = "تم تسليم الطلب";

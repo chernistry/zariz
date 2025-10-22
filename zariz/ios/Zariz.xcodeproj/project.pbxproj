@@ -24,9 +24,11 @@
 		58A3AFDBBCF8292BBE4CD2F3 /* SkeletonOrderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBB2B3121301D0031517353 /* SkeletonOrderRow.swift */; };
 		7026A04CBE57C7AAB19F743D /* Order.swift in Sources */ = {isa = PBXBuildFile; fileRef = E763DE2C85906EDBD48422A3 /* Order.swift */; };
 		7C6ACF5453ABB25037DBC24D /* PushManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDEBF3B6806226144A8EBFE /* PushManager.swift */; };
+		7F217E67C49F4DDF91C065B4 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 085C9579D18A11406FFE1007 /* Haptics.swift */; };
 		9221949AACF5E8F349C3ADC2 /* AppSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2509478F261F4155B34A18E6 /* AppSession.swift */; };
 		9F24442340C119A5B626E5D2 /* OrderDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11BBDBE5EFBCEC508259BD2 /* OrderDetailView.swift */; };
 		9FAA0412FE29CE4F99F5415B /* Shimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3838694143FFCEB35D9FEBE1 /* Shimmer.swift */; };
+		A375E5ECFE1AACBEB44711E6 /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C290D6AF581A1429B24E668 /* Toast.swift */; };
 		B249EA08B54F1ABFD946C3EA /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F11E75BA087995F443429C /* EmptyStateView.swift */; };
 		CDC803C780900C54B7FD2D2C /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A7F0B0F87BD6EE046A6C2D /* AuthView.swift */; };
 		CE570E8BB81A9691C3CE34E0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 17FE40D53EE7AA2D255F85D4 /* Localizable.strings */; };
@@ -53,6 +55,7 @@
 /* Begin PBXFileReference section */
 		05A7F0B0F87BD6EE046A6C2D /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		083F5FA9673EA6B850203EE4 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
+		085C9579D18A11406FFE1007 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		21AB1E66206F81D9C7A79F2E /* OrdersService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersService.swift; sourceTree = "<group>"; };
 		2509478F261F4155B34A18E6 /* AppSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSession.swift; sourceTree = "<group>"; };
 		334CC652083F335B3DA8A8DF /* OrdersListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersListView.swift; sourceTree = "<group>"; };
@@ -60,6 +63,7 @@
 		3FDEBF3B6806226144A8EBFE /* PushManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushManager.swift; sourceTree = "<group>"; };
 		43C88EA393E23C78A6E94D40 /* Zariz.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Zariz.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		54D24F53D19AB75CDBF9B8EF /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		5C290D6AF581A1429B24E668 /* Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
 		5E808588FAAAC21F2209F26B /* GlobalToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalToolbar.swift; sourceTree = "<group>"; };
 		6104438F41AFF9F6002B6458 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		6187193AB1EC434B99F91FFB /* DemoExitToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoExitToolbar.swift; sourceTree = "<group>"; };
@@ -134,7 +138,9 @@
 			isa = PBXGroup;
 			children = (
 				732DCE00E3F410189C1FFF0C /* DesignSystem.swift */,
+				085C9579D18A11406FFE1007 /* Haptics.swift */,
 				3838694143FFCEB35D9FEBE1 /* Shimmer.swift */,
+				5C290D6AF581A1429B24E668 /* Toast.swift */,
 			);
 			path = DesignSystem;
 			sourceTree = "<group>";
@@ -257,7 +263,7 @@
 			path = Persistence;
 			sourceTree = "<group>";
 		};
-		"TEMP_B00BAC21-5F56-4F5E-B5A0-CCEA70FF7301" /* L10n */ = {
+		"TEMP_D1D478A3-BE85-4F15-9013-69ED6C27CF6A" /* L10n */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -348,6 +354,14 @@
 			);
 			mainGroup = 028607995055DB5B8ACD7E3F;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				438155481BC4416F74A33AA4 /* XCRemoteSwiftPackageReference "AlertToast" */,
+				8D636D0B2A2AF81D1DDE5536 /* XCRemoteSwiftPackageReference "BottomSheet" */,
+				DB2DF0437F606EBAF096BF67 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				71815C2D185B80506D50C4CA /* XCRemoteSwiftPackageReference "lottie-spm" */,
+				0138BB366963A02CC695FCE2 /* XCRemoteSwiftPackageReference "Popovers" */,
+				E7FC2D841BC1D9F9A27EACE7 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
+			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
@@ -386,6 +400,7 @@
 				147B9F551D353FB9D99430E1 /* DesignSystem.swift in Sources */,
 				B249EA08B54F1ABFD946C3EA /* EmptyStateView.swift in Sources */,
 				1ECDEC356759B1F95683563A /* GlobalToolbar.swift in Sources */,
+				7F217E67C49F4DDF91C065B4 /* Haptics.swift in Sources */,
 				37A56A4F9FD002149069707A /* KeychainTokenStore.swift in Sources */,
 				4F65F5ADB1952B0D8938F843 /* ModelContextHolder.swift in Sources */,
 				7026A04CBE57C7AAB19F743D /* Order.swift in Sources */,
@@ -397,6 +412,7 @@
 				7C6ACF5453ABB25037DBC24D /* PushManager.swift in Sources */,
 				9FAA0412FE29CE4F99F5415B /* Shimmer.swift in Sources */,
 				58A3AFDBBCF8292BBE4CD2F3 /* SkeletonOrderRow.swift in Sources */,
+				A375E5ECFE1AACBEB44711E6 /* Toast.swift in Sources */,
 				F6B5D748CBE46B71D837FE0F /* ZarizApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -463,7 +479,7 @@
 		2005D0DF43543735FED0FEBC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Zariz/Supporting/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -574,7 +590,7 @@
 		98C2E06B0D849C87D6981BFC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Zariz/Supporting/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -700,6 +716,57 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0138BB366963A02CC695FCE2 /* XCRemoteSwiftPackageReference "Popovers" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aheze/Popovers";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.4;
+			};
+		};
+		438155481BC4416F74A33AA4 /* XCRemoteSwiftPackageReference "AlertToast" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/elai950/AlertToast";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
+		71815C2D185B80506D50C4CA /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.4.0;
+			};
+		};
+		8D636D0B2A2AF81D1DDE5536 /* XCRemoteSwiftPackageReference "BottomSheet" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weitieda/BottomSheet";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.1;
+			};
+		};
+		DB2DF0437F606EBAF096BF67 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.10.2;
+			};
+		};
+		E7FC2D841BC1D9F9A27EACE7 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/markiv/SwiftUI-Shimmer";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 8F08DF75D3EEF47141B8164F /* Project object */;
 }

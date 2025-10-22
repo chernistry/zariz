@@ -7,6 +7,7 @@ import BackgroundTasks
 struct ZarizApp: App {
     @UIApplicationDelegateAdaptor(PushManager.self) var pushManager
     @StateObject private var session = AppSession()
+    @StateObject private var toast = ToastCenter()
 
     var body: some Scene {
         WindowGroup {
@@ -24,6 +25,7 @@ struct ZarizApp: App {
                     AuthView()
                 }
             }
+            .toastHost()
             .id(session.languageCode)
             .onAppear {
                 // Check if token exists (biometric prompt on access)
@@ -35,6 +37,7 @@ struct ZarizApp: App {
         }
         .modelContainer(for: [OrderEntity.self])
         .environmentObject(session)
+        .environmentObject(toast)
         .environment(\.locale, session.locale)
         .environment(\.layoutDirection, session.isRTL ? .rightToLeft : .leftToRight)
         .backgroundTask(.appRefresh("app.zariz.orderUpdates")) {

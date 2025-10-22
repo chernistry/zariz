@@ -2,7 +2,6 @@ import SwiftUI
 
 struct GlobalNavToolbar: ViewModifier {
     @EnvironmentObject private var session: AppSession
-    @State private var showLanguageDialog = false
     var showHomeInDemo: Bool = true
     var showLogout: Bool = true
 
@@ -10,7 +9,20 @@ struct GlobalNavToolbar: ViewModifier {
         content
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button(action: { showLanguageDialog = true }) {
+                    Menu {
+                        Button(action: { session.languageCode = "he" }) {
+                            HStack { Text("HE"); if session.languageCode == "he" { Image(systemName: "checkmark") } }
+                        }
+                        Button(action: { session.languageCode = "ar" }) {
+                            HStack { Text("AR"); if session.languageCode == "ar" { Image(systemName: "checkmark") } }
+                        }
+                        Button(action: { session.languageCode = "en" }) {
+                            HStack { Text("EN"); if session.languageCode == "en" { Image(systemName: "checkmark") } }
+                        }
+                        Button(action: { session.languageCode = "ru" }) {
+                            HStack { Text("RU"); if session.languageCode == "ru" { Image(systemName: "checkmark") } }
+                        }
+                    } label: {
                         Image(systemName: "globe")
                     }
                     if showLogout {
@@ -21,13 +33,6 @@ struct GlobalNavToolbar: ViewModifier {
                         }
                     }
                 }
-            }
-            .confirmationDialog(String(localized: "choose_language"), isPresented: $showLanguageDialog, titleVisibility: .visible) {
-                Button("HE") { session.languageCode = "he" }
-                Button("AR") { session.languageCode = "ar" }
-                Button("EN") { session.languageCode = "en" }
-                Button("RU") { session.languageCode = "ru" }
-                Button(role: .cancel) { showLanguageDialog = false } label: { Text(String(localized: "cancel")) }
             }
     }
 }
