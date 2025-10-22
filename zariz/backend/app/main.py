@@ -2,6 +2,8 @@ import os
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from .api import api_router
+from .core.limits import limiter
+from slowapi.middleware import SlowAPIMiddleware
 
 app = FastAPI(title="Zariz API", version="0.1.0")
 
@@ -13,5 +15,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
 
 app.include_router(api_router, prefix="/v1")

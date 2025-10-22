@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../libs/api';
+import { withAuth } from '../../libs/withAuth';
 import { useRouter } from 'next/router';
 
-export default function NewOrder() {
+function NewOrder() {
   const router = useRouter();
   const [pickup_address, setPickup] = useState('');
   const [delivery_address, setDelivery] = useState('');
@@ -37,3 +38,4 @@ export default function NewOrder() {
   );
 }
 
+export default withAuth(NewOrder);

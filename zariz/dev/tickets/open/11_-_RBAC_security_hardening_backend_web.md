@@ -66,3 +66,41 @@ Verification
 
 Next
 - Implement realtime SSE + filters in Ticket 12.
+
+---
+
+Analysis (agent)
+- Mode: Execute. Harden backend and web auth.
+- Backend already has JWT parsing and `require_role`; `GET /v1/orders` lacked role checks and leaked all orders.
+- CORS exists (env `CORS_ALLOW_ORIGINS`). Rate limiting absent.
+- Web now stores JWT in `localStorage` and uses Authorization header via `libs/api.ts` from Ticket 10.
+
+Plan
+- Backend
+  - Add global rate limiter: slowapi `Limiter(key_func=get_remote_address)`; register `SlowAPIMiddleware` and `app.state.limiter`.
+  - Guard `GET /v1/orders` with `require_role("store","admin","courier")` and apply object-level checks: store → own orders only; courier → own or `new`; admin → all.
+  - Add per-route rate limits for write endpoints (`POST /orders`, `POST /orders/{id}/claim`, `POST /orders/{id}/status`).
+  - Keep CORS env-driven allowlist.
+- Web
+  - Align login payload with backend: `{subject, role}`.
+  - Add `withAuth` HOC to protect pages and implement Logout clearing token.
+  - Ensure all API calls use Authorization header via `libs/api.ts`.
+- Verification
+  - Run backend tests (pytest) → expect green.
+  - Smoke run web build.
+
+Implementation (executed)
+- Backend
+  - Added `app/core/limits.py` with slowapi `limiter`.
+  - Registered in `app/main.py`: `app.state.limiter = limiter`, `SlowAPIMiddleware`.
+  - Secured `GET /v1/orders` with role dependency + object-level filters.
+  - Added rate limits: `@limiter.limit("10/minute")` on create, `20/minute` on claim, `30/minute` on status.
+  - Updated tests expecting auth on list: `zariz/backend/tests/test_core_apis.py`.
+  - Added dependency `slowapi~=0.1` to `pyproject.toml` and reinstalled venv.
+- Web
+  - Updated `pages/login.tsx` to send `{subject, role}`.
+  - Added `libs/withAuth.tsx`; wrapped `orders` and `orders/new` pages; added Logout button.
+
+Verification (results)
+- Backend: `.venv/bin/pytest -q` → 6 passed.
+- Web: `zariz/web-admin` builds successfully (`yarn build`).

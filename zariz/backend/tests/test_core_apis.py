@@ -29,8 +29,8 @@ def test_create_and_list_orders(client, store_token):
     assert r2.status_code == 200
     assert r2.json()["id"] == order["id"]
 
-    # list
-    r = client.get("/v1/orders")
+    # list (requires auth; store sees its own orders)
+    r = client.get("/v1/orders", headers=auth_header(store_token))
     assert r.status_code == 200
     assert any(o["id"] == order["id"] for o in r.json())
 

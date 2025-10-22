@@ -11,6 +11,7 @@ app/api/routes/devices.py
 app/api/routes/events.py
 app/api/routes/orders.py
 app/core/config.py
+app/core/limits.py
 app/core/security.py
 app/db/base.py
 app/db/session.py
@@ -23,6 +24,7 @@ app/db/models/user.py
 app/services/events.py
 app/worker/push.py
 tests/test_core_apis.py
+tests/test_events.py
 zariz_api.egg-info/PKG-INFO
 zariz_api.egg-info/SOURCES.txt
 zariz_api.egg-info/dependency_links.txt

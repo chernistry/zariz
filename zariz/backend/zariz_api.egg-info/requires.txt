@@ -7,3 +7,4 @@ alembic~=1.13
 python-jose[cryptography]~=3.3
 passlib[bcrypt]~=1.7
 tenacity~=9.0
+slowapi~=0.1

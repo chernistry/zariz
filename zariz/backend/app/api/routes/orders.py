@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..schemas import OrderCreate, OrderRead, StatusUpdate
 from ..deps import get_db, require_role, find_idempotency, save_idempotency
+from ...core.limits import limiter
 from ...db.models.order import Order
 from ...db.models.order_event import OrderEvent
 from ...db.models.device import Device
@@ -19,12 +20,30 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 def list_orders(
     status_filter: Optional[str] = Query(default=None, alias="status"),
     db: Session = Depends(get_db),
+    identity: dict = Depends(require_role("store", "admin", "courier")),
 ):
     q = select(Order)
     if status_filter:
         if status_filter not in {"new", "claimed", "picked_up", "delivered", "canceled"}:
             raise HTTPException(status_code=400, detail="Invalid status filter")
         q = q.where(Order.status == status_filter)
+    # Object-level access
+    role = identity.get("role")
+    sub = identity.get("sub")
+    if role == "store":
+        try:
+            store_id = int(sub)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid store id")
+        q = q.where(Order.store_id == store_id)
+    elif role == "courier":
+        # Couriers can only see orders assigned to them or new ones
+        try:
+            courier_id = int(sub)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid courier id")
+        from sqlalchemy import or_
+        q = q.where(or_(Order.courier_id == courier_id, Order.status == "new"))
     rows = db.execute(q).scalars().all()
     return [
         OrderRead(
@@ -39,6 +58,7 @@ def list_orders(
     ]
 
 
+@limiter.limit("10/minute")
 @router.post("", response_model=OrderRead)
 def create_order(
     payload: OrderCreate,
@@ -99,6 +119,7 @@ def _parse_int(s: str) -> Optional[int]:
         return None
 
 
+@limiter.limit("20/minute")
 @router.post("/{order_id}/claim")
 def claim_order(
     order_id: int,
@@ -140,6 +161,7 @@ def claim_order(
     return out
 
 
+@limiter.limit("30/minute")
 @router.post("/{order_id}/status")
 def update_status(
     order_id: int,

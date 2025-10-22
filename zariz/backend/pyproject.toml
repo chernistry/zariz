@@ -16,6 +16,7 @@ dependencies = [
   "python-jose[cryptography]~=3.3",
   "passlib[bcrypt]~=1.7",
   "tenacity~=9.0",
+  "slowapi~=0.1",
 ]
 
 [tool.setuptools.packages.find]
@@ -25,4 +26,3 @@ include = ["app*"]
 [tool.black]
 line-length = 100
 target-version = ["py312"]
-
