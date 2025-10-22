@@ -62,7 +62,8 @@ struct OrdersListView: View {
                                     id: order.id,
                                     status: order.status,
                                     pickup: order.pickupAddress,
-                                    delivery: order.deliveryAddress
+                                    delivery: order.deliveryAddress,
+                                    boxes: order.boxesCount
                                 )
                             }
                             .buttonStyle(.plain)

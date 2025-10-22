@@ -30,6 +30,8 @@ struct OrderDetailView: View {
                 VStack(alignment: .leading, spacing: DS.Spacing.xl) {
                     headerSection(order: order)
                     locationsSection(order: order)
+                    recipientSection(order: order)
+                    boxesSection(order: order)
                     statusTimeline(order: order)
                 }
                 .padding(.horizontal, DS.Spacing.xl)
@@ -115,13 +117,13 @@ extension OrderDetailView {
 }
 
 private extension OrderDetailView {
-    private struct ActionConfiguration {
+    fileprivate struct ActionConfiguration {
         let promptKey: String
         let isEnabled: Bool
         let trigger: () -> Void
     }
 
-    func actionConfiguration(for order: OrderEntity) -> ActionConfiguration? {
+    fileprivate func actionConfiguration(for order: OrderEntity) -> ActionConfiguration? {
         switch order.status {
         case "new":
             return ActionConfiguration(promptKey: "slide_to_claim", isEnabled: true) {
@@ -180,6 +182,54 @@ private extension OrderDetailView {
                 SectionRow(titleKey: "pickup", value: order.pickupAddress, icon: "shippingbox")
                 Divider().background(DS.Color.divider)
                 SectionRow(titleKey: "delivery", value: order.deliveryAddress, icon: "location")
+            }
+        }
+    }
+
+    @ViewBuilder
+    func recipientSection(order: OrderEntity) -> some View {
+        Card {
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                Text("order_recipient_header")
+                    .font(DS.Font.body.weight(.semibold))
+                    .foregroundStyle(DS.Color.textPrimary)
+                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                    if !order.recipientFullName.isEmpty {
+                        Label(order.recipientFullName, systemImage: "person")
+                    }
+                    if !order.recipientPhone.isEmpty {
+                        Label(order.recipientPhone, systemImage: "phone")
+                    }
+                    if !order.deliveryAddress.isEmpty {
+                        Label(order.deliveryAddress, systemImage: "house")
+                    }
+                }
+                .labelStyle(.titleAndIcon)
+                .foregroundStyle(DS.Color.textSecondary)
+                .font(DS.Font.caption)
+            }
+        }
+    }
+
+    @ViewBuilder
+    func boxesSection(order: OrderEntity) -> some View {
+        Card {
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text("order_boxes_header")
+                    .font(DS.Font.body.weight(.semibold))
+                    .foregroundStyle(DS.Color.textPrimary)
+                HStack {
+                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                        Text(String(format: String(localized: "order_boxes_count"), order.boxesCount))
+                        Text(String(format: String(localized: "order_boxes_multiplier"), order.boxesMultiplier))
+                        if order.priceTotal > 0 {
+                            Text(String(format: String(localized: "order_price_total"), order.priceTotal))
+                        }
+                    }
+                    .font(DS.Font.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    Spacer()
+                }
             }
         }
     }

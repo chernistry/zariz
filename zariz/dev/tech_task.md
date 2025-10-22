@@ -15,7 +15,7 @@ The application allows stores to create orders and couriers to view available on
 
 **1. Courier**
 
-* Authentication (via phone or email)
+* Authentication (email/login + password)
 * View active orders list
 * View order details (pickup, delivery, contact info)
 * Take an order into work
@@ -23,16 +23,17 @@ The application allows stores to create orders and couriers to view available on
 
 **2. Store**
 
-* Create orders (items, address, recipient contact)
+* Create orders (recipient first/last name, phone, full address: street, building, floor, apartment, boxes_count)
 * View order statuses
-* Optionally confirm delivery completion
-* Implemented as a web dashboard (no separate app)
+* Implemented as an iPad flow inside the iOS app (no separate store-facing web panel in MVP)
 
 **3. Administrator**
 
 * Manage users (couriers, stores)
 * View all orders
+* Assign couriers, cancel orders (admin-only)
 * Configure limits and monitor activity
+* Export filtered orders report to CSV
 
 ---
 
@@ -40,7 +41,7 @@ The application allows stores to create orders and couriers to view available on
 
 **1. Backend Service**
 
-* API: FastAPI / NestJS / Django REST
+* API: FastAPI
 * Stores data on orders, users, and statuses
 * JWT authentication
 * REST/GraphQL API for client
@@ -48,24 +49,25 @@ The application allows stores to create orders and couriers to view available on
 
 **2. Database**
 
-* PostgreSQL or Firebase Firestore
+* PostgreSQL
 * Tables:
 
-  * `users` (id, role, name, phone, store_id)
-  * `orders` (id, store_id, courier_id, status, pickup_address, delivery_address, created_at, updated_at)
-  * `status_history` (order_id, status, timestamp)
+  * `users` (id, role, name, email, phone, store_id, password_hash)
+  * `orders` (id, store_id, courier_id, status, pickup_address, delivery_address, recipient_first_name, recipient_last_name, phone, street, building_no, floor, apartment, boxes_count, boxes_multiplier, price_total, created_at, updated_at)
+  * `status_history` (order_id, status, timestamp, actor_type, actor_id, meta)
 
 **3. iOS Application**
 
-* Built with SwiftUI
-* Flow: Login → Orders list → Order details → Status update
-* Async API communication (Combine / async-await)
+* Built with SwiftUI (iOS 17+)
+* Flow: Login (email/password) → Orders list → Order details → Status update; iPad: Store creates orders
+* Offline cache with SwiftData; async API communication (async/await)
 
-**4. Web Panel (optional)**
+**4. Admin Web Panel**
 
-* React / Next.js / Vue
-* Store authentication
-* Order creation and monitoring
+* Next.js + TypeScript
+* Admin authentication
+* Order monitoring, assign courier, cancel order
+* CSV export of filtered orders
 
 ---
 
@@ -75,15 +77,16 @@ The application allows stores to create orders and couriers to view available on
 * Order list view (by status: “available,” “in progress,” “delivered”)
 * Filtering by store and date
 * Courier updates order status
-* Real-time status reflection in store dashboard
+* Real-time status reflection in admin panel
 * No geolocation in MVP
 
 ---
 
 ## 5. Non-functional Requirements
 
-* Scalability: up to 100 couriers and 50 stores
+* Scalability: up to 100 couriers and 10 stores
 * API latency: <300 ms (p95)
+* UI propagation SLA: ≤30 s from status change to admin panel visibility (silent push + polling)
 * Reliability: SLA ≥99%
 * Logging/monitoring via Prometheus / Grafana / Sentry
 * Authentication: JWT + HTTPS
@@ -92,11 +95,11 @@ The application allows stores to create orders and couriers to view available on
 
 ## 6. MVP Stage (First 2–3 Weeks)
 
-1. Create base database schema
-2. Implement CRUD API for orders
-3. Add authentication and roles
-4. iOS client displaying orders
-5. Simple web dashboard for stores
+1. Create base database schema (expanded orders fields including boxes_count and recipient details)
+2. Implement CRUD API for orders; add assign and cancel endpoints (admin-only)
+3. Add authentication and roles (email/password); JWT
+4. iOS client displaying orders; iPad store order creation
+5. Admin web panel (monitoring, assign/cancel, CSV export)
 
 ---
 

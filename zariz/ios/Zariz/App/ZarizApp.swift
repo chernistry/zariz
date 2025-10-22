@@ -14,13 +14,10 @@ struct ZarizApp: App {
         WindowGroup {
             Group {
                 if session.isAuthenticated {
-                    TabView {
-                        NavigationStack { OrdersListView() }
-                            .globalNavToolbar()
-                            .tabItem { Label("orders", systemImage: "list.bullet") }
-                        NavigationStack { ProfileView() }
-                            .globalNavToolbar()
-                            .tabItem { Label("profile", systemImage: "person.crop.circle") }
+                    if session.role == .store {
+                        StoreTabView()
+                    } else {
+                        CourierTabView()
                     }
                 } else {
                     AuthView()
@@ -40,15 +37,31 @@ struct ZarizApp: App {
                     session.isAuthenticated = true
                 }
                 pushManager.registerForPush()
+                if session.storePickupAddress.isEmpty {
+                    session.storePickupAddress = AppConfig.defaultPickupAddress
+                }
             }
         }
-        .modelContainer(for: [OrderEntity.self])
+        .modelContainer(for: [OrderEntity.self, OrderDraftEntity.self])
         .environmentObject(session)
         .environmentObject(toast)
         .environment(\.locale, session.locale)
         .environment(\.layoutDirection, session.isRTL ? .rightToLeft : .leftToRight)
         .backgroundTask(.appRefresh("app.zariz.orderUpdates")) {
             await OrdersService.shared.sync()
+        }
+    }
+}
+
+private struct CourierTabView: View {
+    var body: some View {
+        TabView {
+            NavigationStack { OrdersListView() }
+                .globalNavToolbar()
+                .tabItem { Label("orders", systemImage: "list.bullet") }
+            NavigationStack { ProfileView() }
+                .globalNavToolbar()
+                .tabItem { Label("profile", systemImage: "person.crop.circle") }
         }
     }
 }

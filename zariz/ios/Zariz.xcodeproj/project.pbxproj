@@ -7,17 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		029F1AAC187B31761D4CEA2A /* AlertToast in Frameworks */ = {isa = PBXBuildFile; productRef = 16354204D8673CC6D77B771C /* AlertToast */; };
+		029F1AAC187B31761D4CEA2A /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = D94D89E7EB33C5A157B3C315 /* Shimmer */; };
 		11A6903D1BC28E5F00237E3C /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D7D16A05A7D432E925633F /* AuthService.swift */; };
 		147B9F551D353FB9D99430E1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732DCE00E3F410189C1FFF0C /* DesignSystem.swift */; };
 		17B17D572FC9B0E749B58963 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B513E9406090E0068B305A /* Config.swift */; };
 		18013F2A6B6EC3062A5E57E8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AD9A4FEDB31093BCBB54A493 /* Assets.xcassets */; };
 		1ECDEC356759B1F95683563A /* GlobalToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E808588FAAAC21F2209F26B /* GlobalToolbar.swift */; };
 		2DC001BAE88580D6D903D9C7 /* DemoExitToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6187193AB1EC434B99F91FFB /* DemoExitToolbar.swift */; };
+		3167CBD3DEC88CFBF78A94B1 /* StoreTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D764A3FA4B0275D840AFAD68 /* StoreTabView.swift */; };
 		33ADAE9B4BABAB3E082E81DD /* RemoteAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B17E9A0267CD29BBEF179B /* RemoteAvatarView.swift */; };
 		37A56A4F9FD002149069707A /* KeychainTokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F2695D5AA94E75BBEEA72A /* KeychainTokenStore.swift */; };
 		407B2C6C38C2CCBE64EBA94D /* LottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDAC466A13DF7EFBB9302DD /* LottieView.swift */; };
 		41313F7E7AB7A49B7D31CAFD /* OrderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9608E90D137032F7BD70F4E4 /* OrderRowView.swift */; };
+		42A0B433F4180176B856750D /* StoreHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAACB2ED74F7A61DC658199D /* StoreHomeView.swift */; };
 		48719651DCC78156DC53DEEA /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9553C89BFEB4AEF133B8821 /* ProfileView.swift */; };
 		4E7ED000DC81D71AA9BC2131 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98CA6E09876DAF36DB602FC8 /* AuthViewModel.swift */; };
 		4F65F5ADB1952B0D8938F843 /* ModelContextHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBCEFA717E696436ACD8C4AC /* ModelContextHolder.swift */; };
@@ -27,6 +29,7 @@
 		54182D18F34F90FCC4723E82 /* OrdersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 334CC652083F335B3DA8A8DF /* OrdersListView.swift */; };
 		58A3AFDBBCF8292BBE4CD2F3 /* SkeletonOrderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBB2B3121301D0031517353 /* SkeletonOrderRow.swift */; };
 		7026A04CBE57C7AAB19F743D /* Order.swift in Sources */ = {isa = PBXBuildFile; fileRef = E763DE2C85906EDBD48422A3 /* Order.swift */; };
+		74B4B5843DCC8333CEB1E3D6 /* OrderDraftEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AB9AA6C54C45A2DB689690D /* OrderDraftEntity.swift */; };
 		7C6ACF5453ABB25037DBC24D /* PushManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDEBF3B6806226144A8EBFE /* PushManager.swift */; };
 		7F217E67C49F4DDF91C065B4 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 085C9579D18A11406FFE1007 /* Haptics.swift */; };
 		9221949AACF5E8F349C3ADC2 /* AppSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2509478F261F4155B34A18E6 /* AppSession.swift */; };
@@ -36,10 +39,11 @@
 		A85C014870CDFFA2433CB32D /* SlideToConfirmSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E48A601F539367C4E7C8DBEA /* SlideToConfirmSlider.swift */; };
 		B249EA08B54F1ABFD946C3EA /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F11E75BA087995F443429C /* EmptyStateView.swift */; };
 		B2F8B5E525F0B1A7030917BF /* LanguageMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49E7B597C7DD3EDD24B2D5C /* LanguageMenuButton.swift */; };
-		CA5F1BFEFD4E5896474AC4C2 /* UnlockSlider in Frameworks */ = {isa = PBXBuildFile; productRef = 2A18A39B9CFDD9B9626BCB94 /* UnlockSlider */; };
+		C8D240DB1F943DE43D97A387 /* NewOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB08B78FAC8EEA2F9906D8CA /* NewOrderView.swift */; };
+		CA5F1BFEFD4E5896474AC4C2 /* AlertToast in Frameworks */ = {isa = PBXBuildFile; productRef = 16354204D8673CC6D77B771C /* AlertToast */; };
 		CDC803C780900C54B7FD2D2C /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A7F0B0F87BD6EE046A6C2D /* AuthView.swift */; };
 		CE570E8BB81A9691C3CE34E0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 17FE40D53EE7AA2D255F85D4 /* Localizable.strings */; };
-		F034F6E5B6F6A2854FC63002 /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = D94D89E7EB33C5A157B3C315 /* Shimmer */; };
+		E9375A66727C7662E763B5B0 /* StoreOrdersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F090E43AE1CCF879F8FABEB2 /* StoreOrdersListView.swift */; };
 		F342316107F076C7844421CD /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 0F4DABB45AA2E65839140A02 /* Popovers */; };
 		F6B5D748CBE46B71D837FE0F /* ZarizApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF5D6D4550CCC35AAFE48876 /* ZarizApp.swift */; };
 /* End PBXBuildFile section */
@@ -77,6 +81,7 @@
 		6104438F41AFF9F6002B6458 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		6187193AB1EC434B99F91FFB /* DemoExitToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoExitToolbar.swift; sourceTree = "<group>"; };
 		66F11E75BA087995F443429C /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		6AB9AA6C54C45A2DB689690D /* OrderDraftEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderDraftEntity.swift; sourceTree = "<group>"; };
 		6BDAC466A13DF7EFBB9302DD /* LottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieView.swift; sourceTree = "<group>"; };
 		732DCE00E3F410189C1FFF0C /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		75B513E9406090E0068B305A /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
@@ -88,6 +93,8 @@
 		AD9A4FEDB31093BCBB54A493 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B5F2695D5AA94E75BBEEA72A /* KeychainTokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainTokenStore.swift; sourceTree = "<group>"; };
 		BF50EB73C9FC78108A495DC9 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		CB08B78FAC8EEA2F9906D8CA /* NewOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewOrderView.swift; sourceTree = "<group>"; };
+		D764A3FA4B0275D840AFAD68 /* StoreTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTabView.swift; sourceTree = "<group>"; };
 		D9B17E9A0267CD29BBEF179B /* RemoteAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAvatarView.swift; sourceTree = "<group>"; };
 		DBCEFA717E696436ACD8C4AC /* ModelContextHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelContextHolder.swift; sourceTree = "<group>"; };
 		DF5D6D4550CCC35AAFE48876 /* ZarizApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZarizApp.swift; sourceTree = "<group>"; };
@@ -97,10 +104,11 @@
 		E763DE2C85906EDBD48422A3 /* Order.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Order.swift; sourceTree = "<group>"; };
 		E83AE0C6D45D75A259D16650 /* hero_pulse.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = hero_pulse.json; sourceTree = "<group>"; };
 		EB44D3DC548216F2AF872931 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F090E43AE1CCF879F8FABEB2 /* StoreOrdersListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreOrdersListView.swift; sourceTree = "<group>"; };
 		F0F812CEA9B8B9D0CDBAE33B /* ZarizUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ZarizUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F18AEF646AC0DA6B68C9250D /* ZarizTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ZarizTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F75C9B1E95E07C00A231F486 /* UnlockSlider */ = {isa = PBXFileReference; lastKnownFileType = folder; name = UnlockSlider; path = Packages/UnlockSlider; sourceTree = SOURCE_ROOT; };
 		FA41DFDD4C34C87186BA62B5 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
+		FAACB2ED74F7A61DC658199D /* StoreHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreHomeView.swift; sourceTree = "<group>"; };
 		FFBB2B3121301D0031517353 /* SkeletonOrderRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonOrderRow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -110,9 +118,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F342316107F076C7844421CD /* Popovers in Frameworks */,
-				CA5F1BFEFD4E5896474AC4C2 /* UnlockSlider in Frameworks */,
-				029F1AAC187B31761D4CEA2A /* AlertToast in Frameworks */,
-				F034F6E5B6F6A2854FC63002 /* Shimmer in Frameworks */,
+				CA5F1BFEFD4E5896474AC4C2 /* AlertToast in Frameworks */,
+				029F1AAC187B31761D4CEA2A /* Shimmer in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -122,7 +129,6 @@
 		028607995055DB5B8ACD7E3F = {
 			isa = PBXGroup;
 			children = (
-				F6A74877AC345F9CBDE2D453 /* Packages */,
 				BF2CEA4F64E34F8278423C1A /* Zariz */,
 				701497C7F7AE46E5BBA49559 /* Products */,
 			);
@@ -163,6 +169,17 @@
 				A9553C89BFEB4AEF133B8821 /* ProfileView.swift */,
 			);
 			path = Profile;
+			sourceTree = "<group>";
+		};
+		3581B7867A93CCB4E84E4DF3 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				CB08B78FAC8EEA2F9906D8CA /* NewOrderView.swift */,
+				FAACB2ED74F7A61DC658199D /* StoreHomeView.swift */,
+				F090E43AE1CCF879F8FABEB2 /* StoreOrdersListView.swift */,
+				D764A3FA4B0275D840AFAD68 /* StoreTabView.swift */,
+			);
+			path = Store;
 			sourceTree = "<group>";
 		};
 		60C0AB242EFCA6286B27D329 /* DesignSystem */ = {
@@ -223,7 +240,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-
+		7476C8DC654BEA1DD034A867 /* Lottie */ = {
+			isa = PBXGroup;
+			children = (
+				E83AE0C6D45D75A259D16650 /* hero_pulse.json */,
+			);
+			path = Lottie;
+			sourceTree = "<group>";
+		};
 		751055E3807C921C6945FB82 /* API */ = {
 			isa = PBXGroup;
 			children = (
@@ -237,6 +261,7 @@
 			isa = PBXGroup;
 			children = (
 				E763DE2C85906EDBD48422A3 /* Order.swift */,
+				6AB9AA6C54C45A2DB689690D /* OrderDraftEntity.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -248,6 +273,7 @@
 				AE34E58BB7AA010806056C01 /* Orders */,
 				1C2AD50917FA1239F491449B /* Profile */,
 				66B1EA0D0C8A823E48BDCDB9 /* Shared */,
+				3581B7867A93CCB4E84E4DF3 /* Store */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -299,15 +325,7 @@
 			path = Persistence;
 			sourceTree = "<group>";
 		};
-		F6A74877AC345F9CBDE2D453 /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				F75C9B1E95E07C00A231F486 /* UnlockSlider */,
-			);
-			path = Packages;
-			sourceTree = "<group>";
-		};
-		"TEMP_44D0E22E-457B-4B1A-84F9-F2A2EDCDDAFF" /* L10n */ = {
+		"TEMP_DC5643D4-10CF-46B2-BED1-705B87A378F1" /* L10n */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -350,7 +368,6 @@
 			name = Zariz;
 			packageProductDependencies = (
 				0F4DABB45AA2E65839140A02 /* Popovers */,
-				2A18A39B9CFDD9B9626BCB94 /* UnlockSlider */,
 				16354204D8673CC6D77B771C /* AlertToast */,
 				D94D89E7EB33C5A157B3C315 /* Shimmer */,
 			);
@@ -407,7 +424,6 @@
 				438155481BC4416F74A33AA4 /* XCRemoteSwiftPackageReference "AlertToast" */,
 				0138BB366963A02CC695FCE2 /* XCRemoteSwiftPackageReference "Popovers" */,
 				E7FC2D841BC1D9F9A27EACE7 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
-				5D5471D444314EEC615D68BE /* XCLocalSwiftPackageReference "Packages/UnlockSlider" */,
 			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
@@ -424,10 +440,11 @@
 		B2EE57965FE124CF97EB0701 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
-                files = (
-                    18013F2A6B6EC3062A5E57E8 /* Assets.xcassets in Resources */,
-                    CE570E8BB81A9691C3CE34E0 /* Localizable.strings in Resources */,
-                );
+			files = (
+				18013F2A6B6EC3062A5E57E8 /* Assets.xcassets in Resources */,
+				CE570E8BB81A9691C3CE34E0 /* Localizable.strings in Resources */,
+				501EA57C54D3C5261CCC0765 /* hero_pulse.json in Resources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
@@ -436,7 +453,7 @@
 		2829DB666B21827FC946942F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
-                files = (
+			files = (
 				50E88351DA9ABDC8830D7B50 /* APIClient.swift in Sources */,
 				9221949AACF5E8F349C3ADC2 /* AppSession.swift in Sources */,
 				11A6903D1BC28E5F00237E3C /* AuthService.swift in Sources */,
@@ -449,10 +466,13 @@
 				1ECDEC356759B1F95683563A /* GlobalToolbar.swift in Sources */,
 				7F217E67C49F4DDF91C065B4 /* Haptics.swift in Sources */,
 				37A56A4F9FD002149069707A /* KeychainTokenStore.swift in Sources */,
-                    B2F8B5E525F0B1A7030917BF /* LanguageMenuButton.swift in Sources */,
+				B2F8B5E525F0B1A7030917BF /* LanguageMenuButton.swift in Sources */,
+				407B2C6C38C2CCBE64EBA94D /* LottieView.swift in Sources */,
 				4F65F5ADB1952B0D8938F843 /* ModelContextHolder.swift in Sources */,
+				C8D240DB1F943DE43D97A387 /* NewOrderView.swift in Sources */,
 				7026A04CBE57C7AAB19F743D /* Order.swift in Sources */,
 				9F24442340C119A5B626E5D2 /* OrderDetailView.swift in Sources */,
+				74B4B5843DCC8333CEB1E3D6 /* OrderDraftEntity.swift in Sources */,
 				41313F7E7AB7A49B7D31CAFD /* OrderRowView.swift in Sources */,
 				54182D18F34F90FCC4723E82 /* OrdersListView.swift in Sources */,
 				52CEB3BA1F838E9904781C0E /* OrdersService.swift in Sources */,
@@ -462,6 +482,9 @@
 				9FAA0412FE29CE4F99F5415B /* Shimmer.swift in Sources */,
 				58A3AFDBBCF8292BBE4CD2F3 /* SkeletonOrderRow.swift in Sources */,
 				A85C014870CDFFA2433CB32D /* SlideToConfirmSlider.swift in Sources */,
+				42A0B433F4180176B856750D /* StoreHomeView.swift in Sources */,
+				E9375A66727C7662E763B5B0 /* StoreOrdersListView.swift in Sources */,
+				3167CBD3DEC88CFBF78A94B1 /* StoreTabView.swift in Sources */,
 				A375E5ECFE1AACBEB44711E6 /* Toast.swift in Sources */,
 				F6B5D748CBE46B71D837FE0F /* ZarizApp.swift in Sources */,
 			);
@@ -767,13 +790,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		5D5471D444314EEC615D68BE /* XCLocalSwiftPackageReference "Packages/UnlockSlider" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/UnlockSlider;
-		};
-/* End XCLocalSwiftPackageReference section */
-
 /* Begin XCRemoteSwiftPackageReference section */
 		0138BB366963A02CC695FCE2 /* XCRemoteSwiftPackageReference "Popovers" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -811,10 +827,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 438155481BC4416F74A33AA4 /* XCRemoteSwiftPackageReference "AlertToast" */;
 			productName = AlertToast;
-		};
-		2A18A39B9CFDD9B9626BCB94 /* UnlockSlider */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = UnlockSlider;
 		};
 		D94D89E7EB33C5A157B3C315 /* Shimmer */ = {
 			isa = XCSwiftPackageProductDependency;

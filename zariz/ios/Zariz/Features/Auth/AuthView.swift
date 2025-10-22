@@ -21,7 +21,10 @@ struct AuthView: View {
         }
         .onTapGesture { isLoginFocused = false }
         .onChange(of: vm.isAuthenticated) { _, newValue in
-            if newValue { session.isAuthenticated = true }
+            if newValue {
+                session.role = UserRole(rawValue: vm.role) ?? .courier
+                session.isAuthenticated = true
+            }
         }
     }
 
@@ -154,6 +157,7 @@ struct AuthView: View {
                 let fakeToken = "demo:\(input)"
                 do {
                     try KeychainTokenStore.save(token: fakeToken)
+                    session.role = UserRole(rawValue: input) ?? .courier
                     vm.isAuthenticated = true
                     Haptics.success()
                 } catch {
@@ -161,6 +165,9 @@ struct AuthView: View {
                 }
             } else {
                 await vm.signIn()
+                if vm.isAuthenticated {
+                    session.role = UserRole(rawValue: vm.role) ?? .courier
+                }
             }
         }
     }

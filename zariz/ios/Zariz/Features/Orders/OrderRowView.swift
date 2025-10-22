@@ -5,6 +5,7 @@ struct OrderRowView: View {
     let status: String
     let pickup: String
     let delivery: String
+    let boxes: Int
 
     private func badge(for status: String) -> StatusBadge {
         switch status {
@@ -49,6 +50,16 @@ struct OrderRowView: View {
                         } icon: {
                             Image(systemName: "location")
                                 .foregroundStyle(DS.Color.statusClaimed)
+                        }
+                        if boxes > 0 {
+                            Label {
+                                Text(String(format: String(localized: "order_row_boxes"), boxes))
+                                    .font(DS.Font.caption)
+                                    .foregroundStyle(DS.Color.textSecondary)
+                            } icon: {
+                                Image(systemName: "shippingbox.fill")
+                                    .foregroundStyle(DS.Color.statusPicked)
+                            }
                         }
                     }
                     .labelStyle(.titleAndIcon)
