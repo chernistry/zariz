@@ -3,18 +3,13 @@ import SwiftUI
 struct AuthView: View {
     @StateObject private var vm = AuthViewModel()
     @EnvironmentObject private var session: AppSession
+    @State private var showLanguageDialog = false
 
     var body: some View {
         VStack(spacing: DS.Spacing.lg) {
             HStack {
                 Spacer()
-                // Language switcher in auth screen (visible everywhere)
-                Menu {
-                    Button("HE") { session.languageCode = "he" }
-                    Button("AR") { session.languageCode = "ar" }
-                    Button("EN") { session.languageCode = "en" }
-                    Button("RU") { session.languageCode = "ru" }
-                } label: { Image(systemName: "globe") }
+                Button { showLanguageDialog = true } label: { Image(systemName: "globe") }
             }
             Text("welcome_title").font(.largeTitle).bold()
             TextField("phone_or_email", text: $vm.login)
@@ -55,6 +50,13 @@ struct AuthView: View {
             if let err = vm.error { Text(err).foregroundStyle(.red) }
         }
         .padding(DS.Spacing.xl)
+        .confirmationDialog(String(localized: "choose_language"), isPresented: $showLanguageDialog, titleVisibility: .visible) {
+            Button("HE") { session.languageCode = "he" }
+            Button("AR") { session.languageCode = "ar" }
+            Button("EN") { session.languageCode = "en" }
+            Button("RU") { session.languageCode = "ru" }
+            Button(role: .cancel) { showLanguageDialog = false } label: { Text(String(localized: "cancel")) }
+        }
         .onChange(of: vm.isAuthenticated) { _, newValue in
             if newValue { session.isAuthenticated = true }
         }

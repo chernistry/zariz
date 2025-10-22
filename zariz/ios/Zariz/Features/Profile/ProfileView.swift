@@ -5,11 +5,11 @@ struct ProfileView: View {
     var body: some View {
         VStack(spacing: DS.Spacing.lg) {
             Image(systemName: "person.crop.circle.fill").font(.system(size: 72)).foregroundStyle(.secondary)
-            Text("Profile").font(.title2).bold()
+            Text(String(localized: "profile")).font(.title2).bold()
             if session.isDemoMode {
-                Text("Demo Mode is ON").foregroundStyle(.orange)
+                Text(String(localized: "demo_mode")).foregroundStyle(.orange)
             }
-            Button("Log Out") {
+            Button(String(localized: "logout")) {
                 KeychainTokenStore.clear()
                 session.isAuthenticated = false
                 session.isDemoMode = false

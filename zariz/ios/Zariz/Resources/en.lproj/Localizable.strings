@@ -27,3 +27,5 @@
 "status_picked_up" = "Picked";
 "status_delivered" = "Done";
 "status_canceled" = "Canceled";
+"choose_language" = "Choose language";
+"cancel" = "Cancel";
