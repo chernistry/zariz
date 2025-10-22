@@ -54,7 +54,7 @@ Progress: mark done items with [x] and adjust the above ETA line-by-line as you 
 
  - [x] 10. Web panel scaffold (Next.js/TS), auth, routes
  - [x] 11. RBAC + security hardening (backend + web)
-- [ ] 12. Realtime status (SSE), list filters, UX polish
+ - [x] 12. Realtime status (SSE), list filters, UX polish
 
 ## Stage D — Quality & Release
 

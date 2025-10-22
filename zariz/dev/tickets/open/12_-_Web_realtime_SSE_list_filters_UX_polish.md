@@ -82,3 +82,26 @@ Verification
 
 Next
 - E2E testing and contracts in Ticket 13.
+
+---
+
+Analysis (agent)
+- SSE endpoint available at `/v1/events/sse` (unauthenticated). Orders API requires JWT.
+- Add client-side EventSource and refresh orders on `order.*` events.
+- Add status filter; optional date input prepared for future backend support.
+
+Plan
+- Add `zariz/web-admin/libs/sse.ts` helper.
+- Enhance `zariz/web-admin/pages/orders.tsx` with:
+  - `status` filter select and query param on fetch.
+  - Subscription to `${API_BASE}/events/sse` that triggers `refresh()` on order events.
+  - Keep Authorization via existing `api()` wrapper.
+- Verify build and manual smoke.
+
+Implementation (executed)
+- Added `libs/sse.ts` with `subscribe(url, onData)`.
+- Updated `pages/orders.tsx`: status filter, `refresh()` using `api()`, SSE subscription to `${API_BASE}/events/sse`, logout button preserved.
+- Built app successfully (`yarn build`).
+
+Verification (results)
+- Build output lists `/orders` page and bundles. With backend running, creating orders emits SSE events; page refreshes orders automatically.
