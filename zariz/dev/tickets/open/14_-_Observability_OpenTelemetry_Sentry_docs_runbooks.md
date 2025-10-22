@@ -64,3 +64,29 @@ Verification
 
 Next
 - Release and handover in Ticket 15.
+
+---
+
+Analysis (agent)
+- Add JSON logs, request IDs, latency; optional OTel and Sentry; docs and runbooks.
+- Keep observability opt-in via environment to avoid coupling and heavy deps.
+
+Plan
+- Backend
+  - Create `app/core/logging.py` with JSON formatter and `setup_logging()`.
+  - In `app/main.py` call `setup_logging()`, add HTTP middleware for request ID + latency logs.
+  - Optional OTel: instrument FastAPI when `OTEL_ENABLED=1` (try/except import).
+  - Optional Sentry: init when `SENTRY_DSN` present; sampling via `SENTRY_TRACES_SAMPLE_RATE`.
+- Docs
+  - Add Observability section to root `README.md`.
+  - Add `zariz/dev/docs/runbooks.md` covering DB restore, JWT rotation, APNs key rotation, scaling.
+- Verification
+  - Run pytest; ensure no breakage.
+
+Implementation (executed)
+- Backend: added `app/core/logging.py`; updated `app/main.py` with logging, request IDs, OTel/Sentry hooks.
+- Docs: appended Observability to `README.md`; added `zariz/dev/docs/runbooks.md`.
+- Tests: backend suite still green.
+
+Verification (results)
+- `.venv/bin/pytest -q` → all tests pass.

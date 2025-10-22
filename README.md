@@ -107,6 +107,13 @@ cd web && npm install && npm run dev
 open ios/Zariz.xcodeproj
 ```
 
+## 🔎 Observability
+
+- Backend logs are JSON-formatted to stdout with request IDs and latency metrics. Configure CORS via `CORS_ALLOW_ORIGINS`.
+- Optional OpenTelemetry tracing can be enabled by setting `OTEL_ENABLED=1` and configuring an OTLP collector. The app auto-instruments FastAPI if the packages are available.
+- Optional Sentry error tracking can be enabled with `SENTRY_DSN` (sampling via `SENTRY_TRACES_SAMPLE_RATE`, default 0.1).
+- See runbooks: `zariz/dev/docs/runbooks.md`.
+
 ## 📚 Resources
 
 - [Technical Specification](dev/tech_task.md) - Complete system requirements
