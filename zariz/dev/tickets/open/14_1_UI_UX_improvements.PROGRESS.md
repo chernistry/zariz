@@ -35,3 +35,4 @@ Next Steps (Pass 2)
 - Bottom action bar for Order Detail; animate transitions. [DONE: native .safeAreaInset bar]
 - Accessibility + RTL polish across all screens; add identifiers for UITests.
 - SPM declarations added to project.yml (BottomSheet, Popovers, AlertToast, Shimmer, Lottie, Kingfisher). Not linked to targets to avoid build errors offline; resolve and link in Xcode when network is available.
+  - Pinned SwiftUI-Shimmer to 1.5.1 (latest), due to resolution error with 1.6.0.

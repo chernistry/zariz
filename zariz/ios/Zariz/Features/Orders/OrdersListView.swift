@@ -1,5 +1,6 @@
-import SwiftUI
+import Kingfisher
 import SwiftData
+import SwiftUI
 
 struct OrdersListView: View {
     @Environment(\.modelContext) private var ctx
@@ -8,22 +9,33 @@ struct OrdersListView: View {
     @State private var selectedTab: Int = 0
     @State private var isLoading: Bool = true
 
+    private let heroImageURL = URL(string: "https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1200&q=80")
+
     var body: some View {
-        VStack(spacing: 0) {
-            Picker("", selection: $selectedTab) {
-                Text("filter_new").tag(0)
-                Text("filter_active").tag(1)
-                Text("filter_done").tag(2)
+        ZStack {
+            DS.Color.background.ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: DS.Spacing.xl) {
+                    heroHeader
+                    Picker("", selection: $selectedTab) {
+                        Text("filter_new").tag(0)
+                        Text("filter_active").tag(1)
+                        Text("filter_done").tag(2)
+                    }
+                    .pickerStyle(.segmented)
+
+                    summaryRow
+
+                    ordersSection
+                }
+                .padding(.horizontal, DS.Spacing.xl)
+                .padding(.vertical, DS.Spacing.xl)
             }
-            .pickerStyle(.segmented)
-            .padding()
-            
-            TabView(selection: $selectedTab) {
-                ordersList(for: .new).tag(0)
-                ordersList(for: .active).tag(1)
-                ordersList(for: .done).tag(2)
+            .refreshable {
+                isLoading = true
+                await OrdersService.shared.sync()
+                isLoading = false
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
         }
         .navigationDestination(for: Int.self) { id in OrderDetailView(orderId: id) }
         .navigationTitle("orders")
@@ -37,28 +49,30 @@ struct OrdersListView: View {
         .onAppear { ModelContextHolder.shared.context = ctx }
     }
 
-    @ViewBuilder
-    private func ordersList(for filter: Filter) -> some View {
-        let list = ordersFiltered(filter)
-        if isLoading {
-            List {
-                ForEach(0..<5, id: \.self) { _ in SkeletonOrderRow() }
-            }
-            .listStyle(.plain)
-        } else if list.isEmpty {
-            ContentUnavailableView("no_orders_title", systemImage: "tray", description: Text("no_orders_subtitle"))
-        } else {
-            List(list) { o in
-                NavigationLink(value: o.id) {
-                    OrderRowView(id: o.id, status: o.status, pickup: o.pickupAddress, delivery: o.deliveryAddress)
+    private var ordersSection: some View {
+        Group {
+            if isLoading {
+                skeletonList
+            } else {
+                let list = ordersFiltered(currentFilter)
+                if list.isEmpty {
+                    emptyState
+                } else {
+                    LazyVStack(spacing: DS.Spacing.md) {
+                        ForEach(list) { order in
+                            NavigationLink(value: order.id) {
+                                OrderRowView(
+                                    id: order.id,
+                                    status: order.status,
+                                    pickup: order.pickupAddress,
+                                    delivery: order.deliveryAddress
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .transition(.opacity.combined(with: .scale))
                 }
-                .listRowSeparator(.hidden)
-            }
-            .listStyle(.plain)
-            .refreshable {
-                isLoading = true
-                await OrdersService.shared.sync()
-                isLoading = false
             }
         }
     }
@@ -75,4 +89,104 @@ struct OrdersListView: View {
     }
 
     private enum Filter: Hashable { case new, active, done }
+
+    private var currentFilter: Filter {
+        switch selectedTab {
+        case 1: return .active
+        case 2: return .done
+        default: return .new
+        }
+    }
+
+    private var heroHeader: some View {
+        Card {
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                        Text("orders_hero_title")
+                            .font(DS.Font.title)
+                            .foregroundStyle(DS.Color.textPrimary)
+                        Text("orders_hero_subtitle")
+                            .font(DS.Font.body)
+                            .foregroundStyle(DS.Color.textSecondary)
+                    }
+                    Spacer()
+                }
+                KFImage(heroImageURL)
+                    .placeholder { heroPlaceholder }
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 120)
+                    .clipShape(RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous))
+            }
+        }
+    }
+
+    private var heroPlaceholder: some View {
+        RoundedRectangle(cornerRadius: DS.Radius.medium)
+            .fill(DS.Color.surfaceElevated)
+            .frame(height: 120)
+            .shimmer()
+    }
+
+    private var summaryRow: some View {
+        let total = orders.count
+        let newCount = ordersFiltered(.new).count
+        let activeCount = ordersFiltered(.active).count
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DS.Spacing.md) {
+                SummaryChip(titleKey: "orders_summary_total", value: total)
+                SummaryChip(titleKey: "orders_summary_new", value: newCount)
+                SummaryChip(titleKey: "orders_summary_active", value: activeCount)
+            }
+            .padding(.vertical, DS.Spacing.sm)
+        }
+    }
+
+    private var skeletonList: some View {
+        LazyVStack(spacing: DS.Spacing.md) {
+            ForEach(0..<5, id: \.self) { _ in SkeletonOrderRow() }
+        }
+        .transition(.opacity)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: DS.Spacing.md) {
+            Image(systemName: "tray")
+                .font(.system(size: 48))
+                .foregroundStyle(DS.Color.brandPrimary)
+            Text("no_orders_title")
+                .font(DS.Font.title)
+                .foregroundStyle(DS.Color.textPrimary)
+            Text("no_orders_subtitle")
+                .font(DS.Font.body)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(DS.Color.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DS.Spacing.xl)
+    }
+}
+
+private struct SummaryChip: View {
+    let titleKey: LocalizedStringKey
+    let value: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+            Text(titleKey)
+                .font(DS.Font.caption)
+                .foregroundStyle(DS.Color.textSecondary)
+            Text("\(value)")
+                .font(DS.Font.numeric(weight: .bold))
+                .foregroundStyle(DS.Color.textPrimary)
+        }
+        .padding(.vertical, DS.Spacing.md)
+        .padding(.horizontal, DS.Spacing.lg)
+        .background(
+            RoundedRectangle(cornerRadius: DS.Radius.large, style: .continuous)
+                .fill(DS.Color.surfaceElevated)
+                .shadow(color: DS.Color.brandPrimary.opacity(0.08), radius: 12, x: 0, y: 6)
+        )
+    }
 }

@@ -1,5 +1,6 @@
-import SwiftUI
+import AlertToast
 import SwiftData
+import SwiftUI
 import UserNotifications
 import BackgroundTasks
 
@@ -25,7 +26,13 @@ struct ZarizApp: App {
                     AuthView()
                 }
             }
-            .toastHost()
+            .background(DS.Color.background.ignoresSafeArea())
+            .toast(
+                isPresenting: $toast.isPresenting,
+                duration: toast.duration,
+                tapToDismiss: true,
+                alert: { toast.currentToast }
+            )
             .id(session.languageCode)
             .onAppear {
                 // Check if token exists (biometric prompt on access)

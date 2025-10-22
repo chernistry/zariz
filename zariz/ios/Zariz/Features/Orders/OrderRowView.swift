@@ -18,18 +18,43 @@ struct OrderRowView: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: DS.Spacing.md) {
-            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                HStack {
-                    Text("#\(id)").font(.headline)
-                    badge(for: status)
+        Card {
+            HStack(alignment: .top, spacing: DS.Spacing.lg) {
+                RemoteAvatarView(identifier: "order-\(id)-\(pickup)")
+                    .frame(width: 60, height: 60)
+                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                    HStack(spacing: DS.Spacing.sm) {
+                        Text("#\(id)")
+                            .font(DS.Font.numeric())
+                            .foregroundStyle(DS.Color.textPrimary)
+                        badge(for: status)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.footnote)
+                            .foregroundStyle(DS.Color.textSecondary)
+                    }
+                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                        Label {
+                            Text(pickup)
+                                .font(DS.Font.body)
+                                .foregroundStyle(DS.Color.textPrimary)
+                        } icon: {
+                            Image(systemName: "shippingbox")
+                                .foregroundStyle(DS.Color.statusNew)
+                        }
+                        Label {
+                            Text(delivery)
+                                .font(DS.Font.body)
+                                .foregroundStyle(DS.Color.textPrimary)
+                        } icon: {
+                            Image(systemName: "location")
+                                .foregroundStyle(DS.Color.statusClaimed)
+                        }
+                    }
+                    .labelStyle(.titleAndIcon)
                 }
-                Text("Pickup: \(pickup)").font(.subheadline).foregroundStyle(DS.Color.textSecondary)
-                Text("Delivery: \(delivery)").font(.subheadline).foregroundStyle(DS.Color.textSecondary)
             }
-            Spacer()
-            Image(systemName: "chevron.right").foregroundStyle(.tertiary)
         }
-        .padding(.vertical, DS.Spacing.sm)
+        .contentShape(Rectangle())
     }
 }

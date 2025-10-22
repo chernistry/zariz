@@ -1,60 +1,49 @@
+import AlertToast
 import SwiftUI
 
 @MainActor
 final class ToastCenter: ObservableObject {
-    struct Item: Identifiable {
-        enum Style { case info, success, error }
-        let id = UUID()
-        let text: LocalizedStringKey
-        let style: Style
-        let icon: String?
+    enum Style { case info, success, error }
+
+    @Published var isPresenting = false
+    @Published private var toastPayload: AlertToast?
+
+    private(set) var duration: TimeInterval = 1.8
+
+    var currentToast: AlertToast {
+        toastPayload ?? AlertToast(displayMode: .hud, type: .regular, title: "")
     }
 
-    @Published var current: Item?
-
-    func show(_ text: LocalizedStringKey, style: Item.Style = .info, icon: String? = nil, duration: TimeInterval = 1.6) {
-        current = Item(text: text, style: style, icon: icon)
-
-        let delay = UInt64(max(duration, 0) * 1_000_000_000)
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: delay)
-            guard let self else { return }
-            withAnimation(.easeOut(duration: 0.2)) { self.current = nil }
-        }
-    }
-}
-
-private struct ToastView: View {
-    let item: ToastCenter.Item
-    var body: some View {
-        HStack(spacing: 10) {
-            if let icon = item.icon { Image(systemName: icon) }
-            Text(item.text)
-                .font(.subheadline)
-                .multilineTextAlignment(.leading)
-        }
-        .foregroundStyle(.primary)
-        .padding(.vertical, 10)
-        .padding(.horizontal, 14)
-        .background(.ultraThinMaterial, in: Capsule())
-        .shadow(radius: 2, x: 0, y: 1)
+    func show(_ titleKey: LocalizedStringKey,
+              subtitle subtitleKey: LocalizedStringKey? = nil,
+              style: Style = .info,
+              icon: String? = nil,
+              duration: TimeInterval = 1.8) {
+        let title = String(localized: String.LocalizationValue(stringLiteral: "\(titleKey)"))
+        let subtitle = subtitleKey.map { String(localized: String.LocalizationValue(stringLiteral: "\($0)")) }
+        toastPayload = AlertToast(
+            displayMode: .hud,
+            type: style.alertType(fallbackIcon: icon),
+            title: title,
+            subTitle: subtitle
+        )
+        self.duration = duration
+        isPresenting = true
     }
 }
 
-struct ToastHost: ViewModifier {
-    @EnvironmentObject var toast: ToastCenter
-    func body(content: Content) -> some View {
-        ZStack(alignment: .top) {
-            content
-            if let item = toast.current {
-                ToastView(item: item)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .padding(.top, 12)
+private extension ToastCenter.Style {
+    func alertType(fallbackIcon: String?) -> AlertToast.AlertType {
+        switch self {
+        case .info:
+            if let icon = fallbackIcon {
+                return .systemImage(icon, DS.Color.brandPrimary)
             }
+            return .regular
+        case .success:
+            return .complete(DS.Color.success)
+        case .error:
+            return .error(DS.Color.error)
         }
     }
-}
-
-extension View {
-    func toastHost() -> some View { modifier(ToastHost()) }
 }
