@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import UserNotifications
+import SwiftData
 
 @MainActor
 final class PushManager: NSObject, ObservableObject, UNUserNotificationCenterDelegate, UIApplicationDelegate {
@@ -19,6 +20,14 @@ final class PushManager: NSObject, ObservableObject, UNUserNotificationCenterDel
         let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         self.deviceToken = token
         Task { await self.registerDeviceWithBackend(token: token) }
+    }
+
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        if let ctx = ModelContextHolder.shared.context {
+            Task { await OrdersService.shared.sync(context: ctx); completionHandler(.newData) }
+        } else {
+            completionHandler(.noData)
+        }
     }
 
     private func authHeader() -> String? {
@@ -40,4 +49,3 @@ final class PushManager: NSObject, ObservableObject, UNUserNotificationCenterDel
         _ = try? await URLSession.shared.data(for: req)
     }
 }
-

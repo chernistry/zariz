@@ -15,10 +15,13 @@ final class AuthService {
         req.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
         let (data, resp) = try await URLSession.shared.data(for: req)
         if let http = resp as? HTTPURLResponse, http.statusCode >= 400 {
-            throw NSError(domain: "Auth", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: "Login failed ("](http.statusCode)")])
+            throw NSError(
+                domain: "Auth",
+                code: http.statusCode,
+                userInfo: [NSLocalizedDescriptionKey: "Login failed (\(http.statusCode))"]
+            )
         }
         let tok = try JSONDecoder().decode(TokenResponse.self, from: data)
         return tok.access_token
     }
 }
-

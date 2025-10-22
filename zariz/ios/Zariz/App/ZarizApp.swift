@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UserNotifications
+import BackgroundTasks
 
 @main
 struct ZarizApp: App {
@@ -11,7 +12,7 @@ struct ZarizApp: App {
         WindowGroup {
             Group {
                 if session.isAuthenticated {
-                    Text("Welcome") // placeholder; Orders UI in Ticket 8
+                    NavigationStack { OrdersListView() }
                 } else {
                     AuthView()
                 }
@@ -26,5 +27,10 @@ struct ZarizApp: App {
         }
         .modelContainer(for: [OrderEntity.self])
         .environmentObject(session)
+        .backgroundTask(.appRefresh("app.zariz.orderUpdates")) {
+            if let ctx = ModelContextHolder.shared.context {
+                await OrdersService.shared.sync(context: ctx)
+            }
+        }
     }
 }

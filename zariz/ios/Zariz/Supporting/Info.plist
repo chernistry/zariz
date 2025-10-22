@@ -29,5 +29,14 @@
     </dict>
     <key>NSFaceIDUsageDescription</key>
     <string>Authenticate to access your secure session.</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>remote-notification</string>
+        <string>fetch</string>
+    </array>
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>app.zariz.orderUpdates</string>
+    </array>
 </dict>
 </plist>
