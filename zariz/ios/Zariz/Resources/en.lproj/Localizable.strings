@@ -52,3 +52,7 @@
 "toast_picked_up" = "Order picked up";
 "toast_delivered" = "Order delivered";
 "toast_generic_error" = "Something went wrong. Try again.";
+"slide_to_claim" = "Slide to claim";
+"slide_to_pickup" = "Slide to pick up";
+"slide_to_deliver" = "Slide to deliver";
+"release_to_confirm" = "Release to confirm";

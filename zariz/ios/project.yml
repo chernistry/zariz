@@ -8,15 +8,14 @@ packages:
   Popovers:
     url: https://github.com/aheze/Popovers
     from: 1.0.4
+  UnlockSlider:
+    path: Packages/UnlockSlider
   AlertToast:
     url: https://github.com/elai950/AlertToast
     from: 1.3.0
   Shimmer:
     url: https://github.com/markiv/SwiftUI-Shimmer
     from: 1.5.1
-  Lottie:
-    url: https://github.com/airbnb/lottie-spm
-    from: 4.4.0
 settings:
   base:
     SWIFT_VERSION: '6.0'
@@ -40,12 +39,12 @@ targets:
 
       - package: Popovers
         product: Popovers
+      - package: UnlockSlider
+        product: UnlockSlider
       - package: AlertToast
         product: AlertToast
       - package: Shimmer
         product: Shimmer
-      - package: Lottie
-        product: Lottie
   ZarizTests:
     type: bundle.unit-test
     platform: iOS

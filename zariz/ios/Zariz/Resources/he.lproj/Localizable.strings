@@ -52,3 +52,7 @@
 "toast_picked_up" = "ההזמנה נאספה";
 "toast_delivered" = "ההזמנה נמסרה";
 "toast_generic_error" = "אירעה שגיאה. נסו שוב.";
+"slide_to_claim" = "החלק כדי לשייך";
+"slide_to_pickup" = "החלק כדי לאסוף";
+"slide_to_deliver" = "החלק למסירה";
+"release_to_confirm" = "שחררו לאישור";

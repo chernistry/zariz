@@ -52,3 +52,7 @@
 "toast_picked_up" = "تم التقاط الطلب";
 "toast_delivered" = "تم تسليم الطلب";
 "toast_generic_error" = "حدث خطأ، حاول مرة أخرى.";
+"slide_to_claim" = "اسحب للتعيين";
+"slide_to_pickup" = "اسحب للاستلام";
+"slide_to_deliver" = "اسحب للتسليم";
+"release_to_confirm" = "حرر للتأكيد";

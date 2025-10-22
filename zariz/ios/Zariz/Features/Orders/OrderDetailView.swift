@@ -6,6 +6,8 @@ struct OrderDetailView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var items: [OrderEntity]
     @EnvironmentObject private var toast: ToastCenter
+    @Environment(\.locale) private var locale
+    @State private var isPerformingAction = false
 
     init(orderId: Int) {
         self.orderId = orderId
@@ -46,28 +48,19 @@ struct OrderDetailView: View {
 extension OrderDetailView {
     @ViewBuilder
     fileprivate var bottomActionBar: some View {
-        if let order = items.first {
-            let (title, action, enabled): (LocalizedStringKey, () -> Void, Bool) = {
-                switch order.status {
-                case "new":
-                    return (LocalizedStringKey("claim"), { performClaim(orderId: orderId) }, true)
-                case "claimed":
-                    return (LocalizedStringKey("picked_up"), { performStatusUpdate("picked_up") }, true)
-                case "picked_up":
-                    return (LocalizedStringKey("delivered"), { performStatusUpdate("delivered") }, true)
-                default:
-                    return (LocalizedStringKey("delivered"), {}, false)
-                }
-            }()
-
+        if let order = items.first, let action = actionConfiguration(for: order) {
             VStack(spacing: 0) {
                 Divider().background(DS.Color.divider)
-                Button(title) { action() }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(!enabled)
-                    .padding(.horizontal, DS.Spacing.lg)
-                    .padding(.vertical, DS.Spacing.md)
-                    .background(DS.Color.background)
+                SlideToConfirmSlider(
+                    prompt: localized(action.promptKey),
+                    confirmationPrompt: localized("release_to_confirm"),
+                    isEnabled: action.isEnabled && !isPerformingAction,
+                    onActivated: action.trigger
+                )
+                .frame(height: 64)
+                .padding(.horizontal, DS.Spacing.lg)
+                .padding(.vertical, DS.Spacing.md)
+                .background(DS.Color.background)
             }
             .background(DS.Color.background)
             .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: -4)
@@ -75,23 +68,29 @@ extension OrderDetailView {
     }
 
     private func performClaim(orderId: Int) {
+        guard !isPerformingAction else { return }
+        isPerformingAction = true
         Task {
             do {
                 try await OrdersService.shared.claim(id: orderId)
                 await MainActor.run {
                     Haptics.success()
                     toast.show("toast_claimed", style: .success)
+                    isPerformingAction = false
                 }
             } catch {
                 await MainActor.run {
                     Haptics.error()
                     toast.show("toast_generic_error", style: .error)
+                    isPerformingAction = false
                 }
             }
         }
     }
 
     private func performStatusUpdate(_ status: String) {
+        guard !isPerformingAction else { return }
+        isPerformingAction = true
         Task {
             do {
                 try await OrdersService.shared.updateStatus(id: orderId, status: status)
@@ -102,11 +101,13 @@ extension OrderDetailView {
                     case "delivered": toast.show("toast_delivered", style: .success)
                     default: break
                     }
+                    isPerformingAction = false
                 }
             } catch {
                 await MainActor.run {
                     Haptics.error()
                     toast.show("toast_generic_error", style: .error)
+                    isPerformingAction = false
                 }
             }
         }
@@ -114,6 +115,39 @@ extension OrderDetailView {
 }
 
 private extension OrderDetailView {
+    private struct ActionConfiguration {
+        let promptKey: String
+        let isEnabled: Bool
+        let trigger: () -> Void
+    }
+
+    func actionConfiguration(for order: OrderEntity) -> ActionConfiguration? {
+        switch order.status {
+        case "new":
+            return ActionConfiguration(promptKey: "slide_to_claim", isEnabled: true) {
+                performClaim(orderId: orderId)
+            }
+        case "claimed":
+            return ActionConfiguration(promptKey: "slide_to_pickup", isEnabled: true) {
+                performStatusUpdate("picked_up")
+            }
+        case "picked_up":
+            return ActionConfiguration(promptKey: "slide_to_deliver", isEnabled: true) {
+                performStatusUpdate("delivered")
+            }
+        default:
+            return nil
+        }
+    }
+
+    func localized(_ key: String) -> String {
+        String(
+            localized: String.LocalizationValue(stringLiteral: key),
+            bundle: .main,
+            locale: locale
+        )
+    }
+
     @ViewBuilder
     func headerSection(order: OrderEntity) -> some View {
         Card {

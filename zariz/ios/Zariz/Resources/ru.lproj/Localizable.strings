@@ -52,3 +52,7 @@
 "toast_picked_up" = "Заказ забран";
 "toast_delivered" = "Заказ доставлен";
 "toast_generic_error" = "Ошибка. Попробуйте снова.";
+"slide_to_claim" = "Свайпните, чтобы принять";
+"slide_to_pickup" = "Свайпните, чтобы забрать";
+"slide_to_deliver" = "Свайпните, чтобы доставить";
+"release_to_confirm" = "Отпустите для подтверждения";
