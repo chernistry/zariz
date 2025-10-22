@@ -1,216 +1,147 @@
-# Best Practices Playbook — iOS «Zariz» (2025)
+# Best Practices Playbook — iOS “Zariz” (2025)
 
-Практики разработки iOS-клиента и FastAPI-бэкенда (2024–2025)
-iOS-клиент: архитектура, офлайн и производительность
+iOS Client and FastAPI Backend Development Practices (2024–2025)
+iOS Client: Architecture, Offline, and Performance
 
-Архитектура (SwiftUI + MVVM/Clean): Рекомендуется использовать Clean Architecture на основе MVVM для модульности и тестируемости SwiftUI-приложения
-github.com
-. Разделите код на слои: UI (SwiftUI View и ViewModel), домен (бизнес-логика, use cases), данные (сети, БД) и инфраструктура (конфигурации)
-github.com
-. Такой подход упрощает поддержку, внедрение зависимостей и юнит-тестирование даже одному разработчику. SwiftUI 2024+ позволяет обойтись минимальным кодом контроллеров, но сохранение MVVM-паттерна обеспечивает масштабируемость проекта. (Примечание: появились мнения, что SwiftUI может обходиться без толстых ViewModel благодаря SwiftData и @Observable, однако для сложного приложения архитектурное разделение оправдано
-dimillian.medium.com
-.)
+**Architecture (SwiftUI + MVVM/Clean):** Use Clean Architecture based on MVVM for modularity and testability of SwiftUI applications (see github.com). Divide the code into layers: UI (SwiftUI View and ViewModel), domain (business logic, use cases), data (network, DB), and infrastructure (configurations) (github.com). This structure simplifies maintenance, dependency injection, and unit testing, even for a single developer. SwiftUI 2024+ allows minimal controller code, but keeping the MVVM pattern ensures scalability. Note: while some claim SwiftUI can work without heavy ViewModels thanks to SwiftData and @Observable, for complex apps architectural separation is justified (dimillian.medium.com).
 
-Синхронизация и Offline-first: Реализуйте локальный кэш с помощью SwiftData – новой ORM-подобной библиотеки Apple для данных (альтернатива CoreData в iOS 17+). Храните ключовую информацию (заказы, статусы) на устройстве, чтобы приложение работало офлайн. При запуске или восстановлении соединения выполняйте асинхронную синхронизацию: сначала отображайте локальные данные, затем обновляйте с сервера через async/await. Такой offline-first подход повышает отзывчивость и устойчивость. Данные можно сохранять с минимальным кодом: объявив модели @Model в SwiftData и используя свойство @Query в SwiftUI для авто-синхронизации с UI
-reddit.com
-. Обновления с сервера запускаются по таймеру или по пушу (см. ниже) – убедитесь, что сетевые вызовы выполняются в фоновом приоритете, не блокируя главный поток.
+**Synchronization and Offline-first:** Implement local caching with SwiftData—a new ORM-like Apple library for data (CoreData alternative in iOS 17+). Store key data (orders, statuses) on-device so the app works offline. On launch or connection restore, perform async sync: show local data first, then refresh from server via async/await. This offline-first approach improves responsiveness and reliability. Data persistence requires minimal code: declare @Model entities in SwiftData and use @Query in SwiftUI for auto UI-sync (reddit.com). Server updates may be triggered by timer or push (see below); ensure network calls run on background priority to avoid blocking the main thread.
 
-Push-уведомления и фоновые обновления: Для «реалтайма» на iOS используйте тихие push-уведомления (Remote Notifications с content-available:1), которые будят приложение в фоне. Зарегистрируйте пользователя на получение push: запросите у UNUserNotificationCenter разрешение (.alert, .badge, .sound), а затем вызовите UIApplication.shared.registerForRemoteNotifications() (после разрешения) – это предоставит device token для APNs. Передайте токен на бэкенд (endpoint /devices/register)
-github.com
-github.com
-. При событиях (новый заказ, изменение статуса) сервер шлет push через APNs на зарегистрированные девайсы. Уведомление помечено content-available:1 без алерта, чтобы iOS не показывала баннер, а лишь разбудила приложение для фоновой синхронизации данных. На стороне клиента реализуйте обработчик фонового уведомления – в SwiftUI App lifecycle можно использовать модификатор .backgroundTask с типом .appRefresh, чтобы при поступлении push запланировать обновление контента
-swiftwithmajid.com
-. Например:
+**Push Notifications and Background Updates:** For “real-time” behavior, use silent push notifications (Remote Notifications with content-available:1) that wake the app in background. Register users for push: request UNUserNotificationCenter permission (.alert, .badge, .sound), then call UIApplication.shared.registerForRemoteNotifications() (after approval)—this yields the device token for APNs. Send it to the backend (endpoint /devices/register) (github.com, github.com). When events occur (new order, status change), the server pushes through APNs to registered devices. The notification has content-available:1 and no alert, so iOS silently wakes the app for background sync. Client side: handle background notifications with SwiftUI’s .backgroundTask(.appRefresh) modifier to trigger data sync upon push (swiftwithmajid.com). Example:
 
+```swift
 @main
 struct MyApp: App {
     @Environment(\.scenePhase) private var phase
     var body: some Scene {
         WindowGroup { ContentView() }
         .backgroundTask(.appRefresh("orderUpdates")) {
-            await syncOrdersFromAPI()  // фоновой фетч новых данных
+            await syncOrdersFromAPI()  // background fetch
         }
         .onChange(of: phase) { newPhase in
             if newPhase == .background {
-                scheduleAppRefresh()    // планирование следующего фонового запуска
+                scheduleAppRefresh()
             }
         }
     }
 }
+```
 
+In this example, when the app goes to background, BGTaskScheduler plans the refresh; on receiving a silent push, iOS executes the task with ID "orderUpdates" (swiftwithmajid.com). iOS may delay or group silent pushes, so add a fallback—periodic API polling. Avoid excessive push frequency; Apple classifies them as low priority.
 
-В этом примере при уходе приложения в background мы вызываем BGTaskScheduler для планирования фонового обновления, а при получении тихого пуша iOS выполняет задачу с идентификатором "orderUpdates"
-swiftwithmajid.com
-swiftwithmajid.com
-. Важно: iOS может откладывать или группировать silent push, поэтому предусмотрите резервный механизм – периодический пуллинг API на случай, если push не пришёл вовремя. Также не злоупотребляйте частотой пушей: Apple рассматривает их как низкий приоритет.
+**UI Performance:** SwiftUI in Swift 6 renders fast, but follow best practices: use .id() identifiers for diffing lists, LazyVStack/ScrollView for long lists, and avoid heavy logic in View bodies. Run long operations asynchronously (async/await) on global queues. Profile with Xcode Instruments (Time Profiler, SwiftUI previews) to detect bottlenecks. For 100–500 users, UI performance won’t bottleneck if these measures are followed: rendering order lists and details should remain smooth. For heavy computation (routing, sorting), delegate to background tasks (BGProcessingTask). Verify UI updates post-push within p95 ≤ 30–120 s—pushes typically arrive in seconds, with extra time for background fetch and redraw.
 
-Производительность UI: SwiftUI в Swift 6 обеспечивает высокую скорость рендеринга, но соблюдайте лучшие практики: используйте идентификаторы .id() на списках для диффинга, ленивые контейнеры (LazyVStack/ScrollView) для длинных списков, избегайте тяжёлой логики в теле View. Длительные операции выполняйте с помощью async/await на глобальных очередях, чтобы не блокировать основную нить. Инструментируйте приложение с помощью Xcode Instruments (Time Profiler, SwiftUI previews) для выявления узких мест. Для 100–500 пользователей производительность интерфейса не станет узким местом, если соблюдать эти меры: рендеринг простых списков заказов и деталей должен быть плавным. В случае сложных вычислений (например, маршрутизация или сортировка) – делегируйте на фоновые задачи (BGProcessingTask, если нужно обработать даже при закрытом приложении). Замеры: убедитесь, что обновление UI после прихода пуша происходит за допустимые 30–120 секунд p95 – обычно реальный пуш приходит за секунды, остальное время тратится на фоновый fetch и перерисовку.
+**Mobile Observability:** Add crash reporting and logging. Use Sentry SDK or Firebase Crashlytics—no custom server needed. For live debugging, log via OSLog (visible in Console). Include simple analytics—launch counts, active users (via App Center, Firebase Analytics, or Apple App Analytics). This helps ensure users aren’t facing critical issues.
 
-Наблюдаемость мобильного приложения: Внедрите краш-репорты и логирование для клиента. Например, используйте Sentry SDK или Firebase Crashlytics для сбора ошибок приложения и падений – это не требует собственного сервера и поможет вам, как единственному инженеру, быстро узнавать о проблемах. Для отладки в реальном времени можно добавить осмысленные логи с помощью OSLog (они будут видны в Console на устройстве). Также предусмотрите простую аналитику: хотя бы счетчики запусков, активных пользователей (можно через App Center, Firebase Analytics или App Analytics от Apple). Это поможет убедиться, что пользователи не испытывают критических проблем.
+**CI/CD for iOS:** Automate builds and testing. GitHub Actions offers macOS runners. Steps: run XCTest unit tests, lint with SwiftLint, autoformat with SwiftFormat, and build .ipa. Use fastlane for TestFlight upload—fastlane simplifies code signing and App Store Connect upload (brightinventions.pl). Configure Fastlane Match for cert/profile management via repository to simplify CI signing (brightinventions.pl). Automate TestFlight deployment: a push to main triggers a workflow that builds, uploads via fastlane upload_to_testflight (or pilot), and notifies testers. Set CI alerts (e.g., GitHub → Slack/email) for failed builds/tests. Automation ensures quality and saves 24/7 maintenance effort.
 
-CI/CD для iOS: Настройте автоматическую сборку и тестирование приложения. GitHub Actions – хороший выбор (есть готовые макоси-раннеры). Добавьте шаги: запуск юнит-тестов (XCTest), проверка стиля кода (например, SwiftLint для линтинга, SwiftFormat для автоформатирования) и сборка .ipa. Используйте fastlane для интеграции со сборкой и отправкой в TestFlight: fastlane облегчит кодовое подпись и загрузку билда в App Store Connect
-brightinventions.pl
-. Рекомендуется настроить Fastlane Match для управления сертификатами и профилями через репозиторий – это упростит кодсайнинг на CI
-brightinventions.pl
-brightinventions.pl
-. Автодеплой на TestFlight экономит время: например, push на main ветку может триггерить Workflow, который собирает апп, запускает fastlane upload_to_testflight (или pilot) и рассылает билд тестировщикам. Настройте оповещения о результатах CI: GitHub может слать уведомления в Slack/почту при падении сборки или тестов, чтобы вы сразу знали о проблемах. Автоматизация CI/CD позволит вам без 24/7 ручного контроля получать уверенность в качестве – каждый коммит будет проверен и при успехе развернут для тестирования.
+---
 
-Бэкенд: FastAPI на Python vs Node/NestJS
+### Backend: FastAPI (Python) vs Node/NestJS
 
-Почему FastAPI на Python? Для проекта с одним разработчиком и ограниченными сроками Python/FastAPI – обоснованный выбор. Хотя Node.js (особенно с фреймворком NestJS) славится высокой производительностью, при нагрузке в 100–500 пользователей разница несущественна – важнее скорость разработки и простота кода
-reddit.com
-reddit.com
-. FastAPI позволяет очень быстро строить API благодаря Pydantic-схемам и авто-документации OpenAPI: вы получаете проверку входных данных и интерактивную документацию «из коробки» с минимальным шаблонным кодом
-medium.com
-medium.com
-. Developer Experience у FastAPI отличное: динамическая типизация Python облегчает прототипирование, а аннотации типов дают почти TypeScript-подобную уверенность. В условиях MVP за 2–3 недели это критично.
+**Why FastAPI:** For a solo developer with tight deadlines, Python/FastAPI is ideal. While Node/NestJS can outperform Python, for 100–500 users the difference is negligible—development speed matters more (reddit.com). FastAPI enables quick API creation via Pydantic and auto OpenAPI docs—type validation and docs “out of the box” (medium.com). Excellent DX: dynamic typing speeds prototyping, type hints add TS-like confidence. For a 2–3 week MVP, this is critical.
 
-Производительность и задержки: Python-интерпретатор медленнее Node/V8, однако FastAPI асинхронен (ASGI) и за счет uvicorn/Starlette достигает конкурентной производительности среди Python-фреймворков
-reddit.com
-reddit.com
-. В реальных тестах ExpressJS/Node опережает FastAPI примерно в ~3 раза по throughput под экстремальной нагрузкой
-planeks.net
-planeks.net
-, но для наших целей (p95 API ≤ 300 мс) FastAPI справится на одном VPS. Латентность отдельных запросов в FastAPI примерно на уровне Node (десятки миллисекунд) при правильном использовании async DB-драйверов
-planeks.net
-planeks.net
-. Время запуска (boot time): Приложение на Python может стартовать чуть медленнее (нагрузка при импорте библиотек, Pydantic-моделей). Однако для постоянно работающего сервиса на VPS разница в секундах некритична. Если же использовать serverless (Cloud Run без постоянного инстанса), cold start у Python может быть немного больше, но это можно нивелировать минимальным масштабом.
+**Performance:** Python is slower than Node/V8, but FastAPI (ASGI, uvicorn/Starlette) achieves competitive performance (reddit.com). ExpressJS may deliver ~3× higher throughput under stress (planeks.net), but for p95 ≤ 300 ms FastAPI suffices. Proper async DB drivers yield Node-level latency (tens of ms). Startup time is slightly longer but irrelevant for always-on VPS. For serverless (Cloud Run), cold starts are higher but mitigable with minimum instance count.
 
-Экосистема и возможности: Python предоставляет богатую экосистему пакетов – особенно полезно, если потребуется интеграция с научными или аналитическими библиотеками, генерация отчетов или алгоритмы оптимизации. В нашем кейсе главный плюс – зрелые библиотеки для работы с БД (SQLAlchemy, asyncpg), миграции (Alembic), авторизация JWT (например, PyJWT или встроенная OAuth2 в FastAPI) и пр.
-github.com
-. Кроме того, Python-код зачастую короче и понятнее эквивалента на NestJS, что снижает потенциальные баги и ускоряет отладку. DX (Developer Experience): Один инженер зачастую быстрее пишет функционал на том языке, который лучше знает. Если ваш опыт в Python – вы реализуете фичи быстрее за счет лаконичности синтаксиса и отсутствия сборки. Как отмечают разработчики: время инженера дороже инфраструктуры на старте, поэтому быстрее вывести продукт с Python – разумно
-reddit.com
-. Проекты часто умирают, не достигнув масштабов, требующих ультимативной оптимизации, так что «не стреляйте из пушки по воробьям» преждевременно
-reddit.com
-.
+**Ecosystem:** Python offers rich libraries—valuable for analytics, reports, or optimization. Mature DB tools (SQLAlchemy, asyncpg), migrations (Alembic), JWT auth (PyJWT/OAuth2) (github.com). Code is shorter and clearer than NestJS equivalents, reducing bugs. Developer speed outweighs infra cost at early stages (reddit.com). Many startups never reach the scale needing extreme optimization—avoid premature over-engineering (reddit.com).
 
-Когда NestJS/Node может быть лучше: Если команда хорошо владеет TypeScript и проект изначально enterprise-уровня (сложный, много модулей, десятки инженеров), NestJS предоставляет строгую структурированность и Angular-подобную модульность. Также Node традиционно сильнее в real-time задачах (вебсокеты, многопользовательские чаты) за счет event-loop, хотя FastAPI тоже поддерживает WebSocket. В нашем случае NestJS выглядел бы избыточно тяжеловесным для MVP – он добавляет шаблонный код и требователен к boilerplate (модули, провайдеры), что оправдано для большой кодовой базы, но замедляет создание прототипа
-leapcell.io
-medium.com
-. Python предпочтительнее, когда важны быстрая итерация, богатая стандартная библиотека, или специфические библиотеки (например, геокодирование, ML)
-reddit.com
-. К тому же, если впоследствии потребуется оптимизация, можно переписать узкие места (например, интенсивный расчёт) на Go/Rust микросервис или использовать C-расширения, оставив большую часть системы на Python
-reddit.com
-reddit.com
-.
+**When Node/NestJS Fits Better:** For TypeScript-proficient teams or enterprise-grade systems with many modules, NestJS offers strict modularity and Angular-like structure. It’s stronger for heavy real-time (websockets, chats) due to event-loop advantages, though FastAPI also supports WebSocket. For this MVP, NestJS would add boilerplate (modules, providers) and slow delivery (leapcell.io, medium.com). Python excels at fast iteration, standard libs, and domain-specific use (geocoding, ML) (reddit.com). Later optimization can offload hotspots to Go/Rust microservices or C-extensions (reddit.com).
 
-Вывод: FastAPI на Python – отличное решение для малого бюджета и сроков. Как подметили в сообществе, «продать продукт быстрее важнее, чем выжать максимум RPS» на старте
-reddit.com
-. Ваш API на FastAPI будет достаточно быстрым и надёжным для 100–500 пользователей, а разработка и поддержка – проще, что снижает риски и расходы.
+**Conclusion:** FastAPI is optimal for small-scale, fast development. As noted in community discussions, “shipping is more important than squeezing RPS” (reddit.com). A FastAPI backend easily supports 100–500 users with simpler maintenance and lower cost.
 
-Инфраструктура и деплоймент
+---
 
-Одноранговый VPS vs PaaS: Для начала проекта оптимально развернуть всё на одном недорогом VPS-сервере. Например, VPS от Hetzner или бесплатный OCI Ampere дают достаточную мощность (2–4 vCPU, 4–24 ГБ) практически бесплатно. На одном VPS можно запустить Docker Compose со всеми компонентами: FastAPI-приложение, PostgreSQL и фронт-прокси (например, Nginx или Caddy). Это минимизирует сложность – один инженер сможет сам настроить и поддерживать такой сервер без 24/7 DevOps. Альтернатива: современные PaaS-платформы (Railway, Fly.io, Render, GCP Cloud Run) позволяют залить код или контейнер и получить автоскейлинг, HTTPS и минимальную админ-нагрузку. На MVP-этапе даже одного VPS достаточно, но если хочется совсем zero-maintenance, можно воспользоваться Cloud Run или Fly.io. Cloud Run, например, будет автоматически запускать контейнер FastAPI по запросам и масштабировать до нуля, но учитывайте холодный старт. Fly.io/Railway дают простой деплой через CLI, а HTTPS и домены настраиваются за минуты. Их бесплатные тарифы тоже покрывают небольшой трафик. Решение зависит от вашего опыта: VPS даёт полный контроль и предсказуемую работу (без холодных стартов), тогда как PaaS избавляет от необходимости вручную обновлять ОС, ставить патчи безопасности и настраивать веб-сервер. Компромисс – начать на VPS, а при росте нагрузки вынести компоненты: отдельная управляемая БД, воркер для пушей и т.д..
+### Infrastructure and Deployment
 
-Запуск FastAPI с HTTPS: Если используете VPS, установите реверс-прокси Nginx или Caddy перед вашим Uvicorn-сервером. Caddy удобен тем, что автоматически выписывает сертификаты Let’s Encrypt и обновляет их, сводя возню с HTTPS к минимуму. Nginx тоже популярен – можно настроить Let’s Encrypt (Certbot) или использовать Cloudflare-туннель. В Docker Compose включите сервисы: web (FastAPI Uvicorn, желательно запущенный через gunicorn или uvicorn-workers для более устойчивой работы), db (Postgres) и proxy (Nginx/Caddy). Пример: Caddy с простым Caddyfile:
+**Single VPS vs PaaS:** Start with one inexpensive VPS (Hetzner, OCI Ampere). A 2–4 vCPU, 4–24 GB instance is enough. Use Docker Compose: FastAPI, PostgreSQL, and proxy (Nginx/Caddy). This minimizes complexity—manageable by one engineer. Alternative: PaaS (Railway, Fly.io, Render, GCP Cloud Run) offers autoscaling, HTTPS, and low admin. For MVP, a VPS suffices, but Cloud Run or Fly.io provides zero-maintenance options. Cloud Run scales to zero (beware cold starts). Fly.io/Railway deploy easily via CLI with free tiers. VPS offers stability and control; PaaS offloads OS/security patching. Balanced path: start on VPS, later split components (managed DB, push worker).
 
+**Running FastAPI with HTTPS:** On VPS, use a reverse proxy (Nginx or Caddy). Caddy auto-generates Let’s Encrypt certificates—minimal setup. Example Caddyfile:
+
+```
 yourdomain.com {
     reverse_proxy 0.0.0.0:8000
 }
+```
 
+Caddy handles HTTPS on 443, redirect 80→443. Nginx requires TLS config and proxy_pass [http://app:8000](http://app:8000). Ensure backend runs via HTTPS—iOS ATS requires it. On Cloud Run/Render, HTTPS is automatic.
 
-– и он сам будет слать все запросы на ваше FastAPI-приложение, обслуживая HTTPS на 443 порту. Порт 80 можно редиректить на 443. Для Nginx потребуется настроить серверный блок с proxy_pass http://app:8000 и прописать пути к TLS-сертификатам. Важно: убедитесь, что бэкенд всегда работает по HTTPS, особенно для мобильного клиента (ATS на iOS по умолчанию требует защищённого соединения). Если решите использовать Cloud Run или Render, там HTTPS предоставляется автоматически (на их домене или вашем кастомном через настройки).
+**Apple Push Notifications (APNs) Server:** Backend must send APNs push. Obtain .p8 key (Key ID, Team ID, Issuer ID) from Apple Developer Account. Use python-apns2 for FastAPI (HTTP/2 API). Send pushes directly or via background worker (Celery/RQ). Example pseudo-code:
 
-Apple Push Notifications (APNs) на сервере: Ваш бэкенд должен уметь отправлять push-уведомления на устройства iOS. Для этого используйте официальный протокол APNs (HTTP/2 запросы на api.push.apple.com). Необходимо получить ключ авторизации (.p8) в Apple Developer Account – он содержит Key ID, Team ID и Issuer ID. В FastAPI можно использовать готовые библиотеки, например, python-apns2 (поддерживает токен-аутентификацию). Настройте работу нотификатора либо как часть основного приложения, либо как фоновый воркер. Простое решение: создать в FastAPI фоновую задачу (background task) при создании нового заказа – она отправит push. Для большей надежности можно завести отдельный Celery или RQ воркер, слушающий очередь уведомлений. В MVP достаточно и прямого вызова APNs: подключите ключ .p8, и при событии выполняйте, к примеру:
-
+```python
 from hypercorn.asyncio import APNsClient
 
 client = APNsClient(credentials=(AUTH_KEY_PATH, KEY_ID), team_id=TEAM_ID)
 payload = {"aps": {"content-available": 1}, "order_id": 123}
 client.send_notification(device_token, payload, push_type="background")
+```
 
+Encapsulate this in a service. See PushNotificationServerFramework on GitHub for APNs integration (github.com). Ensure outbound 443 access and proper headers: apns-topic (bundle ID) and apns-push-type: background (developer.apple.com).
 
-(приведён псевдокод). Лучше инкапсулировать это в сервис. В проекте PushNotificationServerFramework на FastAPI показано, как организовать регистрацию девайсов и отправку push (там применён модифицированный пакет apns2)
-github.com
-github.com
-. Удостоверьтесь, что сервер может выходить в интернет на порты 443, и настроены правильные HTTP-заголовки: apns-topic (обычно ваш bundle id) и apns-push-type: background для тихих пушей
-developer.apple.com
-developer.apple.com
-.
+**Backend Logging/Monitoring:** Enable structured request/error logging. Uvicorn logs by default; add middleware for extended logs. Output to stdout—Docker captures logs. For metrics, use Prometheus + Grafana, or just monitor system metrics initially. Track API p95 < 300 ms. Add error reporting—Sentry Python SDK captures exceptions automatically. For PaaS, use built-in observability (e.g., GCP Stackdriver). Alerts: configure Sentry or uptime monitors to Telegram/email on errors. Minimal alerting gives you fault awareness without 24/7 on-call.
 
-Логирование и мониторинг бэкенда: Включите структурированное логирование запросов и ошибок. Uvicorn по умолчанию логирует запросы; можно добавить middleware для расширенного логирования (методы, длительность, размеры ответов). Логи пишите в stdout, Docker их соберёт – можно настроить ротацию или использовать централизованный сбор (ELK, Loki) если понадобится. Для мониторинга метрик без лишних усилий используйте Prometheus + Grafana: либо установите Node Exporter и экспортуйте кастомные метрики из FastAPI (например, через prometheus_client библиотеку), либо, в простейшем случае, мониторьте только системные метрики VPS. SLO по API (p95<300мс) можно проконтролировать метриками длительности запросов. На начальном этапе можно обойтись без сложной APM, но ошибки желательно собирать – подключите Sentry Python SDK в FastAPI, чтобы неперехваченные исключения отправлялись вам с трассировками. Это заменит необходимость постоянно читать логи в поисках багов. Если используете Cloud Run или другой PaaS, интегрируйте их встроенный лог/метрик сервис (Stackdriver для GCP, etc). Алерты: настройте простые алерты на ключевые события – например, через Sentry (уведомление в Telegram/почту при новом Runtime Error) или через healthcheck-сервис (если API не отвечает). Таким образом, без 24/7 дежурства вы получите базовое уведомление о критических сбоях.
+**Deployment:** Automate to avoid manual prod updates. On VPS, deploy via GitHub Actions: build Docker image, push to registry, and auto-update container (Watchtower). Simpler: SSH → `docker-compose pull && docker-compose up -d`. GitHub Actions supports SSH/CD. For PaaS, use CLI or git-based deploy. Automate HTTPS renewal (Caddy or certbot cron). Ensure auto-start on reboot (Docker restart or systemd service).
 
-Развёртывание кода: Автоматизируйте деплой, чтобы не делать вручную на прод. Если VPS: можно настроить деплой через GitHub Actions – например, собирать Docker-образ и пушить на Registry, а на сервере иметь Watchtower для обновления контейнера. Или самый простой путь: SSH на VPS и docker-compose pull && docker-compose up -d. GitHub Actions поддерживает SSH-развёртывание, либо используйте CD-инструмент типа Capistrano/Fabric (но для одного сервера это излишне). Для PaaS – настроить CLI deploy или Git push (Railway/Heroku-like). HTTPS-сертификаты на VPS автоматизируйте (тот же Caddy или certbot renewal cron). Убедитесь, что бэкенд запускается при перезагрузке – например, Docker Compose with restart, или systemd service для Uvicorn/Gunicorn.
+**Scaling Path:** For growth, plan migration: move DB to managed service, add Redis for caching/locking, isolate push worker. Up to 500 users, one instance suffices.
 
-Масштабирование при росте: Хотя MVP развернут на одном сервере, закладывайте пути расширения: вынос БД в управляемый сервис (отказ от локального Postgres на VPS, чтобы снять нагрузку и получить резервирование), использование Redis для кэшей и блокировок (например, для конкурентного claim заказа) и выделение отдельного воркера для пушей, чтобы основное API не тормозилось на отправке уведомлений. Но до 500 пользователей все эти компоненты могут успешно работать совместно на одном экземпляре.
+---
 
-Примеры актуальных шаблонов (boilerplates)
+### Example Boilerplates
 
-FastAPI + PostgreSQL + Alembic + JWT + APNs: В 2024–2025 появились несколько открытых шаблонов проектов, экономящих время. Например, репозиторий fastapi_postgres_async_jwt_alembic демонстрирует асинхронный FastAPI с SQLAlchemy, Alembic-миграциями и JWT-аутентификацией
-github.com
-. Там реализован полный цикл регистрации пользователей, логина, refresh токенов и пр., что можно адаптировать под роли «курьер/магазин». За отправку push-уведомлений отвечают внешние библиотеки – готового шаблона с APNs немного, но можно обратиться к упомянутому PushNotificationServerFramework
-github.com
- на GitHub, где уже есть заготовки эндпойнтов /devices/register и /push/send, а также интеграция с apns2 для APNs. Ещё один пример – RealWorld example app на FastAPI: хотя он без push, но показывает структурирование кода (routers, services, models) и JWT-авторизацию. Если предпочтёте TypeScript, аналог – NestJS nestjs-realworld-example-app, но мы держимся Python. В целом, сообщество FastAPI активно делится «стартер kit» проектами – воспользуйтесь этим для ускорения (например, шаблон от BetterStack с JWT и OAuth2)
-betterstack.com
-.
+**FastAPI + PostgreSQL + Alembic + JWT + APNs:** In 2024–2025 several templates emerged. Example: `fastapi_postgres_async_jwt_alembic` demonstrates async FastAPI with SQLAlchemy, Alembic migrations, and JWT auth (github.com). Includes registration, login, refresh, etc.—adaptable to courier/store roles. For push, check PushNotificationServerFramework (github.com) with /devices/register and /push/send endpoints using apns2. Another: RealWorld FastAPI example—good structure (routers, services, models) and JWT auth. If preferring TS, NestJS realworld app exists, but we stay with Python. The FastAPI community shares many starter kits (e.g., BetterStack JWT/OAuth2 templates) (betterstack.com).
 
-SwiftUI MVVM + SwiftData + Push + BGTask: За последние годы разработчики выкладывают образцовые SwiftUI-приложения с чистой архитектурой. Можно ориентироваться на репозиторий Clean-Architecture-SwiftUI-MVVM
-reddit.com
-github.com
- – демонстрационное приложение с разделением на слои, локальным хранилищем (его легко заменить на SwiftData) и примерами тестов. Также заслуживает внимания NativeAppTemplate-Free-iOS – открытый шаблон продакшен-приложения на 100% SwiftUI (iOS 17, использует @Observable, SwiftLint) с реализованным онбордингом, аутентификацией и базовыми CRUD-операциями
-reddit.com
-reddit.com
-. Его можно взять за основу, добавив логику работы с заказами. Для push-уведомлений конкретных шаблонов меньше, но Apple имеет примеры и документацию: например, Sample Code для обработчиков уведомлений и BGTasks. Посмотрите WWDC-документы: “The Push Notifications Primer” (WWDC20-10095) и “Background Tasks”. Кроме того, сообщество iOS публикует статьи – например, руководство по BackgroundTask от Majid
-swiftwithmajid.com
-swiftwithmajid.com
-, где есть минимальный пример, как зарегистрировать задачу и выполнить сетевой запрос в фоне. В нашем проекте BGTaskScheduler уже упоминался – вы легко добавите его, следуя официальной документации.
+**SwiftUI MVVM + SwiftData + Push + BGTask:** Many modern open-source SwiftUI apps show clean architecture. See Clean-Architecture-SwiftUI-MVVM (reddit.com, github.com)—layered app with local storage (easily swapped for SwiftData) and tests. Also, NativeAppTemplate-Free-iOS (reddit.com)—production-grade SwiftUI iOS 17 app with @Observable, SwiftLint, onboarding, auth, and CRUD. Use it as a base, adding order logic. For push examples, check Apple’s sample code and WWDC sessions: “The Push Notifications Primer” (WWDC20-10095) and “Background Tasks”. Also see Majid’s background-task guide (swiftwithmajid.com). Our BGTaskScheduler example follows this API.
 
-Если нужны учебные примеры ближе к тематике доставки: существуют открытые проекты FoodDelivery (SwiftUI UI для доставки еды) или учебные клоны популярных сервисов. Они могут дать идеи по интерфейсу и управлению состоянием (например, использование Combine для сетевых обновлений).
+For domain-related learning, study open food-delivery demo apps—they offer UI and state-management ideas (Combine for network updates).
 
-Совет: Начинать лучше с простого каркаса (Login -> Список заказов -> Детали -> Действия) – затем наращивать функциональность. Шаблоны помогут не упустить детали (напр. обработку ошибок, состояния загрузки, etc.), но не бойтесь упрощать, если какой-то модуль слишком избыточен для MVP.
+**Tip:** Start with minimal flow (Login → Orders → Details → Actions). Expand incrementally. Templates help cover edge cases (error handling, loading states) but simplify when possible for MVP.
 
-Инструменты и SDK: APNs, фоновые задачи, Keychain + биометрия
+---
 
-Apple Push Notifications (APNs) в iOS: Для работы с push не требуется сторонний SDK – используйте встроенный UserNotifications фреймворк. Основные шаги:
+### Tools and SDK: APNs, Background Tasks, Keychain + Biometrics
 
-Запрос разрешения у пользователя на уведомления:
+**APNs on iOS:** Use native UserNotifications.
 
-UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, err in 
-    // …
-}
+1. Request permission:
 
+```swift
+UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, err in }
+```
 
-Желательно запрашивать не на самом старте приложения, а когда пользователь вошёл или когда реально понадобятся уведомления, чтобы контекст был понятен.
-2. Регистрация устройства в APNs: при успешном разрешении вызывайте UIApplication.shared.registerForRemoteNotifications()
-developer.apple.com
-. iOS свяжется с APNs и асинхронно вызовет в вашем AppDelegate метод didRegisterForRemoteNotificationsWithDeviceToken. В SwiftUI App нет AppDelegate по умолчанию, но вы можете добавить его через UIApplicationDelegateAdaptor. Там получите deviceToken (Data) – сконвертируйте в строку (hex) и отправьте на бэкенд (например, POST /devices/register с токеном).
-3. Обработка полученных уведомлений: реализуйте в AppDelegate метод userNotificationCenter(didReceive:response:) для взаимодействия при тапе по уведомлению, а главное – userNotificationCenter(didReceive:withCompletionHandler:) для приема тихих уведомлений в фоне. В нём, если content-available, запускайте фоновый fetch (или ставьте BGTask). Учтите, что у тихого пуша нет UI, и вы обязаны вызвать completionHandler(.newData/ .noData) после обработки.
+Request only after login or when needed, not at launch.
+2. Register for remote notifications: call `UIApplication.shared.registerForRemoteNotifications()` (developer.apple.com). iOS contacts APNs, invoking AppDelegate’s `didRegisterForRemoteNotificationsWithDeviceToken`. In SwiftUI, add AppDelegate via UIApplicationDelegateAdaptor, convert deviceToken → hex, send to backend (`POST /devices/register`).
+3. Handle notifications: implement
+`userNotificationCenter(didReceive:withCompletionHandler:)` for silent notifications (content-available). Launch background fetch or schedule BGTask. Silent pushes have no UI; call completionHandler(.newData/.noData).
 
-Apple рекомендует для фоновых обновлений использовать BGAppRefreshTask: в Info.plist добавьте идентификатор и включите Background Modes > Background Fetch
-swiftwithmajid.com
-swiftwithmajid.com
-. Мы уже привели пример .backgroundTask SwiftUI-модификатора, который под капотом регистрирует handler на BGTaskScheduler
-swiftwithmajid.com
-swiftwithmajid.com
-. Используйте это API – оно более надежно, чем старый UIApplicationBackgroundFetch.
+Apple recommends BGAppRefreshTask for background updates—add ID in Info.plist, enable Background Fetch (swiftwithmajid.com). The SwiftUI `.backgroundTask` modifier internally registers BGTaskScheduler handlers (swiftwithmajid.com). Use this modern API—it’s more reliable than old UIApplicationBackgroundFetch.
 
-SDK для APNs на сервере: (Как отмечено ранее) – Python-библиотека apns2 или ее форки отлично справляются. Она управляет HTTP/2 соединениями, поддерживает токеновую авторизацию и позволяет отправлять как alert-, так и background-уведомления. Если не хотите возиться напрямую с APNs, рассмотрите сервисы типа OneSignal или Firebase Cloud Messaging (FCM) – они берут на себя часть работы (на iOS FCM все равно через APNs шлет, но единый SDK удобен для мультиплатформы). Однако для нашего масштаба и отсутствия Android лучше идти “нативным” путем. Snippet server-side:
+**Server-side APNs SDK:** Use Python apns2 or forks. Handles HTTP/2, token auth, and both alert/background pushes. For multi-platform abstraction, consider OneSignal or Firebase FCM (uses APNs under the hood). For our single-platform scope, native APNs is simplest. Example:
 
+```python
 from apns2.client import APNsClient
 from apns2.payload import Payload
 
 payload = Payload(alert=None, sound=None, content_available=True)
 client = APNsClient('AuthKey_ABC123.p8', use_sandbox=False, team_id='TEAMID', key_id='KEYID')
 client.send_notification(device_token, payload, topic='com.yourapp.bundleid')
+```
 
+Sufficient to send a silent push to one device.
 
-Этого достаточно для отправки тихого пуша на одно устройство.
+________________________________________**Background Tasks and Updates:** In addition to BGTaskScheduler, URLSession background transfers may be needed if large files must be downloaded (not our MVP case). All background activities must be declared to the system: content-available push, background fetch, background processing, background URLSession, or specialized ones (navigation, audio playback, etc.—not applicable here). Apple’s guide *“Choosing Background Strategies for Your App”* outlines this clearly. For our scenario, the best strategy is BGAppRefresh triggered by push. If longer tasks are required (e.g., periodic analytics collection), add a BGProcessingTask (set RequiresExternalPower if heavy and non-urgent).
 
-Фоновые задачи и бэкграунд-обновления: Помимо BGTaskScheduler, может понадобиться и URLSession background transfers – если, скажем, надо скачать большой файл (не наш случай на MVP). Все фоновые активности должны быть заявлены системе: content-available push, background fetch, background processing, background URLSession, либо специальные (навигация, воспроизведение аудио и т.д. – у нас не применимо). Apple имеет хорошую шпаргалку “Choosing Background Strategies for Your App”. Для нашего сценария: лучшая стратегия – BGAppRefresh по пушу. Если понадобятся длительные операции (например, периодический сбор аналитики), можно добавить BGProcessingTask (с указанием RequiresExternalPower если тяжело и не срочно).
+**Keychain and Biometrics:** Store sensitive data (JWT, refresh tokens, passwords) in the Keychain—a secure store accessible only to your app. In Swift 6 (same as Swift 5), use the Security framework. Configure the key with an access control flag requiring biometric authentication. Do this by adding kSecAttrAccessControl with .userPresence or .biometricCurrentSet flags:
 
-Работа с Keychain и биометрией: Хранить чувствительные данные (JWT-токены, refresh-токены, пароли) следует в Keychain – это защищенное хранилище, доступное только вашему приложению. В Swift 6 (так же как и Swift 5) для Keychain используем фреймворк Security. Рекомендуется ключ хранить с флагом, требующим биометрическую аутентификацию для доступа. Делается это через Access Control: при добавлении элемента Keychain укажите атрибут kSecAttrAccessControl с флагами .userPresence или .biometricCurrentSet. Например:
-
+```swift
 let accessControl = SecAccessControlCreateWithFlags(
-    nil, 
-    kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, 
-    .userPresence, 
+    nil,
+    kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
+    .userPresence,
     nil)!
+```
 
+This means the value is device-only, available only with a passcode set, and userPresence requires user authentication (Face ID / Touch ID or passcode) each time it is accessed (andyibanez.com). Then store it:
 
-Эта установка означает: значение доступно только на этом устройстве и только когда установлен паскод, и userPresence – требует аутентификации пользователя (Face ID / Touch ID или код) при каждом доступе
-andyibanez.com
-. Затем при сохранении:
-
+```swift
 let query: [String: Any] = [
   kSecClass: kSecClassGenericPassword,
   kSecAttrAccount: "authToken",
@@ -218,141 +149,135 @@ let query: [String: Any] = [
   kSecAttrAccessControl: accessControl
 ]
 SecItemAdd(query as CFDictionary, nil)
+```
 
+When reading the same item via SecItemCopyMatching, the system automatically shows the Face ID/Touch ID prompt (andyibanez.com). You should not manually invoke LAContext.evaluatePolicy in this case—let Security handle it. This is secure: even on a jailbroken device, the token cannot be retrieved without biometrics. Alternatively, use KeychainAccess (a Swift wrapper supporting AccessControl). Add NSFaceIDUsageDescription to Info.plist, or Face ID access will be blocked (developer.apple.com).
 
-При попытке чтения этого же элемента (через SecItemCopyMatching) система автоматически вызовет Face ID/Touch ID prompt для разблокировки
-andyibanez.com
-andyibanez.com
-. Вы не должны сами вручную вызывать LAContext.evaluatePolicy для Keychain-сценария – лучше поручить это Security фреймворку. Такой подход считается правильным и безопасным: даже при jailbreak токен не извлечь без биометрии. Альтернативно, можно использовать сторонние утилиты: популярна библиотека KeychainAccess (удобный Swift-обертка над Security API) – она тоже поддерживает AccessControl. Также не забудьте добавить в Info.plist ключ NSFaceIDUsageDescription, иначе доступ к Face ID запретится системно
-developer.apple.com
-.
+**Biometric Login UX:** On app launch, if the user is already signed in, prompt for Face ID/Touch ID by reading the token from Keychain—Keychain will display “Unlock using Face ID.” Optionally use LocalAuthentication (LAContext) to check biometric availability or add custom fallback. In short: store tokens in Keychain bound to biometrics for best protection with minimal code (andyibanez.com).
 
-Biometric Login UX: При старте приложения, если пользователь уже залогинен, вы можете попросить его приложить палец/лицо для разблокировки сессии – достаточно попробовать прочитать токен из Keychain: Keychain сам покажет системный диалог “Unlock using Face ID”. Можно дополнительно настроить LocalAuthentication (LAContext) если нужен кастомный fallback или просто проверить, доступна ли биометрия. Но общий совет: храните токены в связке ключей с привязкой к биометрии, это дает лучшую защиту с минимальным кодом
-andyibanez.com
-andyibanez.com
-.
-
-Background Fetch vs Push vs Notifications: Подводя итог: используйте сочетание тихого push + BGTask для своевременных обновлений данных в клиенте. Локальные уведомления нам не особенно нужны (только если захотите уведомлять пользователя о чем-то, но в MVP сценарий – пуш от сервера). Биометрия улучшит безопасность без усложнения UX (один раз при запуске приложение разблокируется). Все эти инструменты – штатные, хорошо документированные Apple. Ссылки на официальные гайды: [Apple Developer: Background Tasks для выбор стратегии фоновых обновлений][5], [Apple: Pushing Background Updates][3], [Apple: Работа с Keychain и биометрией (LocalAuthentication docs)][37]. Они содержат примеры кода и подсказки для тонких моментов.
-
-CI/CD для iOS и бэкенда
-
-Mobile CI/CD (TestFlight): Как отмечалось, связка GitHub Actions + fastlane является де-факто стандартом. Настройте workflow, который запускается по push в основную ветку или по ручному запуску. Шаги: сборка iOS (используйте xcodebuild или fastlane gym), запуск тестов (xcodebuild test или fastlane scan), затем загрузка билда. Fastlane имеет команду upload_to_testflight (alias pilot), которая отправит .ipa в TestFlight
-medium.com
-. Вам понадобятся API-ключ App Store Connect (JSON key) – его можно хранить в секретах репозитория. Также решите вопрос сертификатов: либо подключите автоматическое управление кодовым подписанием (Xcode 13+ может в CI использовать Manage Certificates), либо примените fastlane Match как описано выше
-brightinventions.pl
-. Best practice – хранить сертификаты в приватном репо и подключать его через Match на CI, защищая паролем (MATCH_PASSWORD в секретах)
-brightinventions.pl
-brightinventions.pl
-. Добавьте шаги линтинга: например, swiftlint можно запускать через fastlane (плагин) или напрямую в shell, чтобы PR не сливать с нарушениями стиля.
-
-После успешной загрузки в TestFlight, Apple обычно за 5-15 минут пропускает билд (для новых версий может потребовать настройку compliance). Можно настроить автоматическое присвоение номера билда (fastlane increment_build_number). Уведомления: настроить, чтобы при успешном деплое в TestFlight вам приходило письмо (App Store Connect шлет) или в Slack (можно воспользоваться GitHub Actions Slack Notification). Таким образом, тестировщики (или вы сами) сразу получат свежую версию приложения.
-
-Backend CI/CD: Для FastAPI бэкенда также внедрите pipeline. Основные этапы: прогон тестов (pytest), статический анализ (например, flake8 или современный ruff – очень быстрый линтер), проверка типов (mypy) и форматирование (black, isort). Эти проверки можно автоматизировать с помощью pre-commit хуков и запускать на CI для гарантии. При успехе – деплой. Если вы продолжите на одном VPS, можно настроить деплой через SSH: существуют готовые GitHub Action шаги для копирования файлов или выполнения команд на сервере после пуша. Более production-ready способ – контейнеризация: написать Dockerfile для вашего FastAPI (на основе python:3.12-slim), собирать образ на CI и пушить в контейнерный Registry (GHCR или Docker Hub), а деплой сводить к обновлению сервиса (если на сервере, то docker pull + compose up). На PaaS этот шаг упрощается: например, для Cloud Run есть Action, которая разворачивает новый ревизию при push. Для Fly.io – flyctl deploy можно вызывать из CI.
-
-Качество кода и алерты: Интегрируйте в репозиторий CodeQL анализ от GitHub (бесплатно для публ. репо) – он статически найдет уязвимости. Следите за обновлениями зависимостей: Dependabot (включается в GitHub) будет делать PR, а CI проверит, не сломали ли обновления сборку. Настройте OWASP ZAP или Snyk в пайплайне, если хотите проверять безопасность (опционально для MVP). Алерты DevOps: помимо мониторинга приложения, CI тоже должен сигнализировать: например, если деплой не удался – уведомление вам, чтобы не пропустить, что продакшн не обновился. Инструменты: GitHub Actions может бросать workflow run события – их можно ловить и слать вебхук. Проще всего – e-mail или тот же Sentry (у Sentry есть релизы – можно отправлять событие деплоя и если что-то не вышло – делать выпуск с ошибкой).
-
-Release management: Используйте семантическую версию для мобильного приложения и бэкенда. Для iOS: каждая TestFlight сборка – это отдельный build number; помечайте важные сборки тэгами (Git tag v1.0 etc). Для сервера: можно внедрить версионирование API (v1 в URL) и при CI деплое обновлять changelog. CI/CD – ваш помощник, даже когда вы одиночка: одна кнопка (или push) и новая версия у пользователей – без ручной рутины. Это снижает вероятность пропустить шаг (например, забыть миграцию – включите авто-прогон Alembic миграций при старте сервера или в скрипте деплоя).
-
-Итого по CI/CD:
-
-Используйте GitHub Actions для единообразия – в одном месте и мобильная, и серверная сборка.
-
-Автоматизируйте проверки качества: линтеры, тесты, форматирование – все на автопилоте в CI.
-
-Развёртывание без усилий: fastlane + Actions для iOS(TestFlight), Docker/SSH + Actions для бэкенда.
-
-Отслеживание и оповещения: интеграция со Slack/почтой для важных событий (успешный релиз, упавший билд).
-
-Следуя этим бест-практикам, вы создадите надёжный MVP за 2–3 недели, который легко поддерживать и развивать одному инженеру, а пользователи получат качественный опыт: быстрый UI, своевременные обновления заказов (через push ≤120 с) и стабильный backend API (p95 отклик ≤300 мс). Good luck! 🚀
-
-
-
-Гайд для MVP и масштабирования iOS‑клиента «Zariz» (трекер заказов курьеров) с привязкой к текущему ТЗ и реальным ограничениями (1 инженер, 1 VPS на старте). Цель — быстрое и безопасное MVP с безопасным ростом.
+**Background Fetch vs Push vs Notifications:** Combine silent push + BGTask for timely background data sync. Local notifications aren’t needed (unless explicitly notifying users, which MVP does not). Biometrics improve security with minimal UX friction (one unlock per launch). All these are Apple-native, well-documented tools. References: [Apple Developer: Background Tasks strategy][5], [Apple: Pushing Background Updates][3], [Apple: Keychain and LocalAuthentication docs][37].
 
 ---
 
-## Обложка
+### CI/CD for iOS and Backend
 
-- Тема: iOS‑бестпрактики 2025 для «Zariz»
-- Аудитория: Mobile/iOS, Backend/API, DevOps
-- Проект: Zariz (доставка из магазинов)
-- Контекст: 1 инженер, 2–3 недели на MVP, один VPS (API+Postgres+Reverse proxy), iOS‑клиент на SwiftUI; геолокация — позже; SLA ≥99%, API p95 < 300 мс
-- Дата: 2025‑10‑22
-- Автор(ы): `team@zariz`
+**Mobile CI/CD (TestFlight):** As noted, GitHub Actions + fastlane is the de-facto standard. Set up a workflow triggered on main-branch push or manual run. Steps: build iOS (xcodebuild or fastlane gym), run tests (xcodebuild test or fastlane scan), then upload the build. fastlane’s upload_to_testflight (alias pilot) sends the .ipa to TestFlight (medium.com). You’ll need an App Store Connect API key (JSON) stored in repo secrets. Handle code-signing either with automatic signing (Xcode 13+) or fastlane Match (brightinventions.pl). Best practice: keep certificates in a private repo and connect via Match, protected with MATCH_PASSWORD in secrets (brightinventions.pl). Add linting steps—run swiftlint through fastlane plugin or shell to prevent merging style violations.
+
+After successful upload, Apple typically processes builds in 5–15 minutes (longer for new versions due to compliance review). Auto-increment build numbers via fastlane increment_build_number. Notifications: ensure you or testers are alerted (App Store Connect emails or Slack via GitHub Actions Slack Notification). Testers then get the latest build immediately.
+
+**Backend CI/CD:** Add a FastAPI pipeline too. Main stages: run tests (pytest), static analysis (flake8 or ruff—very fast), type-check (mypy), and format (black, isort). Automate via pre-commit hooks and CI. On success—deploy. If using one VPS, configure SSH deploy via GitHub Actions—ready steps exist for copying files or running commands post-push. For production readiness, containerize: write a Dockerfile (FROM python:3.12-slim), build/push image to GHCR or Docker Hub, and update service (docker pull + compose up). On PaaS (Cloud Run, Fly.io), CI deploys automatically (actions for each platform available).
+
+**Code Quality and Alerts:** Integrate GitHub CodeQL for static vulnerability analysis. Track dependency updates with Dependabot (GitHub built-in); CI ensures updates don’t break builds. Optionally add OWASP ZAP or Snyk security scans. DevOps alerts: CI should notify failures—if deploy fails, get notified immediately. GitHub Actions can emit workflow-run events; simplest: email or Sentry release tracking (report deploys and failed releases).
+
+**Release Management:** Use semantic versioning for both app and backend. iOS: each TestFlight build = unique build number; tag important ones (v1.0). Server: version APIs (e.g., /v1) and update changelog on CI deploy. CI/CD reduces human error—automated builds ensure migrations and tests run every release.
+
+**CI/CD Summary**
+
+* Use GitHub Actions for both mobile and backend.
+* Automate quality checks: lint, test, format, analyze.
+* Zero-effort deploys: fastlane + Actions (iOS), Docker/SSH + Actions (backend).
+* Alerts via Slack/email for key events (release success, build failure).
+
+Following these best practices yields a reliable MVP in 2–3 weeks—maintainable by one engineer, delivering fast UI, timely order updates (push ≤ 120 s), and stable backend API (p95 ≤ 300 ms).
+
+**Good luck. 🚀**
 
 ---
 
+### Guide for MVP & Scaling of iOS Client “Zariz” (Courier Order Tracker)
+
+Adapted to the current spec, realistic constraints (1 engineer, 1 VPS). Goal: rapid, secure MVP with safe growth.
+
+---
+
+#### Cover
+
+* **Topic:** iOS Best Practices 2025 for “Zariz”
+* **Audience:** Mobile/iOS, Backend/API, DevOps
+* **Project:** Zariz (retail delivery)
+* **Context:** 1 engineer, 2–3 weeks MVP, single VPS (API + Postgres + Reverse proxy), SwiftUI client, geo later, SLA ≥ 99%, API p95 < 300 ms
+* **Date:** 2025-10-22
+* **Authors:** team@zariz
+
+---
 ## TL;DR (≤10)
 
-1. Архитектура клиента: SwiftUI + MVVM + Clean (модули Auth/Orders/Notifications), Swift 6 Concurrency (async/await, `@MainActor`, `Sendable`), DI через протоколы/фабрики.
-2. Сеть: `URLSession` + async/await; типизированный API‑клиент, универсальный ретрай c экспоненциальным backoff+джиттер, идемпотентность `Idempotency-Key` для `claim` и статусов.
-3. Данные/офлайн: SwiftData как локальный кэш (мэппинг DTO→Entity), фоновые синки по тихим пушам (`content-available=1`) + `BGTaskScheduler`, поллинг‑фолбэк с backoff.
-4. Обновления статусов: на сервере — атомарный `claim` через транзакцию/`SELECT … FOR UPDATE SKIP LOCKED`; на iOS — защита от двойного тапа (лок‑кнопки + идемпотентный запрос + повторная подстановка статуса).
-5. Observability: `OSLog` категории, breadcrumbs и крэши через Sentry; ключевые метрики клиента — p95 загрузки списка, доля успешных `claim`, латентность «пуш→данные применены» ≤ 120 c.
-6. Security/Privacy: JWT в Keychain, PII‑минимизация, редактирование логов, ATS, TLS, защита токенов от логов/крашей; BOLA‑проверки на API.
-7. CI/CD: GitHub Actions + fastlane (build/test/lint/format/upload‑to‑TestFlight), автосимволикация крэшей, линтеры (SwiftLint/SwiftFormat), Danger‑репорты на PR.
-8. Производительность: целевые SLO клиента — холодный старт < 2 c, память < 200 МБ, рендер списков ≤ 16 мс кадр; профилирование через Instruments.
-9. Тестирование: модульные (ViewModel/UseCase), интеграционные (сетевой слой через `URLProtocol`), UI‑тесты критических флоу (вход, список, claim, смена статуса), снепшоты.
-10. Дорожная карта: v1 — без гео; v2 — гео, пуш‑уведомления пользователю, ETA, аналитика, Android.
+1. **Client architecture:** SwiftUI + MVVM + Clean (modules: Auth/Orders/Notifications), Swift 6 Concurrency (async/await, `@MainActor`, `Sendable`), dependency injection via protocols/factories.
+2. **Networking:** `URLSession` + async/await; typed API client, universal retry with exponential backoff + jitter, idempotency via `Idempotency-Key` for `claim` and status updates.
+3. **Data/offline:** SwiftData as local cache (DTO → Entity mapping), background sync through silent pushes (`content-available=1`) + `BGTaskScheduler`, polling fallback with backoff.
+4. **Status updates:** server—atomic `claim` using transaction/`SELECT … FOR UPDATE SKIP LOCKED`; iOS—double-tap protection (button lock + idempotent request + status re-apply).
+5. **Observability:** `OSLog` categories, breadcrumbs and crashes via Sentry; key metrics — p95 list load, success rate of `claim`, latency “push → data applied” ≤ 120 s.
+6. **Security/Privacy:** JWT in Keychain, PII minimization, log redaction, ATS, TLS, token protection from logs/crashes; BOLA checks on API.
+7. **CI/CD:** GitHub Actions + fastlane (build/test/lint/format/upload-to-TestFlight), auto-symbolication, linters (SwiftLint/SwiftFormat), Danger reports on PRs.
+8. **Performance:** target SLOs — cold start < 2 s, memory < 200 MB, list render ≤ 16 ms per frame; profile with Instruments.
+9. **Testing:** unit (ViewModel/UseCase), integration (network via `URLProtocol`), UI tests for critical flows (login/list/claim/status change), snapshots.
+10. **Roadmap:** v1 — no geo; v2 — geo, user pushes, ETA, analytics, Android.
 
 ---
 
-## Ландшафт 2024–2025
+## Landscape 2024–2025
 
-- Swift 6 строгая конкурентность: `Sendable`, `@MainActor`, actors для защищённого состояния — снижает гонки и улучшает отзывчивость UI.
-- SwiftData стабилизирован для простых локальных кэшей; Observation/`@Observable` упрощают реактивность SwiftUI.
-- Background Tasks: фоновая синхронизация через `BGAppRefreshTask`/`BGProcessingTask` — рекомендуемый путь вместо постоянных сокетов.
-- APNs: фокус на «тихих» пушах для контент‑обновлений + разумные лимиты/коэлы для батареи.
-- iOS 18/ Xcode 16: новые инспекторы производительности, улучшения Instruments, стабильная поддержка async/await в SDK.
-
----
-
-## Паттерны и когда их применять
-
-**Pattern A — MVP «офлайн‑лайт» (рекомендуется на старте)**
-- Когда: 1 инженер, 1 VPS, 100 курьеров / 50 магазинов, SLO «данные применены ≤120 c».
-- Шаги: (1) локальный кэш SwiftData; (2) синк по тихим пушам + фоновая задача; (3) фолбэк‑поллинг каждые 2–5 мин с backoff.
-- Плюсы: просто, предсказуемо, минимальные зависимости; Минусы: не «мгновенно‑реалтайм».
-- Опции позже: агрегация событий, конфликты с приоритетом сервера, более агрессивный синк для VIP‑заказов.
-
-**Pattern B — «Усиленный синк» (масштабирование)**
-- Когда: растут ожидания по «почти‑реалтайм», появляются гео/маршруты/ETA.
-- Шаги: (1) расширение модели событий (event sourcing); (2) тонкая приоритезация пушей/синков; (3) серверная дедупликация; (4) гео‑подсистема.
-- Плюсы: выше актуальность; Минусы: сложнее, больше телеметрии и конфликт‑резолвинга.
+* Swift 6 strict concurrency: `Sendable`, `@MainActor`, actors for state safety → fewer races, better UI responsiveness.
+* SwiftData stabilized for simple local caches; Observation/`@Observable` improve SwiftUI reactivity.
+* Background Tasks: sync via `BGAppRefreshTask`/`BGProcessingTask` is preferred to persistent sockets.
+* APNs: focus on silent pushes for content updates with reasonable battery coalescing.
+* iOS 18 / Xcode 16: new performance inspectors, Instruments upgrades, stable async/await support in SDK.
 
 ---
 
-## Priority 1 — Жизненный цикл заказа и синхронизация
+## Patterns and When to Apply
 
-### Почему
-- Критический UX: курьер видит актуальные заказы, может «забрать» и менять статус без гонок и дублей.
+**Pattern A — MVP “offline-light” (recommended start)**
 
-### Объём
-- Входит: список заказов, детали, claim, смена статуса, кэш, фоновые обновления, фолбэк‑поллинг.
-- Не входит: геолокация, ETA, чаты (v2).
+* **When:** 1 engineer, 1 VPS, ~100 couriers / 50 stores, SLO “data applied ≤ 120 s.”
+* **Steps:** (1) local SwiftData cache; (2) sync via silent push + background task; (3) polling fallback every 2–5 min with backoff.
+* **Pros:** simple, predictable, minimal deps; **Cons:** not instant real-time.
+* **Later options:** event aggregation, server-priority conflict resolution, VIP-order fast sync.
 
-### Решения
-- API: `GET /orders?status=new|claimed`, `POST /orders/{id}/claim` c заголовком `Idempotency-Key`, `POST /orders/{id}/status` (picked_up/delivered).
-- Идемпотентность: ключ = `deviceId:orderId:op:nonce`. Сервер возвращает последний валидный результат для повторов.
-- Атомарность claim: транзакция или `SELECT … FOR UPDATE SKIP LOCKED` — исключает двойное присвоение.
-- Клиентский UX: блокировка кнопки claim на время запроса, повтор с тем же `Idempotency-Key` при сетевых сбоях.
+**Pattern B — “Enhanced Sync” (scaling)**
 
-### Реализация (клиент)
-- ViewModel → UseCase → Repository → APIClient/Store (SwiftData). Все слои — протоколы для подмены в тестах.
-- Список: пагинация/обновление по pull‑to‑refresh; локальный first, затем дифф‑апдейт из сети.
-- Тихие пуши: при получении → быстрая синхронизация нужных заказов → локально применить патч → `@Observable` переотрисует UI.
-- Фон: `BGAppRefreshTask` каждые N минут (с учётом системных ограничений) → синк диффов.
+* **When:** demand for near-real-time, geo/routes/ETA added.
+* **Steps:** (1) event-sourcing model extension; (2) fine push/sync prioritization; (3) server deduplication; (4) geo subsystem.
+* **Pros:** higher freshness; **Cons:** more complex telemetry and conflict resolution.
 
-### Ограничители & SLO
-- p95 «от пуша до данных в UI» ≤ 120 c; p95 загрузки списка ≤ 700 мс (кэш + сеть); успех claim ≥ 99.5%.
+---
 
-### Отказы и восстановление
-- Сеть недоступна: показываем кэш; очереди локальных действий с идемпотентным повтором.
-- Дубли claim: сервер отдаёт 409/422 с телом‑статусом; клиент приводит UI к серверной истине.
+## Priority 1 — Order Lifecycle and Sync
 
-### Сниппеты
+### Why
+
+Critical UX: courier must see fresh orders, claim, and update status without races or duplicates.
+
+### Scope
+
+Includes order list, details, claim, status update, cache, background sync, polling fallback.
+Excludes geo, ETA, chats (v2).
+
+### Solutions
+
+* API: `GET /orders?status=new|claimed`, `POST /orders/{id}/claim` (with `Idempotency-Key`), `POST /orders/{id}/status` (picked_up/delivered).
+* Idempotency key = `deviceId:orderId:op:nonce`; server returns last valid result for retries.
+* Atomic claim: transaction or `SELECT … FOR UPDATE SKIP LOCKED` prevents double assignment.
+* UX: lock claim button during request; retry same key on network failure.
+
+### Client Implementation
+
+ViewModel → UseCase → Repository → APIClient/Store (SwiftData); all layers protocol-based for test mocks.
+List: pagination/pull-to-refresh; local first, then diff update from network.
+Silent push: on receive → sync relevant orders → apply patch locally → `@Observable` re-renders UI.
+Background: `BGAppRefreshTask` every N minutes (with system limits) → diff sync.
+
+### Limits & SLO
+
+p95 “push → UI data” ≤ 120 s; p95 list load ≤ 700 ms (cache + network); claim success ≥ 99.5%.
+
+### Failures & Recovery
+
+Offline → show cache; queue local actions with idempotent replay.
+Duplicate claim → server 409/422 with status body; client reconciles UI to server truth.
+
 ```swift
-// Идемпотентный запрос claim
+// Idempotent claim request
 struct ClaimRequest: Encodable { }
 
 func claim(orderId: UUID) async throws {
@@ -368,14 +293,14 @@ func claim(orderId: UUID) async throws {
 
 ---
 
-## Priority 2 — Авторизация и безопасное хранение
+## Priority 2 — Auth and Secure Storage
 
-### Решения
-- JWT‑access (краткоживущий) + refresh (по API). Токены хранить в Keychain, не логировать.
-- Биометрия (опционально): `LocalAuthentication` для ускорения повтора входа.
-- Безопасные дефолты ATS, только HTTPS; при необходимости пиннинг сертификата (опция позже).
+### Solutions
 
-### Сниппет
+JWT (access short-lived) + refresh (API); store tokens in Keychain, never log.
+Optional biometrics: `LocalAuthentication` for quick re-login.
+Secure defaults: ATS only HTTPS; cert-pinning optional later.
+
 ```swift
 @MainActor
 final class AuthStore: ObservableObject {
@@ -390,20 +315,18 @@ final class AuthStore: ObservableObject {
 
 ---
 
-## Priority 3 — Уведомления и фоновые обновления
+## Priority 3 — Notifications & Background Updates
 
-### Решения
-- APNs «тихие» пуши (`content-available=1`) для триггера синка; пользовательские пуши — позже.
-- `BGAppRefreshTask` для периодического синка; не полагаться на постоянные сокеты в фоне.
+### Solutions
 
-### Сниппет
+Silent APNs (`content-available=1`) to trigger sync; user pushes later.
+`BGAppRefreshTask` for periodic sync; avoid persistent sockets.
+
 ```swift
-// AppDelegate: регистрация фоновой задачи
 BGTaskScheduler.shared.register(forTaskWithIdentifier: "app.zariz.refresh", using: nil) { task in
   Task { await SyncService.shared.refresh(); task.setTaskCompleted(success: true) }
 }
 
-// Планирование
 let request = BGAppRefreshTaskRequest(identifier: "app.zariz.refresh")
 request.earliestBeginDate = Date(timeIntervalSinceNow: 15*60)
 try? BGTaskScheduler.shared.submit(request)
@@ -411,132 +334,100 @@ try? BGTaskScheduler.shared.submit(request)
 
 ---
 
-## Практики по областям
+## Domain Practices
 
-### 1) Код‑стайл и конкурентность
-- Swift 6 Concurrency: `Sendable`, `nonisolated`, `@MainActor` для UI, акторы для защищённых ресурсов (кэш, очередь задач).
-- Ошибки: чёткая иерархия `AppError` (сети/валидация/сервер/неожиданное); маппинг в UI‑состояния.
-- Линтеры: SwiftLint (стайл, сложность), SwiftFormat (формат), pre‑commit‑хуки.
-
-### 2) Дизайн API/модулей
-- Слои: `Domain` (UseCases, модели), `Data` (APIClient, Store), `UI` (SwiftUI + ViewModel). Общие протоколы для DI и тестов.
-- Версионирование API: через серверный OpenAPI 3.1 и автоген‑SDK (опционально); совместимость в DTO.
-
-### 3) Данные и состояние
-- SwiftData: сущности `Order`, `Store`, `User`, `StatusEvent` с минимально нужными индексами; миграции — по версиям схемы.
-- Кэш‑политики: TTL/ETag; merge‑патчи из сети, конфликт‑резолвинг в пользу сервера.
-
-### 4) Security
-- Keychain для токенов; скрывать из логов/крэшей; защита от утечек через символикацию.
-- Не хранить чувствительное в UserDefaults; PII‑минимизация, шифрование в покое (опционально).
-
-### 5) Privacy & Compliance
-- Privacy Manifest (если требуется), App Tracking Transparency — не используется для MVP.
-- Удаление персональных данных по запросу; срок хранения логов ограничить.
-
-### 6) Производительность и стоимость
-- Цели клиента: холодный старт <2 c; UI кадр ≤16 мс; память <200 МБ; сетевые байты — бюджетированы.
-- Инструменты: Instruments (Time Profiler, Allocations, Network), Signposts для критических участков.
-
-### 7) Observability
-- `OSLog` категории: `auth`, `orders`, `sync`, `network`, уровни `debug/info/error`.
-- Sentry: крэши, breadcrumbs (на `claim`, смена статуса, фатальные ошибки сети). Редактирование полей.
-
-### 8) CI/CD
-- GitHub Actions: матрица (iOS 17/18), шаги `build`, `test`, `lint`, `format`, `upload TestFlight` через fastlane.
-- Code signing: автоматизировано через App Store Connect API/fastlane match.
-
-### 9) Тестирование
-- Unit: ViewModel/UseCase без UI; инъекция фейковых репозиториев/клиентов.
-- Integration: `URLProtocol` заглушает сеть; сценарии ошибок (401/409/5xx, таймауты) и ретраи.
-- UI: XCUITest на флоу «вход → список → claim → смена статуса»; снепшоты ключевых экранов.
-
-### 10) Документация
-- Краткие ADR (архрешения), диаграмма слоёв, гайд по дебагу/продакшн‑флагам, чеклисты релиза.
+1. **Code Style & Concurrency:** Swift 6 Concurrency (`Sendable`, `nonisolated`, `@MainActor`), actors for safe resources; hierarchy of `AppError`; linters (SwiftLint/SwiftFormat, pre-commit).
+2. **API/Module Design:** Layers `Domain`/`Data`/`UI`; protocol DI; OpenAPI 3.1 + optional SDK gen.
+3. **Data & State:** SwiftData entities `Order`/`Store`/`User`/`StatusEvent`; TTL/ETag cache; server-first merge.
+4. **Security:** Keychain for tokens; no logs; symbolicated crash redaction; no UserDefaults for PII.
+5. **Privacy & Compliance:** Privacy Manifest if needed; no ATT in MVP; data-deletion on request.
+6. **Performance & Cost:** cold start < 2 s; frame ≤ 16 ms; memory < 200 MB; budget network bytes; profile with Instruments.
+7. **Observability:** `OSLog` categories (auth/orders/sync/network); Sentry for crashes/breadcrumbs.
+8. **CI/CD:** GitHub Actions matrix (iOS 17/18); steps build/test/lint/format/upload via fastlane; auto code-signing.
+9. **Testing:** Unit (ViewModel/UseCase), Integration (URLProtocol stubs 401/409/5xx + retries), UI (XCUITest login→list→claim→status), snapshots.
+10. **Docs:** short ADRs, layer diagram, debug/prod flags guide, release checklists.
 
 ---
 
 ## Observability & SLOs
 
-**Ключевые метрики (клиент)**
-- Доступность: крэш‑фри пользователи ≥ 99.5%.
-- Латентность: p95 загрузки списка ≤ 700 мс (кэш+сеть); p95 «пуш→данные» ≤ 120 c.
-- Ошибки: доля ошибок claim < 0.5%; ретраи > 2 подряд — алерт в логи/анализ.
-- Использование: активные курьеры/час, доля офлайн операций.
+**Key Metrics (client)**
+Crash-free users ≥ 99.5%.
+p95 list load ≤ 700 ms; p95 “push → UI” ≤ 120 s.
+Claim errors < 0.5%; >2 retries → log alert.
+Active couriers/hour, offline actions ratio.
 
-**Алертинг**
-- В Sentry: всплеск крэшей, повторяющиеся ошибки сети/аутентификации.
-- В бэкенде/Мониторинге: SLA API, очередь пушей, скорость обработки событий.
+**Alerting**
+Sentry: crash spikes, network/auth errors.
+Backend monitoring: API SLA, push queue, event processing rate.
 
-**SLO‑таблица (фрагмент)**
-| Поверхность | SLI | Цель | Окно | Заметки |
-| --- | --- | --- | --- | --- |
-| Список заказов | p95 время от запуска до списка | ≤ 2 c | 7/30 дн | холодный старт |
-| Синхронизация | п95 «пуш→данные в UI» | ≤ 120 c | 7/30 дн | тихие пуши + BGTask |
-| Claim | успех операций | ≥ 99.5% | 7/30 дн | идемпотентность + ретраи |
-
----
-
-## Надёжность
-
-- Ретраи с экспоненциальным backoff + джиттер на транзиентных ошибках; отмена по `Task` при уходе со страницы.
-- Идемпотентность всех мутаций: повтор безопасен; клиент хранит последний результат.
-- Килл‑свитчи/фича‑флаги для опасных функций; деградация до кэша при сбоях сети.
+| Surface    | SLI                    | Target  | Window | Notes                 |
+| ---------- | ---------------------- | ------- | ------ | --------------------- |
+| Order list | p95 launch → list time | ≤ 2 s   | 7/30 d | cold start            |
+| Sync       | p95 push → UI data     | ≤ 120 s | 7/30 d | silent push + BGTask  |
+| Claim      | success rate           | ≥ 99.5% | 7/30 d | idempotency + retries |
 
 ---
 
-## Производительность и бюджет
+## Reliability
 
-- Следить за количеством перерисовок SwiftUI (наблюдаемые свойства, `EquatableView`, мемоизация форматтеров/дат).
-- Сетевые ответы — сжать/минимизировать поля; использовать ETag/If‑None‑Match.
+Retries with exponential backoff + jitter; cancel on view exit.
+All mutations idempotent; client stores last result.
+Kill-switches/feature-flags for risky features; fallback to cache on network failures.
+
+---
+
+## Performance & Budget
+
+Minimize SwiftUI re-renders (`EquatableView`, memoized formatters/dates).
+Compress/trim network responses; use ETag/If-None-Match.
 
 ---
 
 ## Security & Privacy
 
-- Потоки угроз: кража токена, MITM, утечки PII через логи.
-- Меры: Keychain, ATS, не логировать чувствительные; редактирование Sentry; ротация токенов на компромет.
+Threats: token theft, MITM, PII leaks via logs.
+Controls: Keychain, ATS, no sensitive logs, Sentry redaction, token rotation on compromise.
 
 ---
 
-## Стратегия тестирования
+## Testing Strategy
 
-- Smoke‑E2E на стейджинге (фейковые заказы) перед релизом.
-- Контрактные тесты DTO (сверка с OpenAPI).
-- Нагрузочный мини‑прогон (100 одновременных claim через инструмент нагрузочного теста API).
-
----
-
-## Риски и компромиссы
-
-| Риск | Влияние | Вероятность | Митигации |
-| --- | --- | --- | --- |
-| Задержки синка > 120 c | Среднее | Средняя | приоритетные пуши для заказов в пути; агрессивный BGRefresh |
-| Дубли claim | Высокое | Низкая | атомарность на БД; идемпотентный клиент |
-| Крэши на старых устройствах | Среднее | Низкая | тесты на iOS 17/18; сбор крэшей; горячие фиксы |
+Smoke E2E on staging (fake orders).
+DTO contract tests vs OpenAPI.
+Mini load test (100 parallel claims).
 
 ---
 
-## Рекомендации и дорожная карта
+## Risks & Trade-offs
 
-**MVP (2–3 недели)**
-- Auth + список заказов + детали + claim + смена статуса; кэш SwiftData; фоновый синк; Sentry/OSLog; CI (build/test/lint/TF).
-
-**Hardening & v2**
-- Геолокация/маршруты, пользовательские пуши, ETA; продвинутая аналитика; Android‑клиент.
+| Risk                     | Impact | Probability | Mitigation                                            |
+| ------------------------ | ------ | ----------- | ----------------------------------------------------- |
+| Sync delay > 120 s       | Medium | Medium      | priority push for active orders; aggressive BGRefresh |
+| Duplicate claim          | High   | Low         | DB atomicity; idempotent client                       |
+| Crashes on older devices | Medium | Low         | test on iOS 17/18; crash reports; hotfixes            |
 
 ---
 
-## Приложения — минимальные сниппеты
+## Recommendations & Roadmap
 
-**OSLog категории**
+**MVP (2–3 weeks)** — Auth, order list/details/claim/status; SwiftData cache; background sync; Sentry/OSLog; CI (build/test/lint/TF).
+**Hardening & v2** — Geo/routes, user pushes, ETA, advanced analytics, Android client.
+
+---
+
+## Appendices — Snippets
+
+**OSLog Categories**
+
 ```swift
 import OSLog
 let log = Logger(subsystem: "app.zariz", category: "orders")
 log.info("Order list loaded: count=\(count)")
 ```
 
-**URLSession клиент (типизированный)**
+**Typed URLSession Client**
+
 ```swift
 struct API {
   let base: URL
@@ -549,58 +440,67 @@ struct API {
 }
 ```
 
-**Статусы BG‑задач**
+**BG Task Timing**
+
 ```swift
-// Планируйте не чаще, чем нужно: система сама коэлит
+// Schedule responsibly; system coalesces automatically
 request.earliestBeginDate = Date(timeIntervalSinceNow: 15*60)
 ```
 
 ---
 
-## Чтиво (2024–2025, аннотированное)
+## Reading List (2024–2025 annotated)
 
-| Заголовок | Дата | Тип | Суть | Релевантность |
-| --- | --- | --- | --- | --- |
-| Choosing Background Strategies for Your App (Apple) | 2024‑?? | Doc | Тихие пуши + BGTasks вместо вечных сокетов | 10/10 |
-| Pushing background updates to your App (Apple) | 2024‑?? | Doc | `content-available=1`, лимиты, экономия батареи | 10/10 |
-| SwiftData Documentation (Apple) | 2025‑?? | Doc | Локальный кэш, модель/миграции | 9/10 |
-| What’s new in Swift Concurrency (WWDC) | 2024‑?? | Talk | Strict concurrency, `Sendable`, `@MainActor` | 9/10 |
-| OWASP Mobile Top‑10 (2023) | 2023 | Std | Мобильные угрозы/защита | 8/10 |
-| URLSession Best Practices (Apple) | 2024‑?? | Guide | Async/await, кэш, TLS | 9/10 |
-| Sentry iOS SDK | 2025‑?? | Doc | Крэши/брэдкрамбс/редактирование | 8/10 |
+| Title                                               | Date | Type  | Essence                                      | Relevance |
+| --------------------------------------------------- | ---- | ----- | -------------------------------------------- | --------- |
+| Choosing Background Strategies for Your App (Apple) | 2024 | Doc   | Silent push + BGTasks vs sockets             | 10/10     |
+| Pushing Background Updates (Apple)                  | 2024 | Doc   | `content-available=1`, battery limits        | 10/10     |
+| SwiftData Documentation (Apple)                     | 2025 | Doc   | Local cache, models/migrations               | 9/10      |
+| What’s New in Swift Concurrency (WWDC)              | 2024 | Talk  | Strict concurrency, `Sendable`, `@MainActor` | 9/10      |
+| OWASP Mobile Top-10 (2023)                          | 2023 | Std   | Mobile threats / defenses                    | 8/10      |
+| URLSession Best Practices (Apple)                   | 2024 | Guide | Async/await, cache, TLS                      | 9/10      |
+| Sentry iOS SDK                                      | 2025 | Doc   | Crashes/breadcrumbs/redaction                | 8/10      |
 
 ---
 
-## Чеклисты
+## Checklists
 
-**Имплементация**
-- [ ] Разделение слоёв и DI
-- [ ] Типизированный API‑клиент + ретраи
-- [ ] Кэш SwiftData + фоновые синки
+**Implementation**
+
+* [ ] Layered architecture + DI
+* [ ] Typed API client + retries
+* [ ] SwiftData cache + background sync
 
 **Security/Privacy**
-- [ ] JWT в Keychain, не в логах
-- [ ] Логи редактируются
-- [ ] ATS/TLS включены
+
+* [ ] JWT in Keychain, no logs
+* [ ]
+
+
+Logs redacted
+
+*  [ ] ATS/TLS enforced
 
 **Observability**
-- [ ] OSLog категории
-- [ ] Sentry подключён
-- [ ] SLO в дашборде
+
+* [ ] OSLog categories
+* [ ] Sentry integrated
+* [ ] SLO dashboard
 
 **CI/CD & Ops**
-- [ ] Actions + fastlane
-- [ ] Линтеры/форматтеры
-- [ ] TestFlight релизы
 
-**Готовность к релизу**
-- [ ] ADR/диаграмма актуальны
-- [ ] Runbook «сбои синка/claim»
-- [ ] KPI‑дашборд
+* [ ] Actions + fastlane
+* [ ] Linters/formatters
+* [ ] TestFlight releases
+
+**Release Readiness**
+
+* [ ] ADRs/diagram current
+* [ ] Runbook “sync/claim failures”
+* [ ] KPI dashboard
 
 ---
 
-## История изменений
+## Changelog
 
-- 2025‑10‑22: Первичная версия, адаптирована под Zariz.
-
+* 2025-10-22: Initial version, adapted for Zariz.
