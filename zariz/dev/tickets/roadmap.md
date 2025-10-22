@@ -39,7 +39,7 @@ Progress: mark done items with [x] and adjust the above ETA line-by-line as you 
 
  - [x] 1. Monorepo structure, tooling, Docker baseline
  - [x] 2. Backend scaffold (FastAPI, SQLAlchemy, Alembic, JWT)
-- [ ] 3. Core APIs: auth, orders CRUD, claim (atomic), idempotency
+ - [x] 3. Core APIs: auth, orders CRUD, claim (atomic), idempotency
 - [ ] 4. Notifications: APNs worker, device registry, SSE for web
 - [ ] 5. CI/CD + Deploy: Actions, Docker images, Compose/Nginx
 

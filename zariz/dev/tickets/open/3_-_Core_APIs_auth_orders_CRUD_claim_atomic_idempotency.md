@@ -136,3 +136,38 @@ ls zariz/backend/docs/prisma_schema_reference.prisma || true
 
 Next
 - Add notifications worker/APNs device registry in Ticket 4.
+
+---
+
+Implementation log (executed)
+- RBAC dependencies
+  - Added `get_current_identity`, `require_role`, and `maybe_current_identity` in `zariz/backend/app/api/deps.py:1`.
+  - Added `get_db` using a lazily constructed sessionmaker for easier testing.
+- Idempotency
+  - Added SQLAlchemy model `IdempotencyKey` at `zariz/backend/app/db/models/idempotency.py:1`.
+  - Helpers `find_idempotency`/`save_idempotency` in `deps.py` and per-route logic for POST endpoints.
+- Schemas
+  - `zariz/backend/app/api/schemas.py:1` with `AuthLogin`, `TokenResponse`, `OrderCreate`, `OrderRead`, `StatusUpdate`, `DeviceRegister`.
+- Routes
+  - Auth: `POST /v1/auth/login` returning JWT with role `zariz/backend/app/api/routes/auth.py:1`.
+  - Orders: list/create/claim/status `zariz/backend/app/api/routes/orders.py:1` with atomic claim (`single UPDATE ... WHERE status='new'`) and status transitions.
+  - Devices: `POST /v1/devices/register` upsert by token; optional auth `zariz/backend/app/api/routes/devices.py:1`.
+- DB and Alembic
+  - Exposed models in `zariz/backend/app/db/base.py:1` for Alembic autogenerate; session creation refactored (`zariz/backend/app/db/session.py:1`).
+- CORS + Docs
+  - Enabled CORS allowlist via `CORS_ALLOW_ORIGINS` in `zariz/backend/app/main.py:1`; updated `.env.example:1`.
+- Tests
+  - Added pytest suite using SQLite: `zariz/backend/tests/conftest.py:1`, `zariz/backend/tests/test_core_apis.py:1`.
+  - Verified: 4 tests green including atomic claim and idempotency reuse.
+
+How to verify locally
+- Without Docker:
+  - `cd zariz/backend && python3 -m venv .venv && source .venv/bin/activate`
+  - `pip install -e . && pip install httpx pytest`
+  - `pytest -q` → expect 4 passed
+  - `uvicorn app.main:app --reload` and use `/docs`.
+- With Docker (requires Docker running):
+  - `docker compose up -d postgres api`
+  - `curl -s http://localhost:8000/v1/orders` → `[]`
+  - Obtain a token: `POST /v1/auth/login {"subject":"1","role":"store"}`
+  - Create order: `POST /v1/orders` with token and body from schemas.
