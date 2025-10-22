@@ -22,7 +22,8 @@
 "picked_up" = "Picked up";
 "delivered" = "Delivered";
 "invalid_demo_login" = "In demo, enter courier, store or admin";
-"language_en" = "English";
-"language_ru" = "Russian";
-"language_he" = "Hebrew";
-"language_ar" = "Arabic";
+"status_new" = "New";
+"status_claimed" = "Claimed";
+"status_picked_up" = "Picked";
+"status_delivered" = "Done";
+"status_canceled" = "Canceled";

@@ -14,8 +14,10 @@ struct ZarizApp: App {
                 if session.isAuthenticated {
                     TabView {
                         NavigationStack { OrdersListView() }
+                            .globalNavToolbar()
                             .tabItem { Label("orders", systemImage: "list.bullet") }
                         NavigationStack { ProfileView() }
+                            .globalNavToolbar()
                             .tabItem { Label("profile", systemImage: "person.crop.circle") }
                     }
                 } else {

@@ -22,7 +22,8 @@
 "picked_up" = "Забрал";
 "delivered" = "Доставил";
 "invalid_demo_login" = "В демо введите courier, store или admin";
-"language_en" = "Английский";
-"language_ru" = "Русский";
-"language_he" = "Иврит";
-"language_ar" = "Арабский";
+"status_new" = "Новый";
+"status_claimed" = "Взято";
+"status_picked_up" = "Забрал";
+"status_delivered" = "Доставлен";
+"status_canceled" = "Отменен";

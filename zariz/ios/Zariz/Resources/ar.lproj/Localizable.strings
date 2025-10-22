@@ -22,7 +22,8 @@
 "picked_up" = "تم الاستلام";
 "delivered" = "تم التسليم";
 "invalid_demo_login" = "في العرض أدخل courier أو store أو admin";
-"language_en" = "الإنجليزية";
-"language_ru" = "الروسية";
-"language_he" = "العبرية";
-"language_ar" = "العربية";
+"status_new" = "جديد";
+"status_claimed" = "تم الاستلام";
+"status_picked_up" = "تم الالتقاط";
+"status_delivered" = "تم التسليم";
+"status_canceled" = "ملغي";

@@ -8,11 +8,11 @@ struct OrderRowView: View {
 
     private func badge(for status: String) -> StatusBadge {
         switch status {
-        case "new": return StatusBadge(text: "New", color: DS.Color.statusNew)
-        case "claimed": return StatusBadge(text: "Claimed", color: DS.Color.statusClaimed)
-        case "picked_up": return StatusBadge(text: "Picked", color: DS.Color.statusPicked)
-        case "delivered": return StatusBadge(text: "Done", color: DS.Color.statusDelivered)
-        case "canceled": return StatusBadge(text: "Canceled", color: DS.Color.statusCanceled)
+        case "new": return StatusBadge(text: String(localized: "status_new"), color: DS.Color.statusNew)
+        case "claimed": return StatusBadge(text: String(localized: "status_claimed"), color: DS.Color.statusClaimed)
+        case "picked_up": return StatusBadge(text: String(localized: "status_picked_up"), color: DS.Color.statusPicked)
+        case "delivered": return StatusBadge(text: String(localized: "status_delivered"), color: DS.Color.statusDelivered)
+        case "canceled": return StatusBadge(text: String(localized: "status_canceled"), color: DS.Color.statusCanceled)
         default: return StatusBadge(text: status, color: .gray)
         }
     }
@@ -33,4 +33,3 @@ struct OrderRowView: View {
         .padding(.vertical, DS.Spacing.sm)
     }
 }
-

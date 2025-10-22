@@ -6,6 +6,16 @@ struct AuthView: View {
 
     var body: some View {
         VStack(spacing: DS.Spacing.lg) {
+            HStack {
+                Spacer()
+                // Language switcher in auth screen (visible everywhere)
+                Menu {
+                    Button("HE") { session.languageCode = "he" }
+                    Button("AR") { session.languageCode = "ar" }
+                    Button("EN") { session.languageCode = "en" }
+                    Button("RU") { session.languageCode = "ru" }
+                } label: { Image(systemName: "globe") }
+            }
             Text("welcome_title").font(.largeTitle).bold()
             TextField("phone_or_email", text: $vm.login)
                 .textContentType(.username)

@@ -22,7 +22,8 @@
 "picked_up" = "נאסף";
 "delivered" = "נמסר";
 "invalid_demo_login" = "בהדגמה הזן courier, store או admin";
-"language_en" = "אנגלית";
-"language_ru" = "רוסית";
-"language_he" = "עברית";
-"language_ar" = "ערבית";
+"status_new" = "חדש";
+"status_claimed" = "נתפס";
+"status_picked_up" = "נאסף";
+"status_delivered" = "נמסר";
+"status_canceled" = "בוטל";
