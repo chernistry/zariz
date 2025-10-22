@@ -24,12 +24,6 @@ struct GlobalNavToolbar: ViewModifier {
                 } label: {
                     Image(systemName: "globe")
                 }
-                if showHomeInDemo && session.isDemoMode {
-                    Button(String(localized: "home")) {
-                        KeychainTokenStore.clear()
-                        session.isAuthenticated = false
-                    }
-                }
                 if showLogout {
                     Button(String(localized: "logout")) {
                         KeychainTokenStore.clear()

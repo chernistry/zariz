@@ -18,7 +18,7 @@ struct ProfileView: View {
             Spacer()
         }
         .padding(DS.Spacing.xl)
-        .navigationTitle("Profile")
+        .navigationTitle("profile")
+        .globalNavToolbar()
     }
 }
-

@@ -27,21 +27,7 @@ struct OrdersListView: View {
         }
         .navigationDestination(for: Int.self) { id in OrderDetailView(orderId: id) }
         .navigationTitle("orders")
-        .toolbar {
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                if session.isDemoMode {
-                    Button("Home") {
-                        KeychainTokenStore.clear()
-                        session.isAuthenticated = false
-                    }
-                }
-                Button("Logout") {
-                    KeychainTokenStore.clear()
-                    session.isAuthenticated = false
-                    session.isDemoMode = false
-                }
-            }
-        }
+        .globalNavToolbar()
         .task {
             await MainActor.run { ModelContextHolder.shared.context = ctx }
             isLoading = true
