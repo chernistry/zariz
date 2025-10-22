@@ -7,7 +7,11 @@ struct StoreHomeView: View {
     @State private var isSyncing: Bool = false
 
     @Query(sort: \OrderDraftEntity.createdAt, order: .reverse) private var drafts: [OrderDraftEntity]
-    @Query(sort: \OrderEntity.id, order: .reverse, fetchLimit: 3) private var recentOrders: [OrderEntity]
+    @Query(sort: \OrderEntity.id, order: .reverse) private var recentOrders: [OrderEntity]
+
+    private var limitedRecentOrders: [OrderEntity] {
+        Array(recentOrders.prefix(3))
+    }
 
     var body: some View {
         ScrollView {
@@ -15,7 +19,7 @@ struct StoreHomeView: View {
                 heroCard
                 actionsCard
                 if !drafts.isEmpty { draftsCard }
-                if !recentOrders.isEmpty { recentOrdersCard }
+                if !limitedRecentOrders.isEmpty { recentOrdersCard }
             }
             .padding(.horizontal, DS.Spacing.xl)
             .padding(.vertical, DS.Spacing.xl)
@@ -99,7 +103,7 @@ struct StoreHomeView: View {
                     .font(DS.Font.body.weight(.semibold))
                     .foregroundStyle(DS.Color.textPrimary)
                 VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                    ForEach(recentOrders) { order in
+                    ForEach(limitedRecentOrders) { order in
                         VStack(alignment: .leading, spacing: DS.Spacing.xs) {
                             HStack {
                                 Text("#\(order.id)")
@@ -115,7 +119,7 @@ struct StoreHomeView: View {
                                 .foregroundStyle(DS.Color.textSecondary)
                         }
                         .padding(.vertical, DS.Spacing.xs)
-                        if order.id != recentOrders.last?.id {
+                        if order.id != limitedRecentOrders.last?.id {
                             Divider().background(DS.Color.divider)
                         }
                     }

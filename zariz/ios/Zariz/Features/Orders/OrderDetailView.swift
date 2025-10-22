@@ -334,7 +334,7 @@ private struct TimelineRow: View {
     }
 }
 
-private extension String {
+extension String {
     var localizedStatus: String {
         switch self {
         case "new": return String(localized: "status_new")

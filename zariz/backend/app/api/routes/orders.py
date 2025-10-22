@@ -16,6 +16,29 @@ from ...worker.push import send_silent
 router = APIRouter(prefix="/orders", tags=["orders"])
 
 
+def price_for_boxes(boxes: int) -> tuple[int, int]:
+    if boxes <= 8:
+        return 35, 1
+    if boxes <= 16:
+        return 70, 2
+    return 105, 3
+
+
+def delivery_address_from_payload(payload: OrderCreate) -> str:
+    parts: list[str] = []
+    street = " ".join(filter(None, [payload.street.strip(), payload.building_no.strip()]))
+    if street:
+        parts.append(street)
+    detail = ", ".join([
+        p.strip()
+        for p in [payload.floor or "", payload.apartment or ""]
+        if p and p.strip()
+    ])
+    if detail:
+        parts.append(detail)
+    return ", ".join(parts)
+
+
 @router.get("", response_model=list[OrderRead])
 def list_orders(
     status_filter: Optional[str] = Query(default=None, alias="status"),
@@ -45,17 +68,29 @@ def list_orders(
         from sqlalchemy import or_
         q = q.where(or_(Order.courier_id == courier_id, Order.status == "new"))
     rows = db.execute(q).scalars().all()
-    return [
-        OrderRead(
-            id=o.id,
-            store_id=o.store_id,
-            courier_id=o.courier_id,
-            status=o.status,
-            pickup_address=o.pickup_address,
-            delivery_address=o.delivery_address,
+    result: list[OrderRead] = []
+    for o in rows:
+        result.append(
+            OrderRead(
+                id=o.id,
+                store_id=o.store_id,
+                courier_id=o.courier_id,
+                status=o.status,
+                pickup_address=o.pickup_address,
+                delivery_address=o.delivery_address,
+                recipient_first_name=o.recipient_first_name,
+                recipient_last_name=o.recipient_last_name,
+                phone=o.phone,
+                street=o.street,
+                building_no=o.building_no,
+                floor=o.floor,
+                apartment=o.apartment,
+                boxes_count=o.boxes_count,
+                boxes_multiplier=o.boxes_multiplier,
+                price_total=o.price_total,
+            )
         )
-        for o in rows
-    ]
+    return result
 
 
 @limiter.limit("10/minute")
@@ -77,12 +112,33 @@ def create_order(
 
             return JSONResponse(status_code=existing.status_code, content=_json.loads(existing.response_body))
 
+    store_id = payload.store_id
+    role = identity.get("role")
+    if role == "store":
+        store_id = _parse_int(identity.get("sub"))
+    if store_id is None:
+        raise HTTPException(status_code=400, detail="Store id required")
+
+    pickup_address = (payload.pickup_address or "").strip()
+    delivery_address = (payload.delivery_address or delivery_address_from_payload(payload)).strip()
+    price, multiplier = price_for_boxes(payload.boxes_count)
+
     o = Order(
-        store_id=payload.store_id,
+        store_id=store_id,
         courier_id=None,
         status="new",
-        pickup_address=payload.pickup_address,
-        delivery_address=payload.delivery_address,
+        pickup_address=pickup_address,
+        delivery_address=delivery_address,
+        recipient_first_name=payload.recipient_first_name,
+        recipient_last_name=payload.recipient_last_name,
+        phone=payload.phone,
+        street=payload.street,
+        building_no=payload.building_no,
+        floor=payload.floor or "",
+        apartment=payload.apartment or "",
+        boxes_count=payload.boxes_count,
+        boxes_multiplier=multiplier,
+        price_total=price,
     )
     db.add(o)
     db.flush()
@@ -106,6 +162,16 @@ def create_order(
         status=o.status,
         pickup_address=o.pickup_address,
         delivery_address=o.delivery_address,
+        recipient_first_name=o.recipient_first_name,
+        recipient_last_name=o.recipient_last_name,
+        phone=o.phone,
+        street=o.street,
+        building_no=o.building_no,
+        floor=o.floor,
+        apartment=o.apartment,
+        boxes_count=o.boxes_count,
+        boxes_multiplier=o.boxes_multiplier,
+        price_total=o.price_total,
     )
     if idem:
         save_idempotency(db, idem, request.method, request.url.path, 200, result.model_dump())

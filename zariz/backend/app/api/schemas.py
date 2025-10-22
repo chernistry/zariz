@@ -13,9 +13,17 @@ class TokenResponse(BaseModel):
 
 
 class OrderCreate(BaseModel):
-    store_id: int
-    pickup_address: str
-    delivery_address: str
+    recipient_first_name: str
+    recipient_last_name: str
+    phone: str
+    street: str
+    building_no: str
+    floor: Optional[str] = None
+    apartment: Optional[str] = None
+    boxes_count: int = Field(gt=0, le=200)
+    pickup_address: Optional[str] = None
+    delivery_address: Optional[str] = None
+    store_id: Optional[int] = None
 
 
 class OrderRead(BaseModel):
@@ -25,6 +33,16 @@ class OrderRead(BaseModel):
     status: str
     pickup_address: str
     delivery_address: str
+    recipient_first_name: Optional[str] = None
+    recipient_last_name: Optional[str] = None
+    phone: Optional[str] = None
+    street: Optional[str] = None
+    building_no: Optional[str] = None
+    floor: Optional[str] = None
+    apartment: Optional[str] = None
+    boxes_count: Optional[int] = None
+    boxes_multiplier: Optional[int] = None
+    price_total: Optional[int] = None
 
 
 class StatusUpdate(BaseModel):
@@ -34,4 +52,3 @@ class StatusUpdate(BaseModel):
 class DeviceRegister(BaseModel):
     platform: Literal["ios"]
     token: str
-

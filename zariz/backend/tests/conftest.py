@@ -50,6 +50,9 @@ def client(db_session):
 
     # override dependency
     app.dependency_overrides[deps_module.get_db] = override_get_db
+    if not db_session.query(Store).filter(Store.id == 1).first():
+        db_session.add(Store(id=1, name="Test Store"))
+        db_session.commit()
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
@@ -71,7 +74,23 @@ def seeded_order(db_session):
     st = Store(name=f"Test Store {uuid.uuid4()}")
     db_session.add(st)
     db_session.flush()
-    o = Order(store_id=st.id, courier_id=None, status="new", pickup_address="A", delivery_address="B")
+    o = Order(
+        store_id=st.id,
+        courier_id=None,
+        status="new",
+        pickup_address="A",
+        delivery_address="Street 1",
+        recipient_first_name="Test",
+        recipient_last_name="User",
+        phone="000",
+        street="Street",
+        building_no="1",
+        floor="",
+        apartment="",
+        boxes_count=2,
+        boxes_multiplier=1,
+        price_total=35,
+    )
     db_session.add(o)
     db_session.commit()
     return o.id

@@ -14,6 +14,9 @@ packages:
   Shimmer:
     url: https://github.com/markiv/SwiftUI-Shimmer
     from: 1.5.1
+  Lottie:
+    url: https://github.com/airbnb/lottie-spm
+    from: 4.4.0
 settings:
   base:
     SWIFT_VERSION: '6.0'
@@ -41,6 +44,8 @@ targets:
         product: AlertToast
       - package: Shimmer
         product: Shimmer
+      - package: Lottie
+        product: Lottie
   ZarizTests:
     type: bundle.unit-test
     platform: iOS

@@ -83,7 +83,7 @@ struct NewOrderView: View {
     }
 
     private var priceHint: String {
-        let (price, _) = PricingRules.price(for: boxesCount)
+        let (price, _) = OrderPricing.price(for: boxesCount)
         return String(format: String(localized: "store_new_order_price_hint"), price)
     }
 
@@ -147,14 +147,5 @@ struct NewOrderView: View {
         floor = ""
         apartment = ""
         boxesCount = 1
-    }
-}
-
-private enum PricingRules {
-    static func price(for boxes: Int) -> (Int, Int) {
-        let count = max(boxes, 1)
-        if count <= 8 { return (35, 1) }
-        if count <= 16 { return (70, 2) }
-        return (105, 3)
     }
 }

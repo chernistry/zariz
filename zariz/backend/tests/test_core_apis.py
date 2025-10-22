@@ -13,18 +13,31 @@ def test_auth_login(client):
 
 def test_create_and_list_orders(client, store_token):
     # create
+    payload = {
+        "pickup_address": "Warehouse A",
+        "recipient_first_name": "John",
+        "recipient_last_name": "Doe",
+        "phone": "+972500000000",
+        "street": "Main",
+        "building_no": "10",
+        "floor": "2",
+        "apartment": "5",
+        "boxes_count": 4,
+    }
     r = client.post(
         "/v1/orders",
         headers=auth_header(store_token) | {"Idempotency-Key": "abc-1"},
-        json={"store_id": 1, "pickup_address": "P", "delivery_address": "D"},
+        json=payload,
     )
     assert r.status_code == 200
     order = r.json()
+    assert order["boxes_count"] == 4
+    assert order["boxes_multiplier"] == 1
     # repeat with same idem key returns cached
     r2 = client.post(
         "/v1/orders",
         headers=auth_header(store_token) | {"Idempotency-Key": "abc-1"},
-        json={"store_id": 1, "pickup_address": "P", "delivery_address": "D"},
+        json=payload,
     )
     assert r2.status_code == 200
     assert r2.json()["id"] == order["id"]
@@ -38,10 +51,19 @@ def test_create_and_list_orders(client, store_token):
 def test_idempotency_key_mismatch_cross_endpoint(client, store_token, courier_token):
     # Create an order with a specific key
     key = "reuse-key-1"
+    payload = {
+        "pickup_address": "Warehouse",
+        "recipient_first_name": "Sara",
+        "recipient_last_name": "Cohen",
+        "phone": "+972500000111",
+        "street": "Herzl",
+        "building_no": "8",
+        "boxes_count": 3,
+    }
     r = client.post(
         "/v1/orders",
         headers=auth_header(store_token) | {"Idempotency-Key": key},
-        json={"store_id": 1, "pickup_address": "A", "delivery_address": "B"},
+        json=payload,
     )
     assert r.status_code == 200
     oid = r.json()["id"]
