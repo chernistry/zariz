@@ -102,3 +102,53 @@ Verification
 
 Next
 - RBAC and security hardening in Ticket 11.
+
+---
+
+Analysis (agent)
+- Mode: Execute. Lowest open ticket is 10.
+- Goal: Scaffold `zariz/web-admin` from `zariz/references/next-delivery` (Next.js 12 + TS), prune storefront routes, add minimal admin pages: `/login`, `/orders`, `/orders/new`.
+- Auth: Store JWT in `localStorage` (web); attach `Authorization: Bearer <token>` in API client.
+- Backend base URL: expose via `NEXT_PUBLIC_API_BASE` (default `http://localhost:8000/v1`). Aligns with backend docs using `/v1/*`.
+- Reuse: keep `components`, `styles`, `contexts/auth`, `libs` from reference; replace `pages` with our minimal set.
+- Best practices fit: simple client-side auth, env-driven base URL, no secrets in logs, protected navigation after login.
+
+Plan (commands and file ops)
+1) Copy scaffold
+   - `rm -rf zariz/web-admin`
+   - `cp -R zariz/references/next-delivery zariz/web-admin`
+   - `rm -rf zariz/web-admin/.git`
+2) Prune storefront routes
+   - `rm -rf zariz/web-admin/pages/[tenant]`
+   - Ensure `zariz/web-admin/pages` exists
+3) API client
+   - Add `zariz/web-admin/libs/api.ts` (env: `NEXT_PUBLIC_API_BASE`, token from `localStorage`)
+4) Pages
+   - Add `zariz/web-admin/pages/login.tsx`
+   - Add `zariz/web-admin/pages/orders.tsx`
+   - Add `zariz/web-admin/pages/orders/new.tsx`
+5) Verification (local)
+   - `cd zariz/web-admin && yarn && yarn build && yarn dev`
+   - Open `/login` → login → redirected to `/orders`
+   - Create order via `/orders/new` and see it in list (requires backend running; if missing, smoke-test page renders)
+
+Notes
+- Ticket 11 will enforce RBAC and stronger guards; here we keep minimal auth redirect.
+- If Yarn missing, use `npm i && npm run dev`.
+
+---
+
+Implementation (executed)
+- Copied scaffold: `zariz/references/next-delivery` → `zariz/web-admin`; removed inner `.git`.
+- Pruned storefront routes: removed `zariz/web-admin/pages/[tenant]`.
+- Replaced landing: `zariz/web-admin/pages/index.tsx` now redirects to `/login` or `/orders` based on token.
+- Added API client: `zariz/web-admin/libs/api.ts` with `NEXT_PUBLIC_API_BASE` and `Authorization` header.
+- Added pages:
+  - `zariz/web-admin/pages/login.tsx`
+  - `zariz/web-admin/pages/orders.tsx`
+  - `zariz/web-admin/pages/orders/new.tsx`
+
+Verification (results)
+- Ran: `cd zariz/web-admin && yarn install && yarn build` → build succeeded.
+- Next.js pages present: `/login`, `/orders`, `/orders/new`, index redirects to the appropriate page.
+- Note: Full API flows require backend running at `http://localhost:8000/v1` or set `NEXT_PUBLIC_API_BASE`.
