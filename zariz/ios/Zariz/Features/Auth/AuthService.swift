@@ -130,11 +130,15 @@ actor AuthService {
         // Best-effort: call backend, then clear
         var req = URLRequest(url: AppConfig.baseURL.appendingPathComponent("auth/logout"))
         req.httpMethod = "POST"
-        if let stored = try? AuthKeychainStore.load(prompt: "Authenticate to logout"), let s = stored {
-            req.addValue("application/json", forHTTPHeaderField: "Content-Type")
-            let body = ["refresh_token": s.refreshToken]
-            req.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
-            _ = try? await URLSession.shared.data(for: req)
+        do {
+            if let stored = try AuthKeychainStore.load(prompt: "Authenticate to logout") {
+                req.addValue("application/json", forHTTPHeaderField: "Content-Type")
+                let body = ["refresh_token": stored.refreshToken]
+                req.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+                _ = try? await URLSession.shared.data(for: req)
+            }
+        } catch {
+            // Ignore keychain errors on logout
         }
         await MainActor.run {
             OrdersSyncManager.shared.stopForegroundLoop()

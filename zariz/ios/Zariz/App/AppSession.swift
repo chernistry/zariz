@@ -27,8 +27,8 @@ final class AppSession: ObservableObject {
     func logout() {
         KeychainTokenStore.clear()
         AuthKeychainStore.clear()
-        currentUser = nil
         isAuthenticated = false
         isDemoMode = false
+        roleState = .courier
     }
 }
