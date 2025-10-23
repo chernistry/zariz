@@ -19,6 +19,11 @@ This will start:
 - **PostgreSQL** on `localhost:5432`
 - **Backend API** on `http://localhost:8000`
 - **Web Admin** on `http://localhost:3000`
+- **Gorush push gateway** on `http://localhost:8088`
+
+> ℹ️  Gorush is pre-configured in sandbox/mock mode, so push requests succeed without Apple
+> credentials. To send real APNs notifications drop your `.p8` key into `zariz/dev/ops/gorush/keys`
+> and set `APNS_KEY_ID`, `APNS_TEAM_ID`, and `APNS_TOPIC` in `.env`.
 
 ### Configure iOS App
 
@@ -93,6 +98,24 @@ Backend environment variables are configured in `docker-compose.yml`:
 - `POSTGRES_PASSWORD=zariz`
 - `POSTGRES_DB=zariz`
 - `API_JWT_SECRET=dev_secret_change_me_in_production`
+
+### Push notifications (gorush)
+
+The stack includes a [gorush](https://github.com/appleboy/gorush) service for APNs delivery.  
+By default it runs in sandbox/mock mode so local development works without Apple credentials.
+
+1. Place your Apple `.p8` key into `zariz/dev/ops/gorush/keys/AuthKey.p8`.
+2. Set the following variables in `.env`:
+
+```
+APNS_KEY_ID=XXXXXX
+APNS_TEAM_ID=YYYYYY
+APNS_TOPIC=com.your.bundle.id
+GORUSH_IOS_MOCK=false
+APNS_USE_SANDBOX=1            # set to 0 when you need production pushes
+```
+
+3. Restart the stack (`./run.sh restart`) and pushes routed through gorush will reach real devices.
 
 ## Troubleshooting
 

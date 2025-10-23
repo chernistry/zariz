@@ -9,11 +9,12 @@ cd "$PROJECT_ROOT"
 
 case "$1" in
   start)
-    echo "Starting all services (postgres, backend, web-admin)..."
+    echo "Starting all services (postgres, backend, web-admin, gorush)..."
     docker compose up -d
     echo "Services started!"
     echo "Backend: http://localhost:8000"
     echo "Web Admin: http://localhost:3000"
+    echo "Gorush: http://localhost:8088"
     ;;
     
   stop)
@@ -90,7 +91,7 @@ EOF
     echo "Usage: ./run.sh {command}"
     echo ""
     echo "Commands:"
-    echo "  start              - Start all services (postgres, backend, web-admin)"
+    echo "  start              - Start all services (postgres, backend, web-admin, gorush)"
     echo "  stop               - Stop all services"
     echo "  restart            - Restart all services"
     echo "  logs [service]     - Show logs (optionally for specific service)"

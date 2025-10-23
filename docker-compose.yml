@@ -28,10 +28,30 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       API_JWT_SECRET: ${API_JWT_SECRET}
       CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS}
+      GORUSH_URL: http://gorush:8088/api/push
+      GORUSH_TOPIC: ${GORUSH_TOPIC:-com.example.zariz}
+      GORUSH_SANDBOX: ${GORUSH_SANDBOX:-1}
     depends_on:
       - postgres
+      - gorush
     ports:
       - "8000:8000"
+
+  gorush:
+    image: appleboy/gorush:v1.18.2
+    environment:
+      - GORUSH_IOS_TOPIC=${GORUSH_TOPIC:-com.example.zariz}
+      - GORUSH_IOS_KEY_PATH=/config/AuthKey.p8
+      - GORUSH_IOS_KEY_ID=${APNS_KEY_ID:-}
+      - GORUSH_IOS_TEAM_ID=${APNS_TEAM_ID:-}
+      - GORUSH_IOS_PRODUCTION=${GORUSH_IOS_PRODUCTION:-false}
+      - GORUSH_IOS_MOCK=${GORUSH_IOS_MOCK:-true}
+    volumes:
+      - ./zariz/dev/ops/gorush/gorush.yml:/gorush.yml:ro
+      - ./zariz/dev/ops/gorush/keys:/config:ro
+    ports:
+      - "8088:8088"
+    command: ["-c", "/gorush.yml"]
 
 volumes:
   db_data: {}

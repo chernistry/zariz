@@ -3,15 +3,30 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:80
 import { authClient } from './authClient';
 
 export async function api(path: string, opts: RequestInit = {}) {
-  const token = authClient.getAccessToken() || undefined;
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(opts.headers || {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  } as Record<string, string>;
-  const res = await fetch(`${API_BASE}/${path}`, { ...opts, headers });
-  if (!res.ok) throw new Error(String(res.status));
-  return res.json();
+  // inner executor to allow single retry after refresh
+  const run = async (): Promise<Response> => {
+    const token = authClient.getAccessToken() || undefined
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(opts.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    } as Record<string, string>
+    return fetch(`${API_BASE}/${path}`, { ...opts, headers })
+  }
+
+  // initial attempt
+  let res = await run()
+  // If unauthorized, try to refresh (cookie-based) and retry once
+  if (res.status === 401) {
+    try {
+      await authClient.refresh()
+      res = await run()
+    } catch {
+      // ignore refresh error; will throw below based on response status
+    }
+  }
+  if (!res.ok) throw new Error(String(res.status))
+  return res.json()
 }
 
 export type CourierInfo = {

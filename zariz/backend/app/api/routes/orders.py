@@ -194,9 +194,15 @@ def create_order(
     events_bus.publish({"type": "order.created", "order_id": o.id, "store_id": o.store_id})
     # Push to all devices (MVP); refine targeting later
     try:
-        tokens = [t for (t,) in db.query(Device.token).all()]
-        for t in tokens:
-            send_silent(t, {"type": "order.created", "order_id": o.id})
+        tokens = (
+            db.query(Device.token)
+            .join(User, Device.user_id == User.id, isouter=True)
+            .filter(Device.platform == "ios")
+            .filter((Device.user_id == None) | (User.role == "courier"))
+            .all()
+        )
+        for (token,) in tokens:
+            send_silent(token, {"type": "order.created", "order_id": o.id})
     except Exception:
         # Don't fail API on push errors
         pass
@@ -296,9 +302,13 @@ def assign_order(
     db.commit()
     events_bus.publish({"type": "order.assigned", "order_id": o.id, "courier_id": courier_id})
     try:
-        tokens = [t for (t,) in db.query(Device.token).all()]
-        for t in tokens:
-            send_silent(t, {"type": "order.assigned", "order_id": o.id, "courier_id": courier_id})
+        tokens = (
+            db.query(Device.token)
+            .filter(Device.user_id == courier_id, Device.platform == "ios")
+            .all()
+        )
+        for (token,) in tokens:
+            send_silent(token, {"type": "order.assigned", "order_id": o.id, "courier_id": courier_id})
     except Exception:
         pass
     return {"ok": True}
@@ -325,7 +335,7 @@ def cancel_order(
     db.commit()
     events_bus.publish({"type": "order.status_changed", "order_id": o.id, "status": "canceled"})
     try:
-        tokens = [t for (t,) in db.query(Device.token).all()]
+        tokens = [t for (t,) in db.query(Device.token).filter(Device.platform == "ios").all()]
         for t in tokens:
             send_silent(t, {"type": "order.status_changed", "order_id": o.id, "status": "canceled"})
     except Exception:
@@ -397,7 +407,7 @@ def claim_order(
     db.commit()
     events_bus.publish({"type": "order.claimed", "order_id": order_id, "courier_id": courier_id})
     try:
-        tokens = [t for (t,) in db.query(Device.token).all()]
+        tokens = [t for (t,) in db.query(Device.token).filter(Device.platform == "ios").all()]
         for t in tokens:
             send_silent(t, {"type": "order.claimed", "order_id": order_id})
     except Exception:
@@ -454,7 +464,7 @@ def update_status(
     db.commit()
     events_bus.publish({"type": "order.status_changed", "order_id": o.id, "status": o.status})
     try:
-        tokens = [t for (t,) in db.query(Device.token).all()]
+        tokens = [t for (t,) in db.query(Device.token).filter(Device.platform == "ios").all()]
         for t in tokens:
             send_silent(t, {"type": "order.status_changed", "order_id": o.id, "status": o.status})
     except Exception:
@@ -482,7 +492,7 @@ def delete_order(
     # Emit event for realtime UIs
     events_bus.publish({"type": "order.deleted", "order_id": order_id})
     try:
-        tokens = [t for (t,) in db.query(Device.token).all()]
+        tokens = [t for (t,) in db.query(Device.token).filter(Device.platform == "ios").all()]
         for t in tokens:
             send_silent(t, {"type": "order.deleted", "order_id": order_id})
     except Exception:

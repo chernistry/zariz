@@ -115,6 +115,13 @@ enum OrdersServiceError: LocalizedError {
 actor OrdersService {
     static let shared = OrdersService()
 
+    struct SyncStats {
+        let newOrders: [Int]
+        let deletedOrders: [Int]
+
+        static let empty = SyncStats(newOrders: [], deletedOrders: [])
+    }
+
     private func authToken() async -> String? { try? await AuthSession.shared.validAccessToken() }
 
     private func demoRole(from token: String?) -> String? {
@@ -186,7 +193,8 @@ actor OrdersService {
         }
     }
 
-    func sync() async {
+    @discardableResult
+    func sync() async -> SyncStats {
         await processDrafts()
         if demoRole(from: try? KeychainTokenStore.load(prompt: "Authenticate to sync orders")) != nil {
             let list: [OrderDTO] = [
@@ -194,11 +202,13 @@ actor OrdersService {
                 .init(id: 2, storeId: 1, courierId: 101, status: "claimed", pickupAddress: "Warehouse A", deliveryAddress: "Elm St 5", recipientFirstName: "Lior", recipientLastName: "Bar", phone: "+972500000002", street: "Elm", buildingNumber: "5", floor: "1", apartment: "1", boxesCount: 10, boxesMultiplier: 2, priceTotal: 70),
                 .init(id: 3, storeId: 2, courierId: 102, status: "picked_up", pickupAddress: "Warehouse C", deliveryAddress: "Pine Ave 9", recipientFirstName: "Anna", recipientLastName: "Cohen", phone: "+972500000003", street: "Pine", buildingNumber: "9", floor: "", apartment: "", boxesCount: 18, boxesMultiplier: 3, priceTotal: 105)
             ]
-            await MainActor.run {
-                guard let context = ModelContextHolder.shared.context else { return }
+            let stats = await MainActor.run { () -> SyncStats in
+                guard let context = ModelContextHolder.shared.context else { return SyncStats.empty }
                 for order in list { upsert(order, in: context) }
+                try? context.save()
+                return SyncStats(newOrders: list.map { $0.id }, deletedOrders: [])
             }
-            return
+            return stats
         }
 
         do {
@@ -206,18 +216,65 @@ actor OrdersService {
             Telemetry.sync.info("orders.sync.request path=orders")
             let (data, resp) = try await URLSession.shared.data(for: req)
             if let http = resp as? HTTPURLResponse {
-                Telemetry.sync.info("orders.sync.http code=\(http.statusCode, privacy: .public) bytes=\(data.count, privacy: .public)")
-                if http.statusCode >= 400 { return }
+                Telemetry.sync.info("orders.sync.http code=\(http.statusCode) bytes=\(data.count)")
+                if http.statusCode >= 400 { return .empty }
             }
             let list = try JSONDecoder().decode([OrderDTO].self, from: data)
             let ids = list.prefix(8).map { String($0.id) }.joined(separator: ",")
-            Telemetry.sync.info("orders.sync.parsed count=\(list.count, privacy: .public) ids=\(ids, privacy: .public)")
-            await MainActor.run {
-                guard let context = ModelContextHolder.shared.context else { return }
+            Telemetry.sync.info("orders.sync.parsed count=\(list.count) ids=\(ids)")
+            let stats = await MainActor.run { () -> SyncStats in
+                let keepIds = Set(list.map { $0.id })
+                let context: ModelContext
+                if let existingContext = ModelContextHolder.shared.context {
+                    context = existingContext
+                } else {
+                    do {
+                        let container = try ModelContainer(for: OrderEntity.self, OrderDraftEntity.self)
+                        context = ModelContext(container)
+                    } catch {
+                        Telemetry.sync.error("orders.sync.context_failure msg=\(error.localizedDescription)")
+                        return SyncStats.empty
+                    }
+                }
+
+                let fetchAll = FetchDescriptor<OrderEntity>()
+                let beforeEntities = (try? context.fetch(fetchAll)) ?? []
+                let beforeIds = Set(beforeEntities.map { $0.id })
+
                 for order in list { upsert(order, in: context) }
+
+                var removed = 0
+                do {
+                    let allEntities = try context.fetch(fetchAll)
+                    for entity in allEntities where !keepIds.contains(entity.id) {
+                        context.delete(entity)
+                        removed += 1
+                    }
+                    if removed > 0 { Telemetry.sync.info("orders.sync.pruned removed=\(removed)") }
+                } catch {
+                    Telemetry.sync.error("orders.sync.prune_failed msg=\(error.localizedDescription)")
+                }
+
+                try? context.save()
+
+                let afterEntities = (try? context.fetch(fetchAll)) ?? []
+                let afterIds = Set(afterEntities.map { $0.id })
+                let newIds = Array(afterIds.subtracting(beforeIds))
+                let deletedIds = Array(beforeIds.subtracting(keepIds))
+                if !newIds.isEmpty {
+                    let sample = newIds.prefix(5).map(String.init).joined(separator: ",")
+                    Telemetry.sync.info("orders.sync.new ids=\(sample)")
+                }
+                if !deletedIds.isEmpty {
+                    let sample = deletedIds.prefix(5).map(String.init).joined(separator: ",")
+                    Telemetry.sync.info("orders.sync.deleted ids=\(sample)")
+                }
+                return SyncStats(newOrders: newIds, deletedOrders: deletedIds)
             }
+            return stats
         } catch {
-            Telemetry.sync.error("orders.sync.error msg=\(error.localizedDescription, privacy: .public)")
+            Telemetry.sync.error("orders.sync.error msg=\(error.localizedDescription)")
+            return .empty
         }
     }
 

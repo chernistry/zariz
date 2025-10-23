@@ -61,6 +61,9 @@
 "slide_to_pickup" = "Slide to pick up";
 "slide_to_deliver" = "Slide to deliver";
 "release_to_confirm" = "Release to confirm";
+"push_new_order_title" = "New order assigned";
+"push_new_order_body" = "Order #%d assigned to you";
+"push_new_order_body_with_address" = "Order #%d assigned · Delivery: %@";
 "store_tab_home" = "Store";
 "store_tab_orders" = "Orders";
 "store_home_title" = "Store dashboard";

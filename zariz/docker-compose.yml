@@ -28,15 +28,37 @@ services:
       POSTGRES_PORT: 5432
       POSTGRES_DB: zariz
       API_JWT_SECRET: dev_secret_change_me_in_production
+      GORUSH_URL: http://gorush:8088/api/push
+      GORUSH_TOPIC: ${GORUSH_TOPIC:-com.example.zariz}
+      GORUSH_SANDBOX: ${GORUSH_SANDBOX:-1}
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+      gorush:
+        condition: service_started
     volumes:
       - ./backend:/app
     command: >
       sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  gorush:
+    image: appleboy/gorush:latest
+    container_name: zariz-gorush
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./dev/ops/gorush/gorush.yml:/gorush.yml:ro
+      - ./dev/ops/gorush/keys:/config:ro
+    environment:
+      - GORUSH_IOS_TOPIC=${GORUSH_TOPIC:-com.example.zariz}
+      - GORUSH_IOS_KEY_PATH=/config/AuthKey.p8
+      - GORUSH_IOS_KEY_ID=${APNS_KEY_ID:-}
+      - GORUSH_IOS_TEAM_ID=${APNS_TEAM_ID:-}
+      - GORUSH_IOS_PRODUCTION=${GORUSH_IOS_PRODUCTION:-false}
+      - GORUSH_IOS_MOCK=${GORUSH_IOS_MOCK:-true}
+    command: ["-c", "/gorush.yml"]
 
   web-admin:
     build:

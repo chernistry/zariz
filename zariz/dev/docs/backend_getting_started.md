@@ -53,6 +53,17 @@ Services available:
 - PostgreSQL: localhost:5432
 - Redis: localhost:6379
 - API Docs: http://localhost:8000/docs
+- Gorush push gateway: http://localhost:8088
+
+#### Local push gateway (gorush)
+
+- The compose stack ships with [gorush](https://github.com/appleboy/gorush), so the backend can emit APNs notifications without additional setup.
+- Default mode is **sandbox + mock**, meaning requests succeed even without Apple credentials.
+- To send real pushes:
+  1. Copy your `.p8` key to `zariz/dev/ops/gorush/keys/AuthKey.p8`.
+  2. Set `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_TOPIC`, and (optionally) `GORUSH_IOS_MOCK=false` in `.env`.
+  3. Restart the stack. Gorush will load the key and forward requests to APNs.
+- Health check: `curl http://localhost:8088/health` should return `"ok"`.
 
 ### Option 2: Manual Setup
 
@@ -106,6 +117,9 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 APNS_KEY_ID=your-key-id
 APNS_TEAM_ID=your-team-id
 APNS_KEY_PATH=/path/to/AuthKey.p8
+# alternatively, provide the key inline
+# APNS_KEY_TEXT="-----BEGIN PRIVATE KEY-----..."
+# APNS_KEY_BASE64=base64encodedp8
 APNS_TOPIC=com.yourteam.zariz
 APNS_USE_SANDBOX=true
 
@@ -443,7 +457,10 @@ SECRET_KEY               # JWT secret key
 APNS_KEY_ID             # Apple Push Notifications key ID
 APNS_TEAM_ID            # Apple Developer Team ID
 APNS_KEY_PATH           # Path to .p8 key file
+APNS_KEY_TEXT           # (Optional) inline key contents
+APNS_KEY_BASE64         # (Optional) base64 key contents
 APNS_TOPIC              # App bundle ID
+APNS_USE_SANDBOX        # 1 for sandbox (default), 0 for production
 ```
 
 ### Optional

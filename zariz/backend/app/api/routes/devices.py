@@ -27,8 +27,8 @@ def register_device(payload: DeviceRegister, db: Session = Depends(get_db), iden
         existing.platform = payload.platform
         db.add(existing)
         db.commit()
-        return {"ok": True}
+        return {"ok": True, "updated": True}
     d = Device(user_id=user_id, platform=payload.platform, token=payload.token)
     db.add(d)
     db.commit()
-    return {"ok": True}
+    return {"ok": True, "created": True}

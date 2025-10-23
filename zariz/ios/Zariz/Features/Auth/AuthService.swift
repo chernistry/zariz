@@ -33,6 +33,7 @@ actor AuthSession {
         self.accessTokenExp = pair.expiresAt
         self.currentUser = user
         try AuthKeychainStore.save(refreshToken: pair.refreshToken, user: user)
+        NotificationCenter.default.post(name: .authSessionConfigured, object: user)
     }
 
     func clear() {

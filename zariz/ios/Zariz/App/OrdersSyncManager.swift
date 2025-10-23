@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import Network
 
 @MainActor
@@ -9,6 +10,7 @@ final class OrdersSyncManager: ObservableObject {
     private let queue = DispatchQueue(label: "orders.sync.monitor")
     private var timer: Timer?
     private var isActive = false
+    private var sse: SSEClient?
 
     init() {
         monitor.start(queue: queue)
@@ -18,11 +20,13 @@ final class OrdersSyncManager: ObservableObject {
         guard !isActive else { return }
         isActive = true
         scheduleNextTick()
+        startSSE()
     }
 
     func stopForegroundLoop() {
         isActive = false
         timer?.invalidate(); timer = nil
+        stopSSE()
     }
 
     private func scheduleNextTick() {
@@ -46,5 +50,31 @@ final class OrdersSyncManager: ObservableObject {
 
     func triggerImmediateSync() {
         Task { await OrdersService.shared.sync() }
+    }
+
+    private func startSSE() {
+        let sseURL = AppConfig.baseURL.appendingPathComponent("events/sse")
+        sse = SSEClient(url: sseURL) { payload in
+            guard let dict = payload as? [String: Any], let type = dict["type"] as? String else { return }
+            if type == "order.deleted" {
+                if let id = dict["order_id"] as? Int { self.deleteLocal(orderId: id) }
+                else if let s = dict["order_id"] as? String, let id = Int(s) { self.deleteLocal(orderId: id) }
+            }
+        }
+        sse?.start()
+    }
+
+    private func stopSSE() { sse?.stop(); sse = nil }
+
+    private func deleteLocal(orderId: Int) {
+        Task { @MainActor in
+            guard let context = ModelContextHolder.shared.context else { return }
+            let fetch = FetchDescriptor<OrderEntity>(predicate: #Predicate<OrderEntity> { $0.id == orderId })
+            if let existing = try? context.fetch(fetch).first {
+                context.delete(existing)
+                try? context.save()
+                Telemetry.sync.info("orders.sse.deleted id=\(orderId, privacy: .public)")
+            }
+        }
     }
 }

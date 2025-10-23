@@ -1,0 +1,32 @@
+core:
+  enabled: true
+  port: 8088
+  worker_num: 1
+  queue_num: 8192
+  mode: "release"
+
+log:
+  format: "text"
+  level: "info"
+
+api:
+  push_uri: "/api/push"
+  stat_uri: "/api/stat"
+  health_uri: "/health"
+  metric_uri: "/metrics"
+
+stat:
+  engine: "memory"
+
+android:
+  enabled: false
+
+ios:
+  enabled: true
+  key_type: "p8"
+  key_path: "/config/AuthKey.p8"
+  key_id: ""
+  team_id: ""
+  topic: "com.example.zariz"
+  production: false
+  mock: true

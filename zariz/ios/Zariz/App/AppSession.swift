@@ -30,5 +30,6 @@ final class AppSession: ObservableObject {
         isAuthenticated = false
         isDemoMode = false
         roleState = .courier
+        UserDefaults.standard.removeObject(forKey: "push.notified_orders")
     }
 }

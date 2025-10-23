@@ -18,6 +18,7 @@ type Subscriber = (token: string | null, claims: Claims | null) => void
 let accessToken: string | null = null
 let claims: Claims | null = null
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
+let refreshPromise: Promise<{ token: string; claims: Claims | null } | null> | null = null
 const REFRESH_ENABLED = process.env.NEXT_PUBLIC_AUTH_REFRESH === '1'
 let backoffMs = 0
 const MAX_BACKOFF = 60_000
@@ -123,9 +124,17 @@ export const authClient = {
     return { token: r.access_token, claims }
   },
   async refresh() {
-    const r = await proxy<{ access_token: string }>('refresh', { method: 'POST' })
-    setAccessToken(r.access_token)
-    return { token: r.access_token, claims }
+    if (refreshPromise) return refreshPromise
+    refreshPromise = (async () => {
+      const r = await proxy<{ access_token: string }>('refresh', { method: 'POST' })
+      setAccessToken(r.access_token)
+      return { token: r.access_token, claims }
+    })()
+    try {
+      return await refreshPromise
+    } finally {
+      refreshPromise = null
+    }
   },
   async logout() {
     try { await proxy('logout', { method: 'POST' }) } catch {}
