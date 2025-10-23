@@ -115,23 +115,21 @@ enum OrdersServiceError: LocalizedError {
 actor OrdersService {
     static let shared = OrdersService()
 
-    private func authToken() -> String? {
-        try? KeychainTokenStore.load(prompt: "Authenticate to sync orders")
-    }
+    private func authToken() async -> String? { try? await AuthSession.shared.validAccessToken() }
 
     private func demoRole(from token: String?) -> String? {
         guard let token, token.hasPrefix("demo:") else { return nil }
         return String(token.dropFirst(5))
     }
 
-    private func authorizedRequest(path: String, method: String = "GET", body: Data? = nil, idempotencyKey: String? = nil) -> URLRequest {
+    private func authorizedRequest(path: String, method: String = "GET", body: Data? = nil, idempotencyKey: String? = nil) async -> URLRequest {
         var req = URLRequest(url: AppConfig.baseURL.appendingPathComponent(path))
         req.httpMethod = method
         if let body {
             req.httpBody = body
             req.addValue("application/json", forHTTPHeaderField: "Content-Type")
         }
-        if let tok = authToken() {
+        if let tok = await authToken() {
             req.addValue("Bearer \(tok)", forHTTPHeaderField: "Authorization")
         }
         if let idk = idempotencyKey {
@@ -142,7 +140,7 @@ actor OrdersService {
     }
 
     func create(dto payload: OrderCreatePayload) async throws -> OrderSubmissionOutcome {
-        if let role = demoRole(from: authToken()) {
+        if let role = demoRole(from: try? KeychainTokenStore.load(prompt: "Authenticate to sync orders")) {
             guard role == "store" || role == "admin" else {
                 throw OrdersServiceError.unavailable
             }
@@ -190,7 +188,7 @@ actor OrdersService {
 
     func sync() async {
         await processDrafts()
-        if demoRole(from: authToken()) != nil {
+        if demoRole(from: try? KeychainTokenStore.load(prompt: "Authenticate to sync orders")) != nil {
             let list: [OrderDTO] = [
                 .init(id: 1, storeId: 1, courierId: nil, status: "new", pickupAddress: "Warehouse A", deliveryAddress: "Main St 12", recipientFirstName: "Noa", recipientLastName: "Levi", phone: "+972500000001", street: "Main", buildingNumber: "12", floor: "2", apartment: "5", boxesCount: 4, boxesMultiplier: 1, priceTotal: 35),
                 .init(id: 2, storeId: 1, courierId: 101, status: "claimed", pickupAddress: "Warehouse A", deliveryAddress: "Elm St 5", recipientFirstName: "Lior", recipientLastName: "Bar", phone: "+972500000002", street: "Elm", buildingNumber: "5", floor: "1", apartment: "1", boxesCount: 10, boxesMultiplier: 2, priceTotal: 70),
@@ -204,7 +202,7 @@ actor OrdersService {
         }
 
         do {
-            let req = authorizedRequest(path: "orders")
+            let req = await authorizedRequest(path: "orders")
             let (data, resp) = try await URLSession.shared.data(for: req)
             if let http = resp as? HTTPURLResponse, http.statusCode >= 400 { return }
             let list = try JSONDecoder().decode([OrderDTO].self, from: data)
@@ -218,7 +216,7 @@ actor OrdersService {
     }
 
     func claim(id: Int) async throws {
-        if demoRole(from: authToken()) != nil {
+        if demoRole(from: try? KeychainTokenStore.load(prompt: "Authenticate to sync orders")) != nil {
             await MainActor.run {
                 guard let context = ModelContextHolder.shared.context else { return }
                 let fetch = FetchDescriptor<OrderEntity>(predicate: #Predicate { $0.id == id })
@@ -229,13 +227,13 @@ actor OrdersService {
             }
             return
         }
-        let req = authorizedRequest(path: "orders/\(id)/claim", method: "POST", body: nil, idempotencyKey: UUID().uuidString)
+        let req = await authorizedRequest(path: "orders/\(id)/claim", method: "POST", body: nil, idempotencyKey: UUID().uuidString)
         _ = try await URLSession.shared.data(for: req)
         await sync()
     }
 
     func decline(id: Int) async throws {
-        if demoRole(from: authToken()) != nil {
+        if demoRole(from: try? KeychainTokenStore.load(prompt: "Authenticate to sync orders")) != nil {
             await MainActor.run {
                 guard let context = ModelContextHolder.shared.context else { return }
                 let fetch = FetchDescriptor<OrderEntity>(predicate: #Predicate { $0.id == id })
@@ -246,13 +244,13 @@ actor OrdersService {
             }
             return
         }
-        let req = authorizedRequest(path: "orders/\(id)/decline", method: "POST", body: nil, idempotencyKey: UUID().uuidString)
+        let req = await authorizedRequest(path: "orders/\(id)/decline", method: "POST", body: nil, idempotencyKey: UUID().uuidString)
         _ = try await URLSession.shared.data(for: req)
         await sync()
     }
 
     func updateStatus(id: Int, status: String) async throws {
-        if demoRole(from: authToken()) != nil {
+        if demoRole(from: try? KeychainTokenStore.load(prompt: "Authenticate to sync orders")) != nil {
             await MainActor.run {
                 guard let context = ModelContextHolder.shared.context else { return }
                 let fetch = FetchDescriptor<OrderEntity>(predicate: #Predicate { $0.id == id })
@@ -270,14 +268,14 @@ actor OrdersService {
             return
         }
         let body = try JSONSerialization.data(withJSONObject: ["status": status], options: [])
-        let req = authorizedRequest(path: "orders/\(id)/status", method: "POST", body: body, idempotencyKey: UUID().uuidString)
+        let req = await authorizedRequest(path: "orders/\(id)/status", method: "POST", body: body, idempotencyKey: UUID().uuidString)
         _ = try await URLSession.shared.data(for: req)
         await sync()
     }
 
     private func sendCreateRequest(payloadDTO: OrderCreateDTO) async throws -> OrderSubmissionOutcome {
         let body = try JSONEncoder().encode(payloadDTO)
-        let req = authorizedRequest(path: "orders", method: "POST", body: body, idempotencyKey: UUID().uuidString)
+        let req = await authorizedRequest(path: "orders", method: "POST", body: body, idempotencyKey: UUID().uuidString)
         let (_, resp) = try await URLSession.shared.data(for: req)
         if let http = resp as? HTTPURLResponse, http.statusCode >= 400 {
             throw OrdersServiceError.server(code: http.statusCode)
@@ -286,7 +284,7 @@ actor OrdersService {
     }
 
     private func processDrafts() async {
-        guard demoRole(from: authToken()) == nil else { return }
+        guard demoRole(from: try? KeychainTokenStore.load(prompt: "Authenticate to sync orders")) == nil else { return }
         
         let draftPayloads: [(id: UUID, payload: OrderCreatePayload)] = await MainActor.run {
             guard let context = ModelContextHolder.shared.context else { return [] }

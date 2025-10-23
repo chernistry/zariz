@@ -9,6 +9,11 @@
 "demo_mode" = "وضع العرض";
 "demo_hint" = "في وضع العرض استخدم courier أو store أو admin.";
 "sign_in" = "تسجيل الدخول";
+"auth_password_label" = "كلمة المرور";
+"password_placeholder" = "كلمة المرور";
+"forgot_password_cta" = "نسيت كلمة المرور؟ راسل ops@zariz";
+"auth_error_identifier_required" = "يرجى إدخال البريد أو الهاتف";
+"auth_error_password_short" = "يجب أن تكون كلمة المرور 8 أحرف على الأقل";
 "auth_hero_title" = "تابع كل الطلبات";
 "auth_hero_subtitle" = "راقب الاستلام والتسليم والحالة فورًا.";
 "auth_hero_badge" = "تشغيل 24/7";

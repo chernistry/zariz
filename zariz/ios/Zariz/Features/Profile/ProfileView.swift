@@ -71,9 +71,10 @@ struct ProfileView: View {
                     .foregroundStyle(DS.Color.textSecondary)
                 Button(String(localized: "logout")) {
                     Haptics.light()
-                    KeychainTokenStore.clear()
-                    session.isAuthenticated = false
-                    session.isDemoMode = false
+                    Task {
+                        await AuthService.shared.logout()
+                        session.logout()
+                    }
                 }
                 .buttonStyle(PrimaryButtonStyle())
             }

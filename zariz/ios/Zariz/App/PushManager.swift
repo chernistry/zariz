@@ -27,11 +27,8 @@ final class PushManager: NSObject, ObservableObject, UNUserNotificationCenterDel
         completionHandler(.newData)
     }
 
-    private func authHeader() -> String? {
-        if let token = try? KeychainTokenStore.load(prompt: "Authenticate to register device") {
-            if token.hasPrefix("demo:") { return nil }
-            return token
-        }
+    private func authHeader() async -> String? {
+        if let token = try? await AuthSession.shared.validAccessToken() { return token }
         return nil
     }
 
@@ -39,7 +36,7 @@ final class PushManager: NSObject, ObservableObject, UNUserNotificationCenterDel
         var req = URLRequest(url: AppConfig.baseURL.appendingPathComponent("devices/register"))
         req.httpMethod = "POST"
         req.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let jwt = authHeader() {
+        if let jwt = await authHeader() {
             req.addValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
         }
         let body: [String: Any] = ["platform": "ios", "token": token]

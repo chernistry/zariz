@@ -21,10 +21,7 @@ struct AuthView: View {
         }
         .onTapGesture { isLoginFocused = false }
         .onChange(of: vm.isAuthenticated) { _, newValue in
-            if newValue {
-                session.role = UserRole(rawValue: vm.role) ?? .courier
-                session.isAuthenticated = true
-            }
+            if newValue { session.isAuthenticated = true }
         }
     }
 
@@ -86,7 +83,7 @@ struct AuthView: View {
                         .font(DS.Font.caption)
                         .foregroundStyle(DS.Color.textSecondary)
                         .padding(.horizontal, 2)
-                    TextField("phone_or_email", text: $vm.login)
+                    TextField("phone_or_email", text: $vm.identifier)
                         .focused($isLoginFocused)
                         .textContentType(.username)
                         .keyboardType(.emailAddress)
@@ -102,30 +99,24 @@ struct AuthView: View {
                         )
                         .submitLabel(.done)
                 }
-
                 VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                    Text("role")
+                    Text("auth_password_label")
                         .font(DS.Font.caption)
                         .foregroundStyle(DS.Color.textSecondary)
                         .padding(.horizontal, 2)
-                    Picker("role", selection: $vm.role) {
-                        Text("role_courier").tag("courier")
-                        Text("role_store").tag("store")
-                        Text("role_admin").tag("admin")
-                    }
-                    .pickerStyle(.segmented)
-                }
-
-                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                    Toggle(isOn: $session.isDemoMode) {
-                        Text("demo_mode")
-                            .font(DS.Font.body)
-                            .foregroundStyle(DS.Color.textPrimary)
-                    }
-                    .toggleStyle(SwitchToggleStyle(tint: DS.Color.brandPrimary))
-                    Text("demo_hint")
-                        .font(DS.Font.caption)
-                        .foregroundStyle(DS.Color.textSecondary)
+                    SecureField("password_placeholder", text: $vm.password)
+                        .textContentType(.password)
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, DS.Spacing.lg)
+                        .background(
+                            RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous)
+                                .fill(DS.Color.surfaceElevated)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous)
+                                .stroke(DS.Color.brandPrimary.opacity(0.2), lineWidth: 1.2)
+                        )
+                        .submitLabel(.go)
                 }
 
                 Button(action: signInTapped) {
@@ -133,6 +124,13 @@ struct AuthView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PrimaryButtonStyle())
+                .disabled(vm.isLoading)
+
+                Button(action: { openSupport() }) {
+                    Text("forgot_password_cta")
+                        .font(DS.Font.caption)
+                        .foregroundStyle(DS.Color.textSecondary)
+                }
 
                 if let err = vm.error {
                     Text(err)
@@ -146,29 +144,13 @@ struct AuthView: View {
 
     private func signInTapped() {
         Task {
-            if session.isDemoMode {
-                let input = vm.login.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                let allowed = ["courier", "store", "admin"]
-                guard allowed.contains(input) else {
-                    vm.error = String(localized: "invalid_demo_login")
-                    Haptics.error()
-                    return
-                }
-                let fakeToken = "demo:\(input)"
-                do {
-                    try KeychainTokenStore.save(token: fakeToken)
-                    session.role = UserRole(rawValue: input) ?? .courier
-                    vm.isAuthenticated = true
-                    Haptics.success()
-                } catch {
-                    vm.error = (error as NSError).localizedDescription
-                }
-            } else {
-                await vm.signIn()
-                if vm.isAuthenticated {
-                    session.role = UserRole(rawValue: vm.role) ?? .courier
-                }
-            }
+            await vm.signIn(session: session)
+            if vm.isAuthenticated { Haptics.success() } else { Haptics.error() }
         }
+    }
+
+    private func openSupport() {
+        guard let url = URL(string: "mailto:ops@zariz") else { return }
+        UIApplication.shared.open(url)
     }
 }

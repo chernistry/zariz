@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		029F1AAC187B31761D4CEA2A /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = D94D89E7EB33C5A157B3C315 /* Shimmer */; };
+		045B57D26B5DF9802C0299B9 /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481A0834A7F077D1099132C8 /* Telemetry.swift */; };
+		0DD76BDE2012546DB985DFDB /* AuthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18192B85F835CB5562AA64C7 /* AuthModels.swift */; };
 		11A6903D1BC28E5F00237E3C /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D7D16A05A7D432E925633F /* AuthService.swift */; };
 		147B9F551D353FB9D99430E1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732DCE00E3F410189C1FFF0C /* DesignSystem.swift */; };
 		17B17D572FC9B0E749B58963 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B513E9406090E0068B305A /* Config.swift */; };
@@ -17,16 +19,18 @@
 		3167CBD3DEC88CFBF78A94B1 /* StoreTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D764A3FA4B0275D840AFAD68 /* StoreTabView.swift */; };
 		33ADAE9B4BABAB3E082E81DD /* RemoteAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B17E9A0267CD29BBEF179B /* RemoteAvatarView.swift */; };
 		37A56A4F9FD002149069707A /* KeychainTokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F2695D5AA94E75BBEEA72A /* KeychainTokenStore.swift */; };
+		407B2C6C38C2CCBE64EBA94D /* LottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BDAC466A13DF7EFBB9302DD /* LottieView.swift */; };
 		41313F7E7AB7A49B7D31CAFD /* OrderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9608E90D137032F7BD70F4E4 /* OrderRowView.swift */; };
 		42A0B433F4180176B856750D /* StoreHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAACB2ED74F7A61DC658199D /* StoreHomeView.swift */; };
+		4330E5346A9F5D266DC1344A /* OrdersSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 205017133705173CDDB3D443 /* OrdersSyncManager.swift */; };
 		48719651DCC78156DC53DEEA /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9553C89BFEB4AEF133B8821 /* ProfileView.swift */; };
 		4E7ED000DC81D71AA9BC2131 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98CA6E09876DAF36DB602FC8 /* AuthViewModel.swift */; };
 		4F65F5ADB1952B0D8938F843 /* ModelContextHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBCEFA717E696436ACD8C4AC /* ModelContextHolder.swift */; };
+		501EA57C54D3C5261CCC0765 /* hero_pulse.json in Resources */ = {isa = PBXBuildFile; fileRef = E83AE0C6D45D75A259D16650 /* hero_pulse.json */; };
 		50E88351DA9ABDC8830D7B50 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54D24F53D19AB75CDBF9B8EF /* APIClient.swift */; };
 		52CEB3BA1F838E9904781C0E /* OrdersService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21AB1E66206F81D9C7A79F2E /* OrdersService.swift */; };
-		BB4B3B9EF13EB0B2E1E29DF9 /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC8D6A5007F4AA0B1A456A5 /* Telemetry.swift */; };
-		C2AAE1F5A3B94F1187629D4C /* OrdersSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32B59C7D84A4EFC81A9D20B /* OrdersSyncManager.swift */; };
 		54182D18F34F90FCC4723E82 /* OrdersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 334CC652083F335B3DA8A8DF /* OrdersListView.swift */; };
+		5486287B72D106AC4C96F17F /* AuthFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47CF548AAD85F5D1E2838365 /* AuthFlowUITests.swift */; };
 		58A3AFDBBCF8292BBE4CD2F3 /* SkeletonOrderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBB2B3121301D0031517353 /* SkeletonOrderRow.swift */; };
 		67351F19F5C7E9A243DDEFB5 /* OrderPricing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E8DBF867F0A1E7EAB6D488 /* OrderPricing.swift */; };
 		7026A04CBE57C7AAB19F743D /* Order.swift in Sources */ = {isa = PBXBuildFile; fileRef = E763DE2C85906EDBD48422A3 /* Order.swift */; };
@@ -38,6 +42,7 @@
 		9FAA0412FE29CE4F99F5415B /* Shimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3838694143FFCEB35D9FEBE1 /* Shimmer.swift */; };
 		A375E5ECFE1AACBEB44711E6 /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C290D6AF581A1429B24E668 /* Toast.swift */; };
 		A85C014870CDFFA2433CB32D /* SlideToConfirmSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E48A601F539367C4E7C8DBEA /* SlideToConfirmSlider.swift */; };
+		B1BD339E8B4450C86C518458 /* AuthKeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F40F2A9A80D0A681B6BD1DA /* AuthKeychainStore.swift */; };
 		B249EA08B54F1ABFD946C3EA /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F11E75BA087995F443429C /* EmptyStateView.swift */; };
 		B2F8B5E525F0B1A7030917BF /* LanguageMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E49E7B597C7DD3EDD24B2D5C /* LanguageMenuButton.swift */; };
 		C8D240DB1F943DE43D97A387 /* NewOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB08B78FAC8EEA2F9906D8CA /* NewOrderView.swift */; };
@@ -45,6 +50,8 @@
 		CDC803C780900C54B7FD2D2C /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A7F0B0F87BD6EE046A6C2D /* AuthView.swift */; };
 		CE570E8BB81A9691C3CE34E0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 17FE40D53EE7AA2D255F85D4 /* Localizable.strings */; };
 		E9375A66727C7662E763B5B0 /* StoreOrdersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F090E43AE1CCF879F8FABEB2 /* StoreOrdersListView.swift */; };
+		E9E28118B5164453B8E4DB85 /* AuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9392DB0AD9C64D47FC26F28 /* AuthServiceTests.swift */; };
+		F034F6E5B6F6A2854FC63002 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = F0E60C89D34C1C3F5691BB25 /* Lottie */; };
 		F342316107F076C7844421CD /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 0F4DABB45AA2E65839140A02 /* Popovers */; };
 		F6B5D748CBE46B71D837FE0F /* ZarizApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF5D6D4550CCC35AAFE48876 /* ZarizApp.swift */; };
 /* End PBXBuildFile section */
@@ -70,15 +77,18 @@
 		05A7F0B0F87BD6EE046A6C2D /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		083F5FA9673EA6B850203EE4 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
 		085C9579D18A11406FFE1007 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		0F40F2A9A80D0A681B6BD1DA /* AuthKeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthKeychainStore.swift; sourceTree = "<group>"; };
+		18192B85F835CB5562AA64C7 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
 		18E8DBF867F0A1E7EAB6D488 /* OrderPricing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderPricing.swift; sourceTree = "<group>"; };
+		205017133705173CDDB3D443 /* OrdersSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersSyncManager.swift; sourceTree = "<group>"; };
 		21AB1E66206F81D9C7A79F2E /* OrdersService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersService.swift; sourceTree = "<group>"; };
-		F32B59C7D84A4EFC81A9D20B /* OrdersSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersSyncManager.swift; sourceTree = "<group>"; };
 		2509478F261F4155B34A18E6 /* AppSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSession.swift; sourceTree = "<group>"; };
 		334CC652083F335B3DA8A8DF /* OrdersListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersListView.swift; sourceTree = "<group>"; };
 		3838694143FFCEB35D9FEBE1 /* Shimmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shimmer.swift; sourceTree = "<group>"; };
 		3FDEBF3B6806226144A8EBFE /* PushManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushManager.swift; sourceTree = "<group>"; };
-		7BC8D6A5007F4AA0B1A456A5 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
 		43C88EA393E23C78A6E94D40 /* Zariz.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Zariz.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		47CF548AAD85F5D1E2838365 /* AuthFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowUITests.swift; sourceTree = "<group>"; };
+		481A0834A7F077D1099132C8 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
 		54D24F53D19AB75CDBF9B8EF /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		5C290D6AF581A1429B24E668 /* Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
 		5E808588FAAAC21F2209F26B /* GlobalToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalToolbar.swift; sourceTree = "<group>"; };
@@ -86,6 +96,7 @@
 		6187193AB1EC434B99F91FFB /* DemoExitToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoExitToolbar.swift; sourceTree = "<group>"; };
 		66F11E75BA087995F443429C /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		6AB9AA6C54C45A2DB689690D /* OrderDraftEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderDraftEntity.swift; sourceTree = "<group>"; };
+		6BDAC466A13DF7EFBB9302DD /* LottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieView.swift; sourceTree = "<group>"; };
 		732DCE00E3F410189C1FFF0C /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		75B513E9406090E0068B305A /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		9608E90D137032F7BD70F4E4 /* OrderRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderRowView.swift; sourceTree = "<group>"; };
@@ -95,6 +106,7 @@
 		A9553C89BFEB4AEF133B8821 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		AD9A4FEDB31093BCBB54A493 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B5F2695D5AA94E75BBEEA72A /* KeychainTokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainTokenStore.swift; sourceTree = "<group>"; };
+		B9392DB0AD9C64D47FC26F28 /* AuthServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthServiceTests.swift; sourceTree = "<group>"; };
 		BF50EB73C9FC78108A495DC9 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		CB08B78FAC8EEA2F9906D8CA /* NewOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewOrderView.swift; sourceTree = "<group>"; };
 		D764A3FA4B0275D840AFAD68 /* StoreTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTabView.swift; sourceTree = "<group>"; };
@@ -105,6 +117,7 @@
 		E48A601F539367C4E7C8DBEA /* SlideToConfirmSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlideToConfirmSlider.swift; sourceTree = "<group>"; };
 		E49E7B597C7DD3EDD24B2D5C /* LanguageMenuButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageMenuButton.swift; sourceTree = "<group>"; };
 		E763DE2C85906EDBD48422A3 /* Order.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Order.swift; sourceTree = "<group>"; };
+		E83AE0C6D45D75A259D16650 /* hero_pulse.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = hero_pulse.json; sourceTree = "<group>"; };
 		EB44D3DC548216F2AF872931 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F090E43AE1CCF879F8FABEB2 /* StoreOrdersListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreOrdersListView.swift; sourceTree = "<group>"; };
 		F0F812CEA9B8B9D0CDBAE33B /* ZarizUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ZarizUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -122,6 +135,7 @@
 				F342316107F076C7844421CD /* Popovers in Frameworks */,
 				CA5F1BFEFD4E5896474AC4C2 /* AlertToast in Frameworks */,
 				029F1AAC187B31761D4CEA2A /* Shimmer in Frameworks */,
+				F034F6E5B6F6A2854FC63002 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,8 +146,18 @@
 			isa = PBXGroup;
 			children = (
 				BF2CEA4F64E34F8278423C1A /* Zariz */,
+				0730DF135383110523E699DD /* ZarizTests */,
+				FF62DF515C352B4502AFBEAC /* ZarizUITests */,
 				701497C7F7AE46E5BBA49559 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		0730DF135383110523E699DD /* ZarizTests */ = {
+			isa = PBXGroup;
+			children = (
+				B9392DB0AD9C64D47FC26F28 /* AuthServiceTests.swift */,
+			);
+			path = ZarizTests;
 			sourceTree = "<group>";
 		};
 		0EA86A9E21F00E56630F264E /* Supporting */ = {
@@ -160,6 +184,7 @@
 			children = (
 				AD9A4FEDB31093BCBB54A493 /* Assets.xcassets */,
 				17FE40D53EE7AA2D255F85D4 /* Localizable.strings */,
+				7476C8DC654BEA1DD034A867 /* Lottie */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -188,6 +213,7 @@
 			children = (
 				732DCE00E3F410189C1FFF0C /* DesignSystem.swift */,
 				085C9579D18A11406FFE1007 /* Haptics.swift */,
+				6BDAC466A13DF7EFBB9302DD /* LottieView.swift */,
 				D9B17E9A0267CD29BBEF179B /* RemoteAvatarView.swift */,
 				3838694143FFCEB35D9FEBE1 /* Shimmer.swift */,
 				E48A601F539367C4E7C8DBEA /* SlideToConfirmSlider.swift */,
@@ -199,6 +225,7 @@
 		6477298EEF6110C9F5534D24 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
+				18192B85F835CB5562AA64C7 /* AuthModels.swift */,
 				E2D7D16A05A7D432E925633F /* AuthService.swift */,
 				05A7F0B0F87BD6EE046A6C2D /* AuthView.swift */,
 				98CA6E09876DAF36DB602FC8 /* AuthViewModel.swift */,
@@ -225,6 +252,7 @@
 		6BB4A9C2DAA054BC7E83464E /* Security */ = {
 			isa = PBXGroup;
 			children = (
+				0F40F2A9A80D0A681B6BD1DA /* AuthKeychainStore.swift */,
 				B5F2695D5AA94E75BBEEA72A /* KeychainTokenStore.swift */,
 			);
 			path = Security;
@@ -238,6 +266,14 @@
 				F0F812CEA9B8B9D0CDBAE33B /* ZarizUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		7476C8DC654BEA1DD034A867 /* Lottie */ = {
+			isa = PBXGroup;
+			children = (
+				E83AE0C6D45D75A259D16650 /* hero_pulse.json */,
+			);
+			path = Lottie;
 			sourceTree = "<group>";
 		};
 		751055E3807C921C6945FB82 /* API */ = {
@@ -278,9 +314,9 @@
 				6187193AB1EC434B99F91FFB /* DemoExitToolbar.swift */,
 				5E808588FAAAC21F2209F26B /* GlobalToolbar.swift */,
 				E49E7B597C7DD3EDD24B2D5C /* LanguageMenuButton.swift */,
-				F32B59C7D84A4EFC81A9D20B /* OrdersSyncManager.swift */,
-				7BC8D6A5007F4AA0B1A456A5 /* Telemetry.swift */,
+				205017133705173CDDB3D443 /* OrdersSyncManager.swift */,
 				3FDEBF3B6806226144A8EBFE /* PushManager.swift */,
+				481A0834A7F077D1099132C8 /* Telemetry.swift */,
 				DF5D6D4550CCC35AAFE48876 /* ZarizApp.swift */,
 			);
 			path = App;
@@ -320,7 +356,15 @@
 			path = Persistence;
 			sourceTree = "<group>";
 		};
-		"TEMP_0BD0CE3B-61D9-45ED-9AD9-6CF3D20C91EC" /* L10n */ = {
+		FF62DF515C352B4502AFBEAC /* ZarizUITests */ = {
+			isa = PBXGroup;
+			children = (
+				47CF548AAD85F5D1E2838365 /* AuthFlowUITests.swift */,
+			);
+			path = ZarizUITests;
+			sourceTree = "<group>";
+		};
+		"TEMP_A1BD5E20-C128-4847-B3CC-1F6697B5FF73" /* L10n */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -365,6 +409,7 @@
 				0F4DABB45AA2E65839140A02 /* Popovers */,
 				16354204D8673CC6D77B771C /* AlertToast */,
 				D94D89E7EB33C5A157B3C315 /* Shimmer */,
+				F0E60C89D34C1C3F5691BB25 /* Lottie */,
 			);
 			productName = Zariz;
 			productReference = 43C88EA393E23C78A6E94D40 /* Zariz.app */;
@@ -417,6 +462,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				438155481BC4416F74A33AA4 /* XCRemoteSwiftPackageReference "AlertToast" */,
+				71815C2D185B80506D50C4CA /* XCRemoteSwiftPackageReference "lottie-spm" */,
 				0138BB366963A02CC695FCE2 /* XCRemoteSwiftPackageReference "Popovers" */,
 				E7FC2D841BC1D9F9A27EACE7 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
 			);
@@ -438,6 +484,7 @@
 			files = (
 				18013F2A6B6EC3062A5E57E8 /* Assets.xcassets in Resources */,
 				CE570E8BB81A9691C3CE34E0 /* Localizable.strings in Resources */,
+				501EA57C54D3C5261CCC0765 /* hero_pulse.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -450,6 +497,8 @@
 			files = (
 				50E88351DA9ABDC8830D7B50 /* APIClient.swift in Sources */,
 				9221949AACF5E8F349C3ADC2 /* AppSession.swift in Sources */,
+				B1BD339E8B4450C86C518458 /* AuthKeychainStore.swift in Sources */,
+				0DD76BDE2012546DB985DFDB /* AuthModels.swift in Sources */,
 				11A6903D1BC28E5F00237E3C /* AuthService.swift in Sources */,
 				CDC803C780900C54B7FD2D2C /* AuthView.swift in Sources */,
 				4E7ED000DC81D71AA9BC2131 /* AuthViewModel.swift in Sources */,
@@ -461,6 +510,7 @@
 				7F217E67C49F4DDF91C065B4 /* Haptics.swift in Sources */,
 				37A56A4F9FD002149069707A /* KeychainTokenStore.swift in Sources */,
 				B2F8B5E525F0B1A7030917BF /* LanguageMenuButton.swift in Sources */,
+				407B2C6C38C2CCBE64EBA94D /* LottieView.swift in Sources */,
 				4F65F5ADB1952B0D8938F843 /* ModelContextHolder.swift in Sources */,
 				C8D240DB1F943DE43D97A387 /* NewOrderView.swift in Sources */,
 				7026A04CBE57C7AAB19F743D /* Order.swift in Sources */,
@@ -470,9 +520,8 @@
 				41313F7E7AB7A49B7D31CAFD /* OrderRowView.swift in Sources */,
 				54182D18F34F90FCC4723E82 /* OrdersListView.swift in Sources */,
 				52CEB3BA1F838E9904781C0E /* OrdersService.swift in Sources */,
+				4330E5346A9F5D266DC1344A /* OrdersSyncManager.swift in Sources */,
 				48719651DCC78156DC53DEEA /* ProfileView.swift in Sources */,
-				BB4B3B9EF13EB0B2E1E29DF9 /* Telemetry.swift in Sources */,
-				C2AAE1F5A3B94F1187629D4C /* OrdersSyncManager.swift in Sources */,
 				7C6ACF5453ABB25037DBC24D /* PushManager.swift in Sources */,
 				33ADAE9B4BABAB3E082E81DD /* RemoteAvatarView.swift in Sources */,
 				9FAA0412FE29CE4F99F5415B /* Shimmer.swift in Sources */,
@@ -481,6 +530,7 @@
 				42A0B433F4180176B856750D /* StoreHomeView.swift in Sources */,
 				E9375A66727C7662E763B5B0 /* StoreOrdersListView.swift in Sources */,
 				3167CBD3DEC88CFBF78A94B1 /* StoreTabView.swift in Sources */,
+				045B57D26B5DF9802C0299B9 /* Telemetry.swift in Sources */,
 				A375E5ECFE1AACBEB44711E6 /* Toast.swift in Sources */,
 				F6B5D748CBE46B71D837FE0F /* ZarizApp.swift in Sources */,
 			);
@@ -490,6 +540,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E9E28118B5164453B8E4DB85 /* AuthServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -497,6 +548,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5486287B72D106AC4C96F17F /* AuthFlowUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -803,6 +855,14 @@
 				minimumVersion = 1.3.0;
 			};
 		};
+		71815C2D185B80506D50C4CA /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.4.0;
+			};
+		};
 		E7FC2D841BC1D9F9A27EACE7 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/markiv/SwiftUI-Shimmer";
@@ -828,6 +888,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E7FC2D841BC1D9F9A27EACE7 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */;
 			productName = Shimmer;
+		};
+		F0E60C89D34C1C3F5691BB25 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 71815C2D185B80506D50C4CA /* XCRemoteSwiftPackageReference "lottie-spm" */;
+			productName = Lottie;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

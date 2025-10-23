@@ -9,6 +9,11 @@
 "demo_mode" = "מצב הדגמה";
 "demo_hint" = "במצב הדגמה השתמש ב־courier, store או admin.";
 "sign_in" = "התחברות";
+"auth_password_label" = "סיסמה";
+"password_placeholder" = "סיסמה";
+"forgot_password_cta" = "שכחתם סיסמה? פנו ל־ops@zariz";
+"auth_error_identifier_required" = "הזינו אימייל או טלפון";
+"auth_error_password_short" = "סיסמה חייבת להכיל לפחות 8 תווים";
 "auth_hero_title" = "כל ההזמנות בשליטה";
 "auth_hero_subtitle" = "עקבו אחרי איסוף, קבלה ומשלוח בזמן אמת.";
 "auth_hero_badge" = "משמרת 24/7";

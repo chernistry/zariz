@@ -9,6 +9,11 @@
 "demo_mode" = "Demo mode";
 "demo_hint" = "In demo mode sign in with courier, store or admin.";
 "sign_in" = "Sign in";
+"auth_password_label" = "Password";
+"password_placeholder" = "Password";
+"forgot_password_cta" = "Forgot password? Contact ops@zariz";
+"auth_error_identifier_required" = "Please enter email or phone";
+"auth_error_password_short" = "Password must be at least 8 characters";
 "auth_hero_title" = "Stay on top of every run";
 "auth_hero_subtitle" = "Track pickups, claims and delivery state in real time.";
 "auth_hero_badge" = "24/7 dispatch";

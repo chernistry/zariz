@@ -41,7 +41,7 @@ final class OrdersSyncManager: ObservableObject {
         let started = Date()
         await OrdersService.shared.sync()
         let durationMs = Int((Date().timeIntervalSince(started) * 1000).rounded())
-        Telemetry.log.info("orders.sync.duration_ms=\(durationMs, privacy: .public)")
+        Telemetry.sync.info("orders.sync.duration_ms=\(durationMs, privacy: .public)")
     }
 
     func triggerImmediateSync() {

@@ -32,9 +32,10 @@ struct ZarizApp: App {
             )
             .id(session.languageCode)
             .onAppear {
-                // Check if token exists (biometric prompt on access)
-                if (try? KeychainTokenStore.load()) != nil {
-                    session.isAuthenticated = true
+                // Bootstrap session from Keychain (will prompt biometrics)
+                if let s = try? AuthKeychainStore.load() {
+                    let user = AuthenticatedUser(userId: s.userId, role: UserRole(rawValue: s.role) ?? .courier, storeIds: s.storeIds, identifier: s.identifier)
+                    session.applyLogin(user: user)
                 }
                 pushManager.registerForPush()
                 if session.storePickupAddress.isEmpty {

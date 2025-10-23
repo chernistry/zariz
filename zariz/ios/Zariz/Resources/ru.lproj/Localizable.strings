@@ -9,6 +9,11 @@
 "demo_mode" = "Демо-режим";
 "demo_hint" = "В демо используйте courier, store или admin.";
 "sign_in" = "Войти";
+"auth_password_label" = "Пароль";
+"password_placeholder" = "Пароль";
+"forgot_password_cta" = "Забыли пароль? Напишите на ops@zariz";
+"auth_error_identifier_required" = "Введите e-mail или телефон";
+"auth_error_password_short" = "Пароль должен быть не короче 8 символов";
 "auth_hero_title" = "Держите заказы под контролем";
 "auth_hero_subtitle" = "Отслеживайте забор, принятие и доставку в реальном времени.";
 "auth_hero_badge" = "24/7 диспетчер";

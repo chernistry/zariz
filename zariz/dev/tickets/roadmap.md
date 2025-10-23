@@ -46,7 +46,7 @@ Progress: mark done items with [x] and adjust the above ETA line-by-line as you 
 ## Stage B — iOS App
 
  - [x] 6. iOS project bootstrap (SwiftUI, modules, SwiftData models)
- - [ ] 7. iOS auth flow + Keychain _(blocked by TICKET-24)_
+ - [x] 7. iOS auth flow + Keychain _(TICKET-24 complete)_
  - [x] 8. Orders UI (list/detail), claim, status updates, offline cache, BG tasks + silent push
  - [x] 9. iOS CI/TestFlight (fastlane, Actions, testers)
 
