@@ -26,8 +26,7 @@ final class AuthViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         do {
-            let (pair, user) = try await AuthService.shared.login(identifier: identifier, password: password)
-            _ = pair // access token kept in session provider
+            let (_, user) = try await AuthService.shared.login(identifier: identifier, password: password)
             session.applyLogin(user: user)
             self.isAuthenticated = true
         } catch {

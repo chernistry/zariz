@@ -1,6 +1,19 @@
 import Foundation
 import Network
 
+struct AuthTokenPair: Sendable {
+    let accessToken: String
+    let refreshToken: String
+    let expiresAt: Date
+}
+
+struct AuthenticatedUser: Sendable {
+    let userId: String
+    let role: UserRole
+    let storeIds: [Int]
+    let identifier: String?
+}
+
 actor AuthSession {
     static let shared = AuthSession()
 
@@ -19,7 +32,7 @@ actor AuthSession {
         self.accessToken = pair.accessToken
         self.accessTokenExp = pair.expiresAt
         self.currentUser = user
-        try AuthKeychainStore.save(pair: pair, user: user)
+        try AuthKeychainStore.save(refreshToken: pair.refreshToken, user: user)
     }
 
     func clear() {
@@ -56,7 +69,7 @@ actor AuthService {
 
     func login(identifier: String, password: String) async throws -> (AuthTokenPair, AuthenticatedUser) {
         guard NetworkMonitor.isOnline else { throw URLError(.notConnectedToInternet) }
-        var req = URLRequest(url: AppConfig.baseURL.appendingPathComponent("auth/login"))
+        var req = URLRequest(url: AppConfig.baseURL.appendingPathComponent("auth/login_password"))
         req.httpMethod = "POST"
         req.addValue("application/json", forHTTPHeaderField: "Content-Type")
         let start = Date()
@@ -72,8 +85,15 @@ actor AuthService {
                 userInfo: [NSLocalizedDescriptionKey: "Login failed (\(http.statusCode))"]
             )
         }
-        let respDTO = try JSONDecoder().decode(AuthLoginResponse.self, from: data)
-        let (pair, user) = try respDTO.toPairAndUser()
+        // Response: { access_token, refresh_token }
+        let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard let access = obj?["access_token"] as? String, let refresh = obj?["refresh_token"] as? String else {
+            throw NSError(domain: "Auth", code: -3, userInfo: [NSLocalizedDescriptionKey: "Malformed response"])
+        }
+        let claims = try Self.decodeClaims(fromJWT: access)
+        let exp = Date(timeIntervalSince1970: TimeInterval(claims.exp))
+        let pair = AuthTokenPair(accessToken: access, refreshToken: refresh, expiresAt: exp)
+        let user = AuthenticatedUser(userId: claims.sub, role: UserRole(rawValue: claims.role) ?? .courier, storeIds: claims.store_ids ?? [], identifier: identifier)
         try await AuthSession.shared.configure(pair: pair, user: user)
         Telemetry.auth.info("auth.login.success latency_ms=\(latency, privacy: .public)")
         return (pair, user)
@@ -94,8 +114,14 @@ actor AuthService {
             Telemetry.auth.error("auth.refresh.failure code=\(http.statusCode)")
             throw NSError(domain: "Auth", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: "Refresh failed"])
         }
-        let dto = try JSONDecoder().decode(AuthLoginResponse.self, from: data)
-        let (pair, user) = try dto.toPairAndUser()
+        let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard let access = obj?["access_token"] as? String, let refresh = obj?["refresh_token"] as? String else {
+            throw NSError(domain: "Auth", code: -4, userInfo: [NSLocalizedDescriptionKey: "Malformed refresh response"])
+        }
+        let claims = try Self.decodeClaims(fromJWT: access)
+        let exp = Date(timeIntervalSince1970: TimeInterval(claims.exp))
+        let pair = AuthTokenPair(accessToken: access, refreshToken: refresh, expiresAt: exp)
+        let user = AuthenticatedUser(userId: claims.sub, role: UserRole(rawValue: claims.role) ?? .courier, storeIds: claims.store_ids ?? [], identifier: stored.identifier)
         try await AuthSession.shared.configure(pair: pair, user: user)
         return pair
     }
@@ -104,14 +130,38 @@ actor AuthService {
         // Best-effort: call backend, then clear
         var req = URLRequest(url: AppConfig.baseURL.appendingPathComponent("auth/logout"))
         req.httpMethod = "POST"
-        if let token = try? await AuthSession.shared.validAccessToken() {
-            req.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        if let stored = try? AuthKeychainStore.load(prompt: "Authenticate to logout"), let s = stored {
+            req.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            let body = ["refresh_token": s.refreshToken]
+            req.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
+            _ = try? await URLSession.shared.data(for: req)
         }
-        _ = try? await URLSession.shared.data(for: req)
         await MainActor.run {
             OrdersSyncManager.shared.stopForegroundLoop()
         }
         await AuthSession.shared.clear()
+    }
+
+    private struct JWTClaims: Decodable {
+        let sub: String
+        let role: String
+        let exp: Int
+        let store_ids: [Int]?
+    }
+
+    private static func decodeClaims(fromJWT jwt: String) throws -> JWTClaims {
+        let parts = jwt.split(separator: ".").map(String.init)
+        if parts.count < 2 { throw NSError(domain: "Auth", code: -5, userInfo: [NSLocalizedDescriptionKey: "Invalid token"]) }
+        func base64urlToData(_ s: String) -> Data? {
+            var b = s.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+            let pad = 4 - (b.count % 4)
+            if pad < 4 { b.append(String(repeating: "=", count: pad)) }
+            return Data(base64Encoded: b)
+        }
+        guard let data = base64urlToData(parts[1]) else {
+            throw NSError(domain: "Auth", code: -6, userInfo: [NSLocalizedDescriptionKey: "Invalid payload"])
+        }
+        return try JSONDecoder().decode(JWTClaims.self, from: data)
     }
 }
 

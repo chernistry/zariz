@@ -146,8 +146,21 @@ def create_order(
     store_id = payload.store_id
     role = identity.get("role")
     if role == "store":
-        store_id = _parse_int(identity.get("sub"))
-    
+        sids = identity.get("store_ids") or []
+        # Prefer explicit payload, else single membership, else legacy sub fallback
+        if store_id is None and sids:
+            if len(sids) == 1:
+                store_id = int(sids[0])
+            else:
+                # ambiguous membership, require explicit store_id
+                raise HTTPException(status_code=400, detail="Store id required")
+        if store_id is None:
+            # Legacy token fallback: sub is store id
+            store_id = _parse_int(identity.get("sub"))
+        # Enforce membership if we have store_ids claim
+        if sids and store_id not in sids:
+            raise HTTPException(status_code=403, detail="Forbidden")
+
     if store_id is None:
         raise HTTPException(status_code=400, detail="Store id required")
 

@@ -9,17 +9,15 @@ enum AuthKeychainStore {
 
     struct StoredSession: Codable {
         let refreshToken: String
-        let refreshExpiresAt: Date
         let userId: String
         let role: String
         let storeIds: [Int]
         let identifier: String?
     }
 
-    static func save(pair: AuthTokenPair, user: AuthenticatedUser) throws {
+    static func save(refreshToken: String, user: AuthenticatedUser) throws {
         let payload = StoredSession(
-            refreshToken: pair.refreshToken,
-            refreshExpiresAt: pair.refreshExpiresAt,
+            refreshToken: refreshToken,
             userId: user.userId,
             role: user.role.rawValue,
             storeIds: user.storeIds,
@@ -80,4 +78,3 @@ enum AuthKeychainStore {
         SecItemDelete(query as CFDictionary)
     }
 }
-
