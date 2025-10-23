@@ -1,6 +1,6 @@
 Read /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/coding_rules.md first
 
-# [TICKET-18] iOS (Courier) — Accept/Decline Assigned Orders and Capacity Awareness
+# [TICKET-20] iOS (Courier) — Accept/Decline Assigned Orders and Capacity Awareness
 
 Goal
 - Enable couriers to accept or decline assigned orders within the iOS app. Reflect `assigned` state and update the action slider logic accordingly. Keep offline behavior.

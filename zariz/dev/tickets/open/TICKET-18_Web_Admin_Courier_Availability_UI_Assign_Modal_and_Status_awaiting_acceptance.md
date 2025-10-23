@@ -1,6 +1,6 @@
 Read /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/coding_rules.md first
 
-# [TICKET-17] Web Admin — Courier Availability UI, Assign Modal, and “Awaiting Acceptance” status
+# [TICKET-18] Web Admin — Courier Availability UI, Assign Modal, and “Awaiting Acceptance” status
 
 Goal
 - Provide an admin UI to select couriers based on capacity (“x/8 boxes used”), prevent oversubscription, and reflect the `assigned` state as “Awaiting acceptance”.
@@ -20,13 +20,13 @@ Scope
 - When selecting a courier from modal, call `POST /v1/orders/{id}/assign`.
 - If server returns 409 due to capacity policy in future, show error.
 
-Plan / Changes
+Plan / Changes (updated for Modernize/MUI from TICKET-19)
 - Components:
-  - `web-admin/components/AssignCourierModal/` (new), uses `libs/api.ts`.
-  - Wire in: `pages/orders.tsx`, `pages/orders/[id].tsx` to open the modal.
+  - `src/components/modals/AssignCourierDialog.tsx` (MUI Dialog), uses `src/libs/api.ts`.
+  - Wire in: `src/pages/orders/index.tsx`, `src/pages/orders/[id].tsx` to open the dialog.
 - API client additions:
-  - `libs/api.ts` — add `getCouriers(availableOnly:boolean)`.
-- Copy styles/patterns from `references/next-delivery` where applicable (button styles already present).
+  - `src/libs/api.ts` — add `getCouriers(availableOnly:boolean)`.
+- Styling and layout use Modernize theme (MUI); legacy Button/Input components are not used.
 
 Verification
 - Start dev server, login as Admin. Open Orders, click Assign, see modal with couriers and availability. Assign → order becomes “Awaiting acceptance”; SSE refresh works. CSV includes current status.

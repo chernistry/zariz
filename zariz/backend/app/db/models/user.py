@@ -10,4 +10,4 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(120))
     role: Mapped[str] = mapped_column(String(16), index=True)  # courier/store/admin
     store_id: Mapped[int | None]
-
+    capacity_boxes: Mapped[int] = mapped_column(Integer, default=8)

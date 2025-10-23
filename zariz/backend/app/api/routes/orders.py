@@ -2,7 +2,7 @@ from typing import Optional
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import select, text
+from sqlalchemy import select, text, func
 from sqlalchemy.orm import Session
 
 from ..schemas import OrderCreate, OrderRead, StatusUpdate
@@ -334,6 +334,24 @@ def claim_order(
     courier_id = _parse_int(identity["sub"])
     if courier_id is None:
         raise HTTPException(status_code=400, detail="Invalid courier id")
+    # Capacity check on acceptance
+    o_target = db.get(Order, order_id)
+    if not o_target:
+        raise HTTPException(status_code=404, detail="Order not found")
+    load = (
+        db.execute(
+            select(func.coalesce(func.sum(Order.boxes_count), 0)).where(
+                Order.courier_id == courier_id, Order.status.in_(["claimed", "picked_up"])
+            )
+        ).scalar()
+        or 0
+    )
+    # Get capacity from users table; default to 8 if user row missing
+    cap_row = db.execute(select(func.coalesce(func.max(text("capacity_boxes")), 8)).select_from(text("users")).where(text("id=:cid")), {"cid": courier_id}).scalar()
+    capacity = int(cap_row or 8)
+    if int(load) + int(o_target.boxes_count) > capacity:
+        raise HTTPException(status_code=409, detail="Courier capacity exceeded")
+
     res = db.execute(
         text(
             """
@@ -420,3 +438,34 @@ def update_status(
     if idem:
         save_idempotency(db, idem, request.method, request.url.path, 200, out)
     return out
+
+
+@limiter.limit("20/minute")
+@router.post("/{order_id}/decline")
+def decline_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    identity: dict = Depends(require_role("courier")),
+    request: Request = None,
+):
+    courier_id = _parse_int(identity["sub"])
+    if courier_id is None:
+        raise HTTPException(status_code=400, detail="Invalid courier id")
+    o = db.get(Order, order_id)
+    if not o:
+        raise HTTPException(status_code=404, detail="Order not found")
+    # Only decline when assigned to this courier (or unassigned but assigned state)
+    if o.status != "assigned" or (o.courier_id not in (None, courier_id)) is False:
+        raise HTTPException(status_code=400, detail="Cannot decline this order")
+    o.status = "new"
+    o.courier_id = None
+    db.add(OrderEvent(order_id=o.id, type="assigned_declined"))
+    db.commit()
+    events_bus.publish({"type": "order.assigned_declined", "order_id": o.id, "courier_id": courier_id})
+    try:
+        tokens = [t for (t,) in db.query(Device.token).all()]
+        for t in tokens:
+            send_silent(t, {"type": "order.assigned_declined", "order_id": o.id})
+    except Exception:
+        pass
+    return {"ok": True}

@@ -24,6 +24,7 @@
 		4F65F5ADB1952B0D8938F843 /* ModelContextHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBCEFA717E696436ACD8C4AC /* ModelContextHolder.swift */; };
 		50E88351DA9ABDC8830D7B50 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54D24F53D19AB75CDBF9B8EF /* APIClient.swift */; };
 		52CEB3BA1F838E9904781C0E /* OrdersService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21AB1E66206F81D9C7A79F2E /* OrdersService.swift */; };
+		C2AAE1F5A3B94F1187629D4C /* OrdersSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32B59C7D84A4EFC81A9D20B /* OrdersSyncManager.swift */; };
 		54182D18F34F90FCC4723E82 /* OrdersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 334CC652083F335B3DA8A8DF /* OrdersListView.swift */; };
 		58A3AFDBBCF8292BBE4CD2F3 /* SkeletonOrderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBB2B3121301D0031517353 /* SkeletonOrderRow.swift */; };
 		67351F19F5C7E9A243DDEFB5 /* OrderPricing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E8DBF867F0A1E7EAB6D488 /* OrderPricing.swift */; };
@@ -70,6 +71,7 @@
 		085C9579D18A11406FFE1007 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		18E8DBF867F0A1E7EAB6D488 /* OrderPricing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderPricing.swift; sourceTree = "<group>"; };
 		21AB1E66206F81D9C7A79F2E /* OrdersService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersService.swift; sourceTree = "<group>"; };
+		F32B59C7D84A4EFC81A9D20B /* OrdersSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersSyncManager.swift; sourceTree = "<group>"; };
 		2509478F261F4155B34A18E6 /* AppSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSession.swift; sourceTree = "<group>"; };
 		334CC652083F335B3DA8A8DF /* OrdersListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersListView.swift; sourceTree = "<group>"; };
 		3838694143FFCEB35D9FEBE1 /* Shimmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shimmer.swift; sourceTree = "<group>"; };
@@ -274,6 +276,7 @@
 				6187193AB1EC434B99F91FFB /* DemoExitToolbar.swift */,
 				5E808588FAAAC21F2209F26B /* GlobalToolbar.swift */,
 				E49E7B597C7DD3EDD24B2D5C /* LanguageMenuButton.swift */,
+				F32B59C7D84A4EFC81A9D20B /* OrdersSyncManager.swift */,
 				3FDEBF3B6806226144A8EBFE /* PushManager.swift */,
 				DF5D6D4550CCC35AAFE48876 /* ZarizApp.swift */,
 			);
@@ -465,6 +468,7 @@
 				54182D18F34F90FCC4723E82 /* OrdersListView.swift in Sources */,
 				52CEB3BA1F838E9904781C0E /* OrdersService.swift in Sources */,
 				48719651DCC78156DC53DEEA /* ProfileView.swift in Sources */,
+				C2AAE1F5A3B94F1187629D4C /* OrdersSyncManager.swift in Sources */,
 				7C6ACF5453ABB25037DBC24D /* PushManager.swift in Sources */,
 				33ADAE9B4BABAB3E082E81DD /* RemoteAvatarView.swift in Sources */,
 				9FAA0412FE29CE4F99F5415B /* Shimmer.swift in Sources */,
