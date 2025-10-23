@@ -16,22 +16,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let lastErr: Response | null = null
     for (const base of BASES) {
-      // Try password login first
-      let r = await fetch(base + LOGIN_PASSWORD_PATH, {
+      const r = await fetch(base + LOGIN_PASSWORD_PATH, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, password })
       })
-      if (r.ok) { const data = await r.json(); return res.status(200).json(data) }
-
-      // Fallback to legacy stub login if available
-      const legacy = await fetch(base + '/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: identifier, role: 'admin' })
-      })
-      if (legacy.ok) { const data = await legacy.json(); return res.status(200).json(data) }
-      lastErr = legacy
+      if (r.ok) {
+        const data = await r.json()
+        if (data && data.refresh_token) {
+          const isProd = process.env.NODE_ENV === 'production'
+          const maxAge = 60 * 60 * 24 * 14
+          res.setHeader('Set-Cookie', `zariz_rt=${encodeURIComponent(data.refresh_token)}; Path=/; HttpOnly; SameSite=Strict; ${isProd ? 'Secure; ' : ''}Max-Age=${maxAge}`)
+        }
+        return res.status(200).json(data)
+      }
+      lastErr = r
     }
     if (lastErr) {
       const text = await lastErr.text().catch(() => '')

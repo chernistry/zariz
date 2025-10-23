@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		029F1AAC187B31761D4CEA2A /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = D94D89E7EB33C5A157B3C315 /* Shimmer */; };
 		045B57D26B5DF9802C0299B9 /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481A0834A7F077D1099132C8 /* Telemetry.swift */; };
-		0DD76BDE2012546DB985DFDB /* AuthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18192B85F835CB5562AA64C7 /* AuthModels.swift */; };
 		11A6903D1BC28E5F00237E3C /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D7D16A05A7D432E925633F /* AuthService.swift */; };
 		147B9F551D353FB9D99430E1 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732DCE00E3F410189C1FFF0C /* DesignSystem.swift */; };
 		17B17D572FC9B0E749B58963 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75B513E9406090E0068B305A /* Config.swift */; };
@@ -78,7 +77,6 @@
 		083F5FA9673EA6B850203EE4 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
 		085C9579D18A11406FFE1007 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		0F40F2A9A80D0A681B6BD1DA /* AuthKeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthKeychainStore.swift; sourceTree = "<group>"; };
-		18192B85F835CB5562AA64C7 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
 		18E8DBF867F0A1E7EAB6D488 /* OrderPricing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderPricing.swift; sourceTree = "<group>"; };
 		205017133705173CDDB3D443 /* OrdersSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersSyncManager.swift; sourceTree = "<group>"; };
 		21AB1E66206F81D9C7A79F2E /* OrdersService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersService.swift; sourceTree = "<group>"; };
@@ -225,7 +223,6 @@
 		6477298EEF6110C9F5534D24 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
-				18192B85F835CB5562AA64C7 /* AuthModels.swift */,
 				E2D7D16A05A7D432E925633F /* AuthService.swift */,
 				05A7F0B0F87BD6EE046A6C2D /* AuthView.swift */,
 				98CA6E09876DAF36DB602FC8 /* AuthViewModel.swift */,
@@ -364,7 +361,7 @@
 			path = ZarizUITests;
 			sourceTree = "<group>";
 		};
-		"TEMP_A1BD5E20-C128-4847-B3CC-1F6697B5FF73" /* L10n */ = {
+		"TEMP_2CD526C2-08C6-4BF7-AA72-331FE0329CBE" /* L10n */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -498,7 +495,6 @@
 				50E88351DA9ABDC8830D7B50 /* APIClient.swift in Sources */,
 				9221949AACF5E8F349C3ADC2 /* AppSession.swift in Sources */,
 				B1BD339E8B4450C86C518458 /* AuthKeychainStore.swift in Sources */,
-				0DD76BDE2012546DB985DFDB /* AuthModels.swift in Sources */,
 				11A6903D1BC28E5F00237E3C /* AuthService.swift in Sources */,
 				CDC803C780900C54B7FD2D2C /* AuthView.swift in Sources */,
 				4E7ED000DC81D71AA9BC2131 /* AuthViewModel.swift in Sources */,

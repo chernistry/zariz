@@ -18,15 +18,24 @@ type Subscriber = (token: string | null, claims: Claims | null) => void
 let accessToken: string | null = null
 let claims: Claims | null = null
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
+const REFRESH_ENABLED = process.env.NEXT_PUBLIC_AUTH_REFRESH === '1'
 let backoffMs = 0
 const MAX_BACKOFF = 60_000
 const BASE_BACKOFF = 1_000
 const JITTER = 250
 
+function base64UrlToBase64(input: string) {
+  // Replace URL-safe chars and pad
+  input = input.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = input.length % 4;
+  if (pad) input += '='.repeat(4 - pad);
+  return input;
+}
+
 function parseJwt(token: string): Claims | null {
   try {
     const [, payload] = token.split('.')
-    const json = atob(payload)
+    const json = atob(base64UrlToBase64(payload))
     return JSON.parse(json)
   } catch {
     return null
@@ -45,6 +54,7 @@ function clearTimer() {
 }
 
 function scheduleRefresh() {
+  if (!REFRESH_ENABLED) return
   clearTimer()
   if (!claims?.exp) return
   const nowSec = Math.floor(Date.now() / 1000)

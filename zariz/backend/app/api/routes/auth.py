@@ -28,12 +28,6 @@ except Exception:
     LOGIN_FAILURE = _Noop()
 
 
-@router.post("/login", response_model=TokenResponse)
-def login_legacy(payload: AuthLogin):
-    token = create_access_token(sub=str(payload.subject), role=payload.role)
-    return TokenResponse(access_token=token)
-
-
 @limiter.limit("5/minute")
 @router.post("/login_password", response_model=AuthTokenPair)
 def login_password(
@@ -41,14 +35,15 @@ def login_password(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    identifier = (payload.identifier or "").strip().lower()
+    identifier = (payload.identifier or "").strip()
     pwd = payload.password or ""
     user = None
-    if "@" in identifier:
-        user = db.execute(select(User).where(User.email == identifier)).scalars().first()
-    if user is None:
+    # Try email match (lowercased) regardless of '@'
+    if identifier:
+        user = db.execute(select(User).where(User.email == identifier.lower())).scalars().first()
+    if user is None and identifier:
         # Try phone as-is
-        user = db.execute(select(User).where(User.phone == payload.identifier.strip())).scalars().first()
+        user = db.execute(select(User).where(User.phone == identifier)).scalars().first()
     ip = request.client.host if request and request.client else "?"
     if user is None or user.status != "active" or not verify_password(pwd, user.password_hash or "!"):
         _log.info(
@@ -92,16 +87,14 @@ def refresh_token(payload: RefreshTokenRequest, db: Session = Depends(get_db)):
     if matched is None:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     exp = matched.expires_at
-    # handle naive datetimes from SQLite
+    # handle naive datetimes from SQLite vs aware from Postgres
     if exp.tzinfo is None:
         from datetime import datetime as _dt
-
         if exp < _dt.utcnow():
             raise HTTPException(status_code=401, detail="Invalid refresh token")
     else:
         if exp < now_aware:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
     user = db.get(User, matched.user_id)
     if user is None or user.status != "active":
         raise HTTPException(status_code=401, detail="User inactive")

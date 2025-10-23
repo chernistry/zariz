@@ -6,7 +6,6 @@ from jose import jwt
 
 from .config import settings
 
-from passlib.hash import bcrypt as _bcrypt
 import hashlib
 try:
     from passlib.handlers.argon2 import argon2 as _argon2handler
@@ -27,6 +26,8 @@ def hash_password(password: str) -> str:
         except Exception:
             pass
     try:
+        # Lazy import bcrypt only if needed
+        from passlib.hash import bcrypt as _bcrypt  # type: ignore
         return _bcrypt.hash(password)
     except Exception:
         # Last-resort fallback to sha256 for test environments
@@ -40,8 +41,12 @@ def verify_password(password: str, password_hash: str) -> bool:
             return _argon2.verify(password, password_hash)
         if password_hash.startswith("sha256$"):
             return hashlib.sha256(password.encode("utf-8")).hexdigest() == password_hash.split("$", 1)[1]
-        # fallback to bcrypt
-        return _bcrypt.verify(password, password_hash)
+        # fallback to bcrypt (lazy import)
+        try:
+            from passlib.hash import bcrypt as _bcrypt  # type: ignore
+            return _bcrypt.verify(password, password_hash)
+        except Exception:
+            return False
     except Exception:
         return False
 

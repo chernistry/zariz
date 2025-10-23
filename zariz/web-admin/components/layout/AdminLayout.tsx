@@ -5,16 +5,36 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PeopleIcon from '@mui/icons-material/People';
 import { useRouter } from 'next/router';
+import { authClient } from '../../libs/authClient';
 
 const drawerWidth = 220;
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [ready, setReady] = React.useState(false);
   const router = useRouter();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
+
+  React.useEffect(() => {
+    let cancelled = false
+    const check = () => {
+      let token = authClient.getAccessToken()
+      if (!token && typeof window !== 'undefined') {
+        try {
+          const stored = localStorage.getItem('token')
+          if (stored) { authClient._set(stored); token = stored }
+        } catch {}
+      }
+      if (token) { if (!cancelled) setReady(true) }
+      else { if (!cancelled) setReady(false) }
+    }
+    const unsub = authClient.subscribe(() => check())
+    check()
+    return () => { cancelled = true; unsub && unsub() }
+  }, [])
 
   const drawer = (
     <div>
@@ -37,6 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 
+  if (!ready) return null
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />

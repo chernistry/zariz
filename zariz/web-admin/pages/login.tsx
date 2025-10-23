@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Box, TextField, Button, Typography, Alert, Paper, Container } from '@mui/material';
 import { authClient } from '../libs/authClient';
 
 export default function Login() {
@@ -18,7 +19,10 @@ export default function Login() {
         body: JSON.stringify({ identifier, password })
       })
       if (!r.ok) throw new Error(String(r.status))
-      const { access_token } = await r.json()
+      const data = await r.json()
+      const access_token = data?.access_token as string | undefined
+      if (!access_token) throw new Error('No access token returned')
+      try { localStorage.setItem('token', access_token) } catch {}
       authClient._set(access_token)
       location.href = '/orders'
     } catch (err) {
@@ -29,15 +33,50 @@ export default function Login() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12, width: 360 }}>
-        <h1>Zariz Admin Login</h1>
-        <input value={identifier} onChange={e=>setIdentifier(e.target.value)} placeholder="Email or phone" autoComplete="username" />
-        <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" type="password" autoComplete="current-password" />
-        {error && <div style={{ color: 'crimson' }}>{error}</div>}
-        <button type="submit" disabled={pending}>{pending ? 'Signing in…' : 'Sign In'}</button>
-        <div style={{ fontSize: 12, color: '#666' }}>No self-service. For access, contact Zariz administrator.</div>
-      </form>
-    </div>
+    <Container maxWidth="xs">
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+          <Typography variant="h4" component="h1" gutterBottom align="center">
+            Zariz Admin
+          </Typography>
+          <Box component="form" onSubmit={submit} sx={{ mt: 3 }}>
+            <TextField
+              fullWidth
+              label="Email or Phone"
+              value={identifier}
+              onChange={e => setIdentifier(e.target.value)}
+              autoComplete="username"
+              autoCapitalize="none"
+              margin="normal"
+              disabled={pending}
+            />
+            <TextField
+              fullWidth
+              label="Password"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              autoComplete="current-password"
+              margin="normal"
+              disabled={pending}
+            />
+            {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+            <Button
+              fullWidth
+              type="submit"
+              variant="contained"
+              size="large"
+              disabled={pending}
+              sx={{ mt: 3, mb: 2 }}
+            >
+              {pending ? 'Signing in…' : 'Sign In'}
+            </Button>
+            <Typography variant="caption" color="text.secondary" align="center" display="block">
+              No self-service. For access, contact Zariz administrator.
+            </Typography>
+          </Box>
+        </Paper>
+      </Box>
+    </Container>
   );
 }
