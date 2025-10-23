@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..core.config import settings
+from ..db.models.user_session import UserSession
 from ..db.session import get_sessionmaker
 from ..db.models.user import User
 from ..db.models.order import Order
@@ -28,16 +29,29 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
-def get_current_identity(creds=Depends(bearer)) -> dict:
+def get_current_identity(creds=Depends(bearer), db: Session = Depends(get_db)) -> dict:
     if creds is None:
         raise HTTPException(status_code=401, detail="Missing token")
     try:
         payload = jwt.decode(creds.credentials, settings.jwt_secret, algorithms=[settings.jwt_algo])
         role = payload.get("role")
         sub = payload.get("sub")
+        store_ids = payload.get("store_ids")
+        session_id = payload.get("session_id")
         if not role or not sub:
             raise HTTPException(status_code=401, detail="Invalid token claims")
-        return {"sub": sub, "role": role}
+        # If session_id is present, verify session is active (not revoked, not expired)
+        if session_id is not None:
+            try:
+                sid = int(session_id)
+                s = db.get(UserSession, sid)
+                from datetime import datetime, timezone
+
+                if s is None or s.revoked_at is not None or (s.expires_at and s.expires_at < datetime.now(timezone.utc)):
+                    raise HTTPException(status_code=401, detail="Session expired")
+            except Exception:
+                raise HTTPException(status_code=401, detail="Invalid session")
+        return {"sub": sub, "role": role, "store_ids": store_ids, "session_id": session_id}
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
@@ -57,9 +71,10 @@ def maybe_current_identity(creds=Depends(bearer)) -> dict | None:
         payload = jwt.decode(creds.credentials, settings.jwt_secret, algorithms=[settings.jwt_algo])
         role = payload.get("role")
         sub = payload.get("sub")
+        store_ids = payload.get("store_ids")
         if not role or not sub:
             return None
-        return {"sub": sub, "role": role}
+        return {"sub": sub, "role": role, "store_ids": store_ids}
     except JWTError:
         return None
 

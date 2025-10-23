@@ -1,15 +1,30 @@
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from pydantic import BaseModel, Field
 
 
 class AuthLogin(BaseModel):
-    subject: str = Field(..., description="User identifier for sub claim")
+    subject: str = Field(..., description="User identifier for sub claim (legacy demo)")
     role: Literal["courier", "store", "admin"]
 
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class AuthLoginRequest(BaseModel):
+    identifier: str = Field(..., description="Email or phone")
+    password: str = Field(..., description="Password")
+
+
+class AuthTokenPair(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 
 class OrderCreate(BaseModel):

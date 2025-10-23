@@ -61,11 +61,16 @@ def list_orders(
     role = identity.get("role")
     sub = identity.get("sub")
     if role == "store":
-        try:
-            store_id = int(sub)
-        except Exception:
-            raise HTTPException(status_code=400, detail="Invalid store id")
-        q = q.where(Order.store_id == store_id)
+        sids = identity.get("store_ids") or []
+        if sids:
+            q = q.where(Order.store_id.in_(sids))
+        else:
+            # legacy token: sub is store id
+            try:
+                store_id = int(sub)
+            except Exception:
+                raise HTTPException(status_code=400, detail="Invalid store id")
+            q = q.where(Order.store_id == store_id)
     elif role == "courier":
         try:
             courier_id = int(sub)
@@ -214,12 +219,17 @@ def get_order(order_id: int, db: Session = Depends(get_db), identity: dict = Dep
     role = identity.get("role")
     sub = identity.get("sub")
     if role == "store":
-        try:
-            store_id = int(sub)
-        except Exception:
-            raise HTTPException(status_code=400, detail="Invalid store id")
-        if o.store_id != store_id:
-            raise HTTPException(status_code=403, detail="Forbidden")
+        sids = identity.get("store_ids") or []
+        if sids:
+            if o.store_id not in sids:
+                raise HTTPException(status_code=403, detail="Forbidden")
+        else:
+            try:
+                store_id = int(sub)
+            except Exception:
+                raise HTTPException(status_code=400, detail="Invalid store id")
+            if o.store_id != store_id:
+                raise HTTPException(status_code=403, detail="Forbidden")
     if role == "courier":
         try:
             courier_id = int(sub)
