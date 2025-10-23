@@ -3,9 +3,16 @@ import { api } from '../../libs/api';
 import { withAuth } from '../../libs/withAuth';
 import { useRouter } from 'next/router';
 
+interface Store {
+  id: number;
+  name: string;
+}
+
 function NewOrder() {
   const router = useRouter();
+  const [stores, setStores] = useState<Store[]>([]);
   const [formData, setFormData] = useState({
+    store_id: '',
     recipient_first_name: '',
     recipient_last_name: '',
     phone: '',
@@ -22,13 +29,21 @@ function NewOrder() {
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (!token) router.replace('/login');
+    
+    // Fetch stores
+    api('stores').then((data: Store[]) => {
+      setStores(data);
+      if (data.length > 0) {
+        setFormData(prev => ({ ...prev, store_id: String(data[0].id) }));
+      }
+    }).catch(err => console.error('Failed to load stores:', err));
   }, [router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'boxes_count' ? parseInt(value) || 1 : value
+      [name]: name === 'boxes_count' ? parseInt(value) || 1 : name === 'store_id' ? parseInt(value) : value
     }));
   };
 
@@ -47,6 +62,12 @@ function NewOrder() {
     <div style={{ padding: 24 }}>
       <h1>New Order</h1>
       <form onSubmit={create} style={{ display: 'flex', flexDirection: 'column', gap: 12, width: 420 }}>
+        <select name="store_id" value={formData.store_id} onChange={handleChange} required>
+          <option value="">Select Store *</option>
+          {stores.map(store => (
+            <option key={store.id} value={store.id}>{store.name}</option>
+          ))}
+        </select>
         <input name="recipient_first_name" value={formData.recipient_first_name} onChange={handleChange} placeholder="First Name *" required />
         <input name="recipient_last_name" value={formData.recipient_last_name} onChange={handleChange} placeholder="Last Name *" required />
         <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone *" required />

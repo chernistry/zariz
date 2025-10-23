@@ -33,3 +33,23 @@ Verification
 
 Notes
 - This relies on backend changes in TICKET-16 (`/v1/couriers`, `assigned` status).
+
+---
+
+Status: Completed
+
+Implementation summary
+- Assign modal (MUI Dialog) listing couriers with capacity:
+  - `zariz/web-admin/components/modals/AssignCourierDialog.tsx`
+  - Fetches `GET /v1/couriers?available_only=1`; toggle to show all.
+- API utility:
+  - `zariz/web-admin/libs/api.ts` — added `getCouriers()` and `CourierInfo` type.
+- Orders pages wired to modal and status label:
+  - `zariz/web-admin/pages/orders.tsx` — opens modal on Assign, maps status `assigned` → “Awaiting acceptance”.
+  - `zariz/web-admin/pages/orders/[id].tsx` — same; Assign opens modal.
+- Couriers availability page (MUI Table):
+  - `zariz/web-admin/pages/couriers.tsx` — shows id/name/load/capacity/available with Available-only toggle.
+
+Verification
+- Build: `cd zariz/web-admin && yarn && yarn build` → success.
+- Dev: `yarn dev` → Orders Assign opens modal and assigns; list shows “Awaiting acceptance” for assigned; Couriers page lists availability.

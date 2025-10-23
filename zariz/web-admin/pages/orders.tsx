@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { InputField } from '../components/InputField';
 import { ButtonWithIcon } from '../components/ButtonWithIcon';
 import { Button } from '../components/Button';
+import AssignCourierDialog from '../components/modals/AssignCourierDialog';
 
 type Order = { id: string | number; status: string; store_id?: number; courier_id?: number | null; created_at?: string };
 type Filter = { status: string; store: string; courier: string; from: string; to: string };
@@ -15,6 +16,7 @@ function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>({ status: '', store: '', courier: '', from: '', to: '' });
+  const [assignFor, setAssignFor] = useState<number | string | null>(null);
 
   async function refresh() {
     setError(null);
@@ -49,12 +51,16 @@ function Orders() {
     a.href = url; a.download = 'orders.csv'; a.click(); URL.revokeObjectURL(url);
   }
 
-  function openAssign(id: number | string) {
-    const s = prompt('Courier ID?');
-    if (!s) return;
-    api(`orders/${id}/assign`, { method: 'POST', body: JSON.stringify({ courier_id: parseInt(s, 10) }) })
-      .then(refresh)
-      .catch(() => setError('Failed to assign'));
+  function openAssign(id: number | string) { setAssignFor(id); }
+  async function selectCourier(courierId: number) {
+    if (!assignFor) return;
+    try {
+      await api(`orders/${assignFor}/assign`, { method: 'POST', body: JSON.stringify({ courier_id: courierId }) });
+      setAssignFor(null);
+      await refresh();
+    } catch (e) {
+      setError('Failed to assign');
+    }
   }
 
   function openCancel(id: number | string) {
@@ -99,7 +105,7 @@ function Orders() {
           {orders.map(o => (
             <tr key={o.id}>
               <td>#{String(o.id)}</td>
-              <td>{o.status}</td>
+              <td>{o.status === 'assigned' ? 'Awaiting acceptance' : o.status}</td>
               <td>{o.store_id ?? '-'}</td>
               <td>{o.courier_id ?? '-'}</td>
               <td style={{ display:'flex', gap:6 }}>
@@ -111,6 +117,12 @@ function Orders() {
           ))}
         </tbody>
       </table>
+
+      <AssignCourierDialog
+        open={assignFor !== null}
+        onClose={() => setAssignFor(null)}
+        onSelect={selectCourier}
+      />
     </div>
   );
 }

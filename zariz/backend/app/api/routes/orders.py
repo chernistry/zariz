@@ -12,6 +12,7 @@ from ...db.models.order import Order
 from ...db.models.order_event import OrderEvent
 from ...db.models.user import User
 from ...db.models.device import Device
+from ...db.models.store import Store
 from ...services.events import events_bus
 from ...worker.push import send_silent
 
@@ -141,9 +142,8 @@ def create_order(
     role = identity.get("role")
     if role == "store":
         store_id = _parse_int(identity.get("sub"))
+    
     if store_id is None:
-        import logging
-        logging.getLogger("app").error(f"Store id required. Role: {role}, identity: {identity}, payload.store_id: {payload.store_id}")
         raise HTTPException(status_code=400, detail="Store id required")
 
     pickup_address = (payload.pickup_address or "").strip()

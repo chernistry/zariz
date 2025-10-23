@@ -4,12 +4,14 @@ import { api, API_BASE } from '../../libs/api';
 import { withAuth } from '../../libs/withAuth';
 import { subscribe } from '../../libs/sse';
 import { ButtonWithIcon } from '../../components/ButtonWithIcon';
+import AssignCourierDialog from '../../components/modals/AssignCourierDialog';
 
 function OrderDetail() {
   const router = useRouter();
   const { id } = router.query as { id?: string };
   const [order, setOrder] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   async function load() {
     if (!id) return;
@@ -25,8 +27,9 @@ function OrderDetail() {
     return off;
   }, [id]);
 
-  async function assign(courier_id: number) {
+  async function doAssign(courier_id: number) {
     await api(`orders/${id}/assign`, { method: 'POST', body: JSON.stringify({ courier_id }) });
+    setAssignOpen(false);
     await load();
   }
   async function cancel(reason: string) {
@@ -36,13 +39,12 @@ function OrderDetail() {
 
   if (!order) return <div style={{ padding:24 }}>Loading...</div>;
   return (
+    <>
     <div style={{ padding:24 }}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <h1>Order #{order.id}</h1>
         <div style={{ display:'flex', gap:8 }}>
-          <ButtonWithIcon color="#0a6" leftIcon="checked" value="Assign" onClick={()=>{
-            const s = prompt('Courier ID?'); if (s) assign(parseInt(s,10));
-          }} />
+          <ButtonWithIcon color="#0a6" leftIcon="checked" value="Assign" onClick={()=> setAssignOpen(true)} />
           <ButtonWithIcon color="#c33" leftIcon="delete" value="Cancel" onClick={()=>{
             const reason = prompt('Reason?') || ''; cancel(reason);
           }} />
@@ -50,7 +52,7 @@ function OrderDetail() {
       </div>
       {error && <div style={{ color:'crimson' }}>{error}</div>}
       <div style={{ marginTop:12 }}>
-        <div>Status: {order.status}</div>
+        <div>Status: {order.status === 'assigned' ? 'Awaiting acceptance' : order.status}</div>
         <div>Store: {order.store_id}</div>
         <div>Courier: {order.courier_id ?? '-'}</div>
         <div>Recipient: {[order.recipient_first_name, order.recipient_last_name].filter(Boolean).join(' ')}</div>
@@ -60,8 +62,9 @@ function OrderDetail() {
         <div>Price: ₪{order.price_total}</div>
       </div>
     </div>
+    <AssignCourierDialog open={assignOpen} onClose={()=>setAssignOpen(false)} onSelect={doAssign} />
+    </>
   );
 }
 
 export default withAuth(OrderDetail);
-

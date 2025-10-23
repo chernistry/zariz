@@ -12,3 +12,14 @@ export async function api(path: string, opts: RequestInit = {}) {
   return res.json();
 }
 
+export type CourierInfo = {
+  id: number;
+  name: string;
+  capacity_boxes: number;
+  load_boxes: number;
+  available_boxes: number;
+};
+
+export async function getCouriers(availableOnly = true): Promise<CourierInfo[]> {
+  return api(`couriers?available_only=${availableOnly ? 1 : 0}`);
+}
