@@ -466,6 +466,29 @@ def update_status(
     return out
 
 
+@router.delete("/{order_id}")
+def delete_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    identity: dict = Depends(require_role("admin")),
+):
+    o = db.get(Order, order_id)
+    if not o:
+        raise HTTPException(status_code=404, detail="Order not found")
+    # Delete related order events first to satisfy FKs
+    db.query(OrderEvent).filter(OrderEvent.order_id == order_id).delete()
+    db.delete(o)
+    db.commit()
+    # Emit event for realtime UIs
+    events_bus.publish({"type": "order.deleted", "order_id": order_id})
+    try:
+        tokens = [t for (t,) in db.query(Device.token).all()]
+        for t in tokens:
+            send_silent(t, {"type": "order.deleted", "order_id": order_id})
+    except Exception:
+        pass
+    return {"ok": True}
+
 @limiter.limit("20/minute")
 @router.post("/{order_id}/decline")
 def decline_order(
