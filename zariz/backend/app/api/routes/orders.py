@@ -10,6 +10,7 @@ from ..deps import get_db, require_role, find_idempotency, save_idempotency
 from ...core.limits import limiter
 from ...db.models.order import Order
 from ...db.models.order_event import OrderEvent
+from ...db.models.user import User
 from ...db.models.device import Device
 from ...services.events import events_bus
 from ...worker.push import send_silent
@@ -346,9 +347,9 @@ def claim_order(
         ).scalar()
         or 0
     )
-    # Get capacity from users table; default to 8 if user row missing
-    cap_row = db.execute(select(func.coalesce(func.max(text("capacity_boxes")), 8)).select_from(text("users")).where(text("id=:cid")), {"cid": courier_id}).scalar()
-    capacity = int(cap_row or 8)
+    # Get capacity from users table via ORM; default to 8 if user row missing
+    user = db.get(User, courier_id)
+    capacity = int(getattr(user, "capacity_boxes", 8) or 8)
     if int(load) + int(o_target.boxes_count) > capacity:
         raise HTTPException(status_code=409, detail="Courier capacity exceeded")
 
@@ -454,8 +455,8 @@ def decline_order(
     o = db.get(Order, order_id)
     if not o:
         raise HTTPException(status_code=404, detail="Order not found")
-    # Only decline when assigned to this courier (or unassigned but assigned state)
-    if o.status != "assigned" or (o.courier_id not in (None, courier_id)) is False:
+    # Only decline when assigned and either unassigned courier or assigned to this courier
+    if o.status != "assigned" or (o.courier_id not in (None, courier_id)):
         raise HTTPException(status_code=400, detail="Cannot decline this order")
     o.status = "new"
     o.courier_id = None

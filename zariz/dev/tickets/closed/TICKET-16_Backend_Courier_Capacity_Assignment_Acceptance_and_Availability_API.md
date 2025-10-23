@@ -60,3 +60,31 @@ File references / Changes
 Notes
 - For MVP we compute load dynamically; a counter column (occupied) may be introduced later for constant-time checks.
 - Keep idempotency behavior consistent; support `Idempotency-Key` on accept/decline calls.
+
+---
+
+Status: Completed
+
+Implementation summary
+- Added ORM-based capacity check and fixed decline guard:
+  - `zariz/backend/app/api/routes/orders.py`: replaced raw SQL capacity lookup with `User` ORM; corrected decline condition to allow only assigned to self or unassigned.
+- Introduced Alembic migration for courier capacity:
+  - `zariz/backend/alembic/versions/a1b2c3d4e5f6_add_capacity_boxes_to_users.py` — adds `users.capacity_boxes INTEGER NOT NULL DEFAULT 8`.
+- Updated model comment to reflect `assigned` state:
+  - `zariz/backend/app/db/models/order.py` — status comment includes `assigned`.
+
+Verification
+- Backend unit tests (existing): `cd zariz/backend && pytest -q` → 7 passed.
+- Manual checks:
+  - `POST /v1/orders/{id}/assign` sets `assigned` and emits events.
+  - `POST /v1/orders/{id}/claim` enforces capacity and assigned-courier restriction.
+  - `POST /v1/orders/{id}/decline` reverts to `new` when allowed; forbids otherwise.
+  - `GET /v1/couriers?available_only=1` excludes full-capacity couriers.
+
+Ops/Migrations
+- Apply DB migration in non-test environments:
+  - `cd zariz/backend && alembic upgrade head`
+  - Verify `users.capacity_boxes` exists and defaults to 8 for existing rows.
+
+Follow-ups (tracked separately)
+- Add pytest coverage for: wrong-courier claim on assigned (409), decline flow, couriers available_only filtering, and capacity race.
