@@ -8,22 +8,17 @@ enum KeychainTokenStore {
 
     static func save(token: String) throws {
         let data = Data(token.utf8)
-        var error: Unmanaged<CFError>?
-        guard let sac = SecAccessControlCreateWithFlags(
-            nil,
-            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            [.biometryCurrentSet],
-            &error
-        ) else {
-            throw error!.takeRetainedValue() as Error
-        }
-        let addQuery: [String: Any] = [
+        var addQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrAccessControl as String: sac,
             kSecValueData as String: data
         ]
+        if let sac = makeAccessControl() {
+            addQuery[kSecAttrAccessControl as String] = sac
+        } else {
+            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        }
         // Replace if exists
         SecItemDelete(addQuery as CFDictionary)
         let status = SecItemAdd(addQuery as CFDictionary, nil)
@@ -33,23 +28,34 @@ enum KeychainTokenStore {
     }
 
     static func load(prompt: String = "Authenticate to access") throws -> String? {
-        let context = LAContext()
-        context.localizedReason = prompt
-        let query: [String: Any] = [
+        var baseQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecUseAuthenticationContext as String: context
+            kSecMatchLimit as String: kSecMatchLimitOne
         ]
+        let context = LAContext()
+        context.localizedReason = prompt
+        let canAuth = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil) ||
+                      context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
+        context.interactionNotAllowed = !canAuth
+        baseQuery[kSecUseAuthenticationContext as String] = context
         var item: CFTypeRef?
-        let status = SecItemCopyMatching(query as CFDictionary, &item)
-        if status == errSecItemNotFound { return nil }
-        guard status == errSecSuccess, let data = item as? Data else {
+        let status = SecItemCopyMatching(baseQuery as CFDictionary, &item)
+        switch status {
+        case errSecSuccess:
+            guard let data = item as? Data else {
+                throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
+            }
+            return String(data: data, encoding: .utf8)
+        case errSecItemNotFound:
+            return nil
+        case errSecUserCanceled:
+            return nil
+        default:
             throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
         }
-        return String(data: data, encoding: .utf8)
     }
 
     static func clear() {
@@ -59,5 +65,32 @@ enum KeychainTokenStore {
             kSecAttrAccount as String: account
         ]
         SecItemDelete(query as CFDictionary)
+    }
+
+    private static func makeAccessControl() -> SecAccessControl? {
+        let candidates: [SecAccessControlCreateFlags] = [
+            [.biometryCurrentSet],
+            [.biometryAny],
+            [.userPresence]
+        ]
+        var lastError: Error?
+        for flags in candidates {
+            var error: Unmanaged<CFError>?
+            if let sac = SecAccessControlCreateWithFlags(
+                nil,
+                kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+                flags,
+                &error
+            ) {
+                return sac
+            }
+            if let err = error?.takeRetainedValue() {
+                lastError = err as Error
+            }
+        }
+        if let lastError {
+            Telemetry.auth.error("auth.keychain.token_access_control_fallback error=\(lastError.localizedDescription, privacy: .public)")
+        }
+        return nil
     }
 }

@@ -35,19 +35,6 @@ final class PushManager: NSObject, ObservableObject {
         Task { await self.registerDeviceWithBackend(token: token) }
     }
 
-    @MainActor
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.banner, .sound])
-    }
-
-    @MainActor
-    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping @Sendable (UIBackgroundFetchResult) -> Void) {
-        Task {
-            await OrdersService.shared.sync()
-            await MainActor.run { completionHandler(.newData) }
-        }
-    }
-
     private func authHeader() async -> String? {
         if let token = try? await AuthSession.shared.validAccessToken() { return token }
         return nil
@@ -135,6 +122,15 @@ final class PushManager: NSObject, ObservableObject {
     }
 }
 
-extension PushManager: UNUserNotificationCenterDelegate, UIApplicationDelegate {}
+extension PushManager: UNUserNotificationCenterDelegate, UIApplicationDelegate {
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound])
+    }
+
+    nonisolated func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        completionHandler(.noData)
+        Task { await OrdersService.shared.sync() }
+    }
+}
 
 // Notification names moved to Shared/Notifications.swift

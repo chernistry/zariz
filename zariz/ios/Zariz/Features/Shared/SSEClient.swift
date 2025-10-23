@@ -1,7 +1,7 @@
 import Foundation
 
-final class SSEClient: NSObject, URLSessionDataDelegate, @unchecked Sendable {
-    private let task: UnsafeMutablePointer<URLSessionDataTask?> = .allocate(capacity: 1)
+final class SSEClient: NSObject, @preconcurrency URLSessionDataDelegate {
+    private var task: URLSessionDataTask?
     private var buffer = Data()
     private let url: URL
     private let onEvent: (Any) -> Void
@@ -10,12 +10,6 @@ final class SSEClient: NSObject, URLSessionDataDelegate, @unchecked Sendable {
     init(url: URL, onEvent: @escaping (Any) -> Void) {
         self.url = url
         self.onEvent = onEvent
-        task.initialize(to: nil)
-    }
-
-    deinit {
-        task.deinitialize(count: 1)
-        task.deallocate()
     }
 
     func start() {
@@ -24,13 +18,13 @@ final class SSEClient: NSObject, URLSessionDataDelegate, @unchecked Sendable {
         req.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         req.timeoutInterval = 0
         let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
-        task.pointee = session.dataTask(with: req)
-        task.pointee?.resume()
+        task = session.dataTask(with: req)
+        task?.resume()
     }
 
     func stop() {
-        task.pointee?.cancel()
-        task.pointee = nil
+        task?.cancel()
+        task = nil
     }
 
     private func handleChunk(_ data: Data) {
@@ -45,10 +39,9 @@ final class SSEClient: NSObject, URLSessionDataDelegate, @unchecked Sendable {
                     for part in line.split(separator: "\n") {
                         if part.hasPrefix("data:") {
                             let jsonStr = part.dropFirst(5).trimmingCharacters(in: .whitespaces)
-                            if let payload = jsonStr.data(using: .utf8) {
-                                if let obj = try? JSONSerialization.jsonObject(with: payload) {
-                                    Task { @MainActor in self.onEvent(obj) }
-                                }
+                            if let payload = jsonStr.data(using: .utf8),
+                               let obj = try? JSONSerialization.jsonObject(with: payload) {
+                                Task { @MainActor in self.onEvent(obj) }
                             }
                         }
                     }
@@ -57,7 +50,6 @@ final class SSEClient: NSObject, URLSessionDataDelegate, @unchecked Sendable {
         }
     }
 
-    // URLSessionDataDelegate
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         handleChunk(data)
     }
