@@ -1,12 +1,12 @@
 Read /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/coding_rules.md first
 
-# [TICKET-24] Shared — Auth Rollout, Migration, and QA
+# [TICKET-25] Shared — Auth Rollout, Migration, and QA
 
 Goal
 - Coordinate backend, iOS, and web authentication rollout with migrations, seed data, documentation, and cross-platform verification to ensure a smooth transition to the new secure auth stack.
 
 Context
-- TICKET-21/22/23 introduce breaking changes (password login, refresh tokens, store-scoped RBAC). We need a controlled migration path, seed accounts, CI coverage, and release checklist before enabling auth in production/TestFlight.
+- TICKET-21/22/23/24 introduce breaking changes (password login, refresh tokens, store-scoped RBAC). We need a controlled migration path, seed accounts, CI coverage, and release checklist before enabling auth in production/TestFlight.
 
 Scope
 1) Migration planning

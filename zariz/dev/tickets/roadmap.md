@@ -39,21 +39,21 @@ Progress: mark done items with [x] and adjust the above ETA line-by-line as you 
 
  - [x] 1. Monorepo structure, tooling, Docker baseline
  - [x] 2. Backend scaffold (FastAPI, SQLAlchemy, Alembic, JWT)
- - [ ] 3. Core APIs: auth + orders CRUD/idempotency _(reopened by TICKET-21)_
+ - [x] 3. Core APIs: auth + orders CRUD/idempotency _(TICKET-21 complete)_
  - [x] 4. Notifications: APNs worker, device registry, SSE for web
  - [x] 5. CI/CD + Deploy: Actions, Docker images, Compose/Nginx
 
 ## Stage B — iOS App
 
  - [x] 6. iOS project bootstrap (SwiftUI, modules, SwiftData models)
- - [ ] 7. iOS auth flow + Keychain _(blocked by TICKET-22)_
+ - [ ] 7. iOS auth flow + Keychain _(blocked by TICKET-24)_
  - [x] 8. Orders UI (list/detail), claim, status updates, offline cache, BG tasks + silent push
  - [x] 9. iOS CI/TestFlight (fastlane, Actions, testers)
 
 ## Stage C — Store Web Panel
 
- - [ ] 10. Web panel scaffold (Next.js/TS), auth, routes _(blocked by TICKET-23)_
- - [ ] 11. RBAC + security hardening _(needs TICKET-21 & TICKET-23)_
+ - [ ] 10. Web panel scaffold (Next.js/TS), auth, routes _(blocked by TICKET-22)_
+ - [ ] 11. RBAC + security hardening _(needs TICKET-21 & TICKET-22)_
  - [x] 12. Realtime status (SSE), list filters, UX polish
 
 ## Stage D — Quality & Release

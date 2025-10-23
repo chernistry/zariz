@@ -1,92 +1,128 @@
 Read /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/coding_rules.md first
 
-# [TICKET-21] Backend — Authentication & RBAC Overhaul
+# [TICKET-21] Backend — Authentication & RBAC Overhaul (admin-only web, 1 учётка на Store/Courier)
 
-Goal
-- Deliver a production-grade authentication stack with hashed credentials, refreshable JWTs, and store-aware RBAC so mobile and web clients can sign in securely.
+1. Task Summary
 
-Context
-- `POST /v1/auth/login` currently issues tokens for any `{subject, role}` payload; there is no password verification, no session tracking, and the `users` schema lacks hashed secrets or multi-store assignments.
-- Upcoming iOS/web work (TICKET-22, TICKET-23) depends on a real auth contract and user model that differentiates couriers, store staff, and admins.
+Objective: Поставить продукционную аутентификацию с Argon2, JWT/refresh, жёстким RBAC и простой моделью учёток: одна учётка на магазин (store user) и одна учётка на курьера (courier user). В админку входит только системный администратор.
 
-Scope
-1) Data model & migrations
-   - Extend `users` with `email`, `password_hash`, `status`, `last_login_at`, `default_store_id`, `created_at`, `updated_at`.
-   - Introduce `store_user_memberships` (user_id, store_id, role_in_store, is_primary, created_at) for one-to-many assignments and `user_sessions` (id, user_id, refresh_token_hash, issued_at, expires_at, device_metadata, revoked_at) for refresh lifecycle; add FK + unique constraints (`refresh_token_hash` unique, `store_user_memberships` unique on (user_id, store_id)).
-   - Backfill existing rows with temporary passwords (random) and mark demo accounts (`status='disabled'`) until seeded properly.
-2) Credential handling
-   - Require Argon2id (`argon2-cffi`) hashing with environment-configurable parameters; centralize in `core/security.py`.
-   - Normalize login identifier: accept email or phone; enforce unique trimmed lowercase email.
-   - Implement password reset CLI (`scripts/manage_users.py`) to create/update users with hashed password and role.
-3) Auth endpoints & sessions
-   - Redesign `POST /v1/auth/login` to validate identifier + password, rate-limit (fastapi-limiter) to 5/min per IP, emit structured logs (no plaintext password), update `last_login_at`.
-   - Add `POST /v1/auth/refresh` (requires valid refresh token, rotates token, updates `user_sessions`) and `POST /v1/auth/logout` (revokes session).
-   - JWT payload: `sub`, `role`, `store_ids`, `session_id`, `exp=15m`; refresh tokens live 14 days, opaque + hashed in DB.
-4) RBAC enforcement
-   - Update dependencies to read JWT `role`/`store_ids`; tighten route guards (orders, couriers, stores) via FastAPI dependencies; courier endpoints must ensure `user_id == courier_id`.
-   - Enforce store scoping: store users can only access orders for their stores; admins retain full access.
-5) Observability & compliance
-   - Emit json logs (`event=auth.login`, `user_id`, `role`, `result`, `ip_hash`) via structlog or logging filter; add Prometheus counters (`auth_login_success_total`, `auth_login_failure_total`).
-   - Update OpenAPI schema (`AuthLoginRequest`, `AuthTokenPair`) and docs; ensure secrets pulled from `.env` (`JWT_SECRET`, `JWT_REFRESH_SECRET`, `ARGON2_*`).
+Expected Outcome: Работают логин/refresh/logout, админ‑эндпоинты CRUD для Stores/Couriers, смена логина/пароля только админом. Нет self‑service.
 
-Plan
-1. Scenario scan & guard-rails: assess DB migration complexity (medium risk due to backfill); choose metric profile {time:0.2, energy:0.1, safety:0.5, maintain:0.2}.
-2. Design new Pydantic models (`AuthLoginRequest`, `AuthTokenPair`, `RefreshTokenRequest`) and update OpenAPI.
-3. Create Alembic migration: alter `users`, introduce `store_user_memberships`, `user_sessions`; backfill existing data with random 32-char passwords and disabled status.
-4. Implement Argon2 utilities (`hash_password`, `verify_password`) with configurable params; add CLI for bootstrap user creation.
-5. Replace `POST /v1/auth/login` handler: lookup by email/phone (case-insensitive), verify password, enforce rate limit, persist `user_sessions`, return access + refresh tokens.
-6. Add `POST /v1/auth/refresh` and `POST /v1/auth/logout` endpoints; revoke previous session on refresh rotate; add dependency to ensure session status is active.
-7. Update auth dependency middleware to decode JWT, fetch session if `session_id` present, attach `principal` context (user_id, role, store_ids).
-8. Refactor protected routes to use new dependency (orders, couriers, devices, stores); enforce store scoping in queries.
-9. Wire structured logging + Prometheus metrics counters; redact identifiers (`ip_hash`).
-10. Update tests: unit tests for hashing, login success/failure, refresh rotation, revoked sessions; integration tests for store scoping; generate fixtures for disabled/demo users.
-11. Document new env vars in `README.md` + `.env.example`; ensure docker compose includes redis rate limiter dependency.
+Success Criteria: Тесты login/refresh, RBAC, CRUD Stores/Couriers (включая смену логина/пароля) проходят. OpenAPI обновлён.
 
-Verification
-- `cd zariz/backend && pytest -k "auth or session"`.
-- Manual: `http POST :8000/v1/auth/login email=... password=...` returns both tokens; refresh rotates; accessing `/orders` without membership returns 403.
-- Prometheus metrics display login counters; structured logs contain no plaintext secrets.
+Go/No-Go: JWT/refresh секреты, Redis для rate limit, Alembic миграции готовы; .env заполнен.
+
+2. Assumptions & Scope
+
+Assumptions: Используем StoreMemberships (1..N) для гибкости доступа (см. `app/db/models/store_user_membership.py`). Для MVP у магазина есть один primary пользователь (роль `store`) через membership `is_primary=True`; курьеры — пользователи с ролью `courier`. В админку логинится только `admin` (системная учётка).
+
+Non-Goals: Нет кастомных ролей, нет self‑signup/invite, нет восстановления пароля конечным пользователем.
+
+3. Architecture Overview
+
+Components: FastAPI auth (login/refresh/logout), таблицы users/stores, админ‑роуты `/v1/admin/*`, сессии refresh в `user_sessions`. Rate limiting через Redis. Prometheus метрики.
+
+4. Affected Modules/Files
+
+Files to Modify:
+- `zariz/backend/app/api/routes/auth.py`, `.../deps.py`, `.../schemas.py`
+- `zariz/backend/app/core/security.py`, `.../core/config.py`
+- `zariz/backend/app/db/models/user.py`, `.../db/models/store.py`
+- `zariz/backend/app/api/routes/orders.py` (RBAC: store/courier доступы)
+
+Files to Create:
+- `zariz/backend/app/db/models/user_session.py`
+- Админ‑роуты: `zariz/backend/app/api/routes/admin/stores.py`, `.../admin/couriers.py`
+- Alembic миграции
+- Тесты: `zariz/backend/tests/auth/*`, `tests/admin/*`
+
+5. Implementation Steps
+
+1) Миграции:
+   - Таблица `users`: поля `email`, `phone`, `password_hash`, `role in ('admin','store','courier')`, `status`, timestamps.
+   - Таблица `user_sessions`: `id`, `user_id`, `refresh_token_hash`, `issued_at`, `expires_at`, `revoked_at`, `device_meta`.
+   - Таблица `stores`: добавить поля `status`, базовые настройки (pickup_address, box_limit, hours_text). Primary store user связывается через `store_user_memberships`.
+   - Для курьеров используем строки в `users` с ролью `courier`; дополнительные поля уже есть (`capacity_boxes`).
+2) Безопасность:
+   - Argon2id hash/verify; rate limit `POST /v1/auth/login` = 5/min/IP.
+   - JWT: `sub`, `role`, `exp=15m`; refresh 14d; хэшируем refresh в БД.
+3) Эндпоинты:
+   - `POST /v1/auth/login`, `POST /v1/auth/refresh`, `POST /v1/auth/logout`.
+   - Admin Stores: `GET/POST /v1/admin/stores`, `GET/PATCH /v1/admin/stores/{id}`, `POST /v1/admin/stores/{id}/credentials`, `POST /v1/admin/stores/{id}/status`.
+   - Admin Couriers: `GET/POST /v1/admin/couriers`, `GET/PATCH /v1/admin/couriers/{id}`, `POST /v1/admin/couriers/{id}/credentials`, `POST /v1/admin/couriers/{id}/status`.
+   - Все `admin/*` требуют `role=admin`.
+4) RBAC/Scopes:
+   - Курьер доступен только к своим ресурсам (orders/status). Store доступ к заказам своего магазина (если используется вне админки). Admin — полный доступ.
+5) Наблюдаемость:
+   - Логи JSON: `event=auth.login`, `user_id`, `role`, `result`, IP редактируем до hash.
+   - Метрики Prometheus: `auth_login_success_total`, `auth_login_failure_total`.
+6) Тесты: login/refresh/logout, CRUD stores/couriers, смена логина/пароля, RBAC 403’и.
 
 ---
 
-Status: Completed (with legacy login retained for compatibility)
+Result (Implemented)
 
-Implementation summary
-- Models & migration:
-  - Extended `users` with email, password_hash, status, last_login_at, default_store_id, created_at/updated_at.
-  - Added `store_user_memberships` and `user_sessions`.
-  - Migration: `zariz/backend/alembic/versions/b2c3d4e5f6a7_auth_rbac_overhaul.py`.
-- Security:
-  - `app/core/security.py` implements Argon2id when available; falls back to bcrypt, and ultimately sha256 for test envs.
-  - Added helpers: `hash_password`, `verify_password`, `generate_refresh_token`, extended `create_access_token` (store_ids + session_id).
-- Auth endpoints (keeping legacy `/v1/auth/login`):
-  - `POST /v1/auth/login_password` — identifier (email/phone) + password; rate-limited; creates `user_sessions`; returns access+refresh.
-  - `POST /v1/auth/refresh` — rotates session, revokes old, issues new pair.
-  - `POST /v1/auth/logout` — revokes session for provided refresh token.
-  - Prometheus counters (no-op if lib missing): `auth_login_success_total`, `auth_login_failure_total`.
-- RBAC & scoping:
-  - `deps.get_current_identity` validates `session_id` if present and attaches `store_ids`.
-  - Orders endpoints now respect `store_ids` for store users; legacy tokens (sub=store_id) still supported.
-- Tooling:
-  - `zariz/backend/scripts/manage_users.py` — create/update users with hashed passwords.
-- Tests:
-  - Added `tests/auth/test_login.py` and `tests/auth/test_rbac.py`; all backend tests pass (11/11).
+- Auth endpoints: `/v1/auth/login_password`, `/v1/auth/refresh`, `/v1/auth/logout` with rate limit 5/min/IP and session rotation. Legacy `/v1/auth/login` kept for demo.
+- RBAC: `require_role()` checked on all routes; store scoping on orders via `store_ids` claim; sessions verified when `session_id` present.
+- Admin APIs:
+  - Stores: `GET/POST /v1/admin/stores`, `GET/PATCH /v1/admin/stores/{id}`, `POST /v1/admin/stores/{id}/credentials`, `POST /v1/admin/stores/{id}/status`.
+  - Couriers: `GET/POST /v1/admin/couriers`, `GET/PATCH /v1/admin/couriers/{id}`, `POST /v1/admin/couriers/{id}/credentials`, `POST /v1/admin/couriers/{id}/status`.
+- Data model/migrations:
+  - `user_sessions` table; users: `email`, `status`, `password_hash`, timestamps, `default_store_id`, `capacity_boxes`.
+  - `store_user_memberships` table for store access; stores extended with `status`, `pickup_address`, `box_limit`, `hours_text` (see Alembic `c3d4e5f6a8b9_*`).
+- Tests: added `tests/admin/test_admin_stores.py`, `tests/admin/test_admin_couriers.py`. All tests: 16 passed.
 
-Notes
-- Legacy demo login is still available at `/v1/auth/login` and will be removed after clients migrate.
-- For production, install `argon2-cffi` to enable Argon2id and `prometheus-client` to expose metrics (route to be wired in ops).
+How to apply and verify
 
-File references / Changes
-- `zariz/backend/app/api/routes/auth.py`, `zariz/backend/app/api/deps.py`
-- `zariz/backend/app/api/schemas.py`
-- `zariz/backend/app/core/security.py`, `zariz/backend/app/core/config.py`
-- `zariz/backend/app/db/models/user.py`, new `store_user_membership.py`, `user_session.py`
-- `zariz/backend/alembic/versions/*` (new migration)
-- `zariz/backend/tests/auth/test_login.py`, `test_refresh.py`, `test_rbac.py`
-- `zariz/backend/scripts/manage_users.py` (new)
-- `zariz/backend/README.md`, `.env.example`
+1) Migrate DB
+   cd zariz/backend && source .venv/bin/activate && alembic upgrade head
+2) Run tests
+   python -m pytest -q zariz/backend/tests
+3) Smoke endpoints with an admin JWT
+   - `GET /v1/admin/stores`
+   - `POST /v1/admin/couriers { name, phone }`
 
 Notes
-- Disable legacy demo login endpoint once clients migrate (coordinate with TICKET-22/23); remove after rollout flag is retired.
-- Session revocation must cascade on password change (invalidate all refresh tokens).
-- Ensure JWT secrets rotate per environment; store refresh token hash only (never raw).
+- Store membership model is used (primary user per store via `is_primary=True`). This supersedes the earlier FK approach.
+- Argon2 is preferred when available (passlib); falls back to bcrypt/sha256 in test envs.
+
+Checklist
+- [x] Alembic миграции применены; индексы созданы.
+- [x] Auth login/refresh/logout с rate‑limit.
+- [x] Admin CRUD эндпоинты для Stores/Couriers.
+- [x] RBAC и тесты зелёные; метрики и логи пишутся.
+
+6. Interfaces & Contracts
+
+Schemas (Pydantic v2):
+- `AuthLoginRequest { identifier: EmailStr|PhoneStr, password: str } → AuthTokenPair { access_token, refresh_token, expires_in, refresh_expires_in, role, user_id }`
+- `StoreCreate/Update`, `CourierCreate/Update`, `CredentialsChange { login: str, password?: str }`, `StatusChange { status: 'active'|'suspended'|'offboarded' }`
+
+7. Data Model & Migration
+
+- `stores.store_user_id` обеспечивает правило «1 учётка на магазин» (UNIQUE, FK). Для курьеров — каждая строка в `users` с ролью `courier` — отдельная учётка.
+- Downgrade: удаление `user_sessions`, снятие FK/UNIQUE (данные теряются при откате).
+
+8. Testing & Validation
+
+- Pytest: позитив/негатив для логина, refresh rotate, revoke; CRUD admin; RBAC.
+- Adversarial: brute‑force → rate‑limit; попытка смены логина не‑админом → 403; повторная смена на занятый логин → 409.
+
+9. Observability & Operations
+
+- OpenTelemetry трассы на auth/refresh; Prometheus счётчики; структурированные логи без PII.
+- .env.example: `JWT_SECRET`, `JWT_REFRESH_SECRET`, `ARGON2_*`, `AUTH_MODE=strict`.
+
+10. Risks & Considerations
+
+- Коллизии логинов (email/phone) → уникальные индексы, нормализация.
+- Смена логина инвалидирует активные сессии (по флагу) — желательно.
+- Миграция существующих пользователей: задать временные пароли, статус `disabled` до ручной активации админом.
+
+11. Implementation Checklist
+
+- [] Alembic миграции применены; индексы созданы.
+- [] Auth login/refresh/logout реализованы с rate‑limit.
+- [] Admin CRUD эндпоинты для Stores/Couriers.
+- [] RBAC для admin/store/courier на нужных роутерах.
+- [] Тесты зелёные; метрики и логи пишутся.

@@ -17,5 +17,5 @@ class User(Base):
     last_login_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    store_id: Mapped[int | None]
+    store_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     capacity_boxes: Mapped[int] = mapped_column(Integer, default=8)

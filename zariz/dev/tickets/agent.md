@@ -79,9 +79,8 @@ Notes for Codex CLI/CI harnesses
 - Ambiguity beyond the MVP: propose 1–2 safe options in the ticket and pause for confirmation.
 - Non‑MVP features (geolocation, advanced analytics): defer to backlog unless explicitly requested.
 
-## Reuse Patterns
-- iOS: copy from DeliveryApp‑iOS/Swift‑DeliveryApp and rename types/strings to Zariz. Keep SPM modules local initially.
-- Backend: mirror deliver‑backend module boundaries; port Prisma schema fields to SQLAlchemy with Alembic migrations.
-- Web: copy next‑delivery repo to `zariz/web-admin`, strip storefront, keep admin pages/components.
 
 Now go and start executing tickets in /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/open
+
+
+Start with /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/open/TICKET-22_Web_Admin_Secure_Login_and_Session_Guards.md

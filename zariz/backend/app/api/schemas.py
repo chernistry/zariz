@@ -68,3 +68,46 @@ class StatusUpdate(BaseModel):
 class DeviceRegister(BaseModel):
     platform: Literal["ios"]
     token: str
+
+
+# Admin schemas
+class StoreCreate(BaseModel):
+    name: str
+    status: Optional[Literal["active", "suspended"]] = "active"
+    pickup_address: Optional[str] = None
+    box_limit: Optional[int] = Field(default=8, ge=1, le=1000)
+    hours_text: Optional[str] = None
+
+
+class StoreUpdate(BaseModel):
+    name: Optional[str] = None
+    status: Optional[Literal["active", "suspended"]] = None
+    pickup_address: Optional[str] = None
+    box_limit: Optional[int] = Field(default=None, ge=1, le=1000)
+    hours_text: Optional[str] = None
+
+
+class CourierCreate(BaseModel):
+    name: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    capacity_boxes: Optional[int] = Field(default=8, ge=1, le=200)
+    status: Optional[Literal["active", "disabled"]] = "active"
+
+
+class CourierUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    capacity_boxes: Optional[int] = Field(default=None, ge=1, le=200)
+    status: Optional[Literal["active", "disabled"]] = None
+
+
+class CredentialsChange(BaseModel):
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    password: Optional[str] = None
+
+
+class StatusChange(BaseModel):
+    status: Literal["active", "disabled", "suspended", "offboarded"]

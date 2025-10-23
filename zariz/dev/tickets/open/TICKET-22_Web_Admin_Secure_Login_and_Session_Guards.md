@@ -1,31 +1,29 @@
 Read /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/coding_rules.md first
 
-# [TICKET-23] Web Admin — Secure Login and Session Guards
+# [TICKET-22] Web Admin — Secure Login (admin‑only) and Session Guards
 
 Goal
-- Deliver a production-ready authentication experience for the admin/store web panel using the new backend contracts, with protected routes, refresh handling, and logout.
+- Deliver a production-ready authentication experience for the admin web panel (admin‑only) using the new backend contracts, with protected routes, refresh handling, and logout.
 
 Context
 - `/pages/login.tsx` currently sends `{subject, role}` to the stub login endpoint; any input succeeds. There is no password field, CSRF protection, or route guard. Orders pages assume a token exists in `localStorage`.
-- Backend will provide real JWT + refresh tokens (TICKET-21). iOS app will rely on consistent semantics.
+- Backend will provide real JWT + refresh tokens (TICKET-21). Only system admin can log into web admin; stores/couriers не получают доступ к админке.
 
 Scope
-1) Login UX & validation
+1) Login UX & validation (admin‑only)
    - Replace subject/role inputs with email/phone + password fields, inline validation, and error messaging (translated strings).
-   - Add remember-me checkbox (defaults true) to decide whether refresh token is stored in `httpOnly` cookie vs memory.
-   - Display password reset contact instructions (link to support channel).
+   - No self‑service, no password reset UI — только подсказка «обратитесь к администратору Zariz».
 2) Session management
    - Move auth handling to Next.js API route `/api/auth/login` that proxies to backend, sets `httpOnly`, `Secure`, `SameSite=Strict` cookies for refresh token, stores access token in memory (React context).
    - Implement `/api/auth/refresh` and `/api/auth/logout`, rotate tokens, clear cookies.
    - Add `AuthProvider` React context to wrap pages, automatically refresh when token expiry <2 minutes (with exponential backoff and jitter).
 3) Route guards & RBAC
-   - Implement `withAuth` higher-order component / middleware to redirect unauthenticated users to `/login`.
-   - Ensure store-scoped routes pass store_id from JWT claims; handle unauthorized (403) responses by showing message and logging out.
+   - Implement `withAuth` HOC / middleware to redirect unauthenticated users to `/login`.
+   - Verify `role=admin` in JWT; otherwise force logout.
 4) Security & observability
-   - Sanitize logs, never store tokens in localStorage.
-   - Track Prometheus/Grafana metrics via simple beacon (`/api/metrics/auth_login`) if applicable; otherwise add client-side OSLog-style console with redacted data.
+   - Sanitize logs, never store tokens in localStorage (dev‑only fallback off by default).
 5) Tests & docs
-   - Playwright E2E: login success, wrong password, session expiry (refresh) across navigation.
+   - Playwright E2E: admin login success, wrong password, session expiry (refresh) across navigation.
    - Jest/unit tests for `AuthProvider` and API routes with mocked fetch.
    - Update `web-admin/README.md` with setup, env vars (`NEXT_PUBLIC_API_BASE`, `AUTH_COOKIE_NAME`).
 

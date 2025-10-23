@@ -1,6 +1,6 @@
 Read /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/coding_rules.md first
 
-# [TICKET-22] iOS — Real Login Flow and Session Management
+# [TICKET-24] iOS — Real Login Flow and Session Management
 
 Goal
 - Replace the demo-only login with a secure email/phone + password flow backed by TICKET-21 APIs, persisting tokens safely and enforcing role-based routing inside the app.
