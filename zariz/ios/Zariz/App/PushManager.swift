@@ -12,6 +12,7 @@ final class PushManager: NSObject, ObservableObject {
     override init() {
         super.init()
         NotificationCenter.default.addObserver(self, selector: #selector(onAuthConfigured(_:)), name: .authSessionConfigured, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(onOrdersDidSync(_:)), name: .ordersDidSync, object: nil)
     }
 
     deinit {
@@ -112,6 +113,12 @@ final class PushManager: NSObject, ObservableObject {
         guard let token = self.deviceToken else { return }
         Task { await self.registerDeviceWithBackend(token: token) }
     }
+
+    @MainActor
+    @objc private func onOrdersDidSync(_ note: Notification) {
+        guard let newOrderIds = note.object as? [Int], !newOrderIds.isEmpty else { return }
+        Task { await self.presentNotifications(for: newOrderIds) }
+    }
 }
 
 @MainActor
@@ -130,8 +137,15 @@ extension PushManager: UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                      fetchCompletionHandler completion: @escaping (UIBackgroundFetchResult) -> Void) {
-        completion(.noData)
-        Task { await OrdersService.shared.sync() }
+        Task {
+            let stats = await OrdersService.shared.sync()
+            if !stats.newOrders.isEmpty {
+                await presentNotifications(for: stats.newOrders)
+                completion(.newData)
+            } else {
+                completion(.noData)
+            }
+        }
     }
 }
 

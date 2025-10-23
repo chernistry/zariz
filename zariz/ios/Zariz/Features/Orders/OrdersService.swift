@@ -271,6 +271,11 @@ actor OrdersService {
                 }
                 return SyncStats(newOrders: newIds, deletedOrders: deletedIds)
             }
+            if !stats.newOrders.isEmpty {
+                Task { @MainActor in
+                    NotificationCenter.default.post(name: .ordersDidSync, object: stats.newOrders)
+                }
+            }
             return stats
         } catch {
             Telemetry.sync.error("orders.sync.error msg=\(error.localizedDescription)")
