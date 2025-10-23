@@ -25,13 +25,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <ListItemIcon><AssignmentIcon /></ListItemIcon>
           <ListItemText primary="Orders" />
         </ListItemButton>
+        <ListItemButton onClick={() => router.push('/stores')}>
+          <ListItemIcon><PeopleIcon /></ListItemIcon>
+          <ListItemText primary="Stores" />
+        </ListItemButton>
         <ListItemButton onClick={() => router.push('/couriers')}>
           <ListItemIcon><LocalShippingIcon /></ListItemIcon>
           <ListItemText primary="Couriers" />
-        </ListItemButton>
-        <ListItemButton onClick={() => router.push('/users')}>
-          <ListItemIcon><PeopleIcon /></ListItemIcon>
-          <ListItemText primary="Users" />
         </ListItemButton>
       </List>
     </div>

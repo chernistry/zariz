@@ -39,3 +39,8 @@ yarn dev
 ## Security
 - CSRF: refresh token is `httpOnly; Secure; SameSite=Strict; Path=/`.
 - No tokens in localStorage; logs sanitized; do not print tokens.
+
+## Admin Pages
+- Stores: `/stores`, detail `/stores/[id]`, creation `/stores/new`.
+- Couriers: `/couriers`, detail `/couriers/[id]`, creation `/couriers/new`.
+- Each detail page includes a Credentials block to change login (email/phone) and set a temporary password.

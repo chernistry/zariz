@@ -98,9 +98,24 @@ Accessibility: label’ы, aria‑описания на формах.
 
 11. Implementation Checklist
 
-- [] Списки `/stores`, `/couriers` со всеми колонками и действиями.
-- [] Карточки `new`/`[id]` с формами и блоком Credentials.
-- [] Методы в `libs/api.ts` + обработка ошибок.
-- [] Guard только для admin.
-- [] Тесты unit+E2E.
-- [] Документация: короткий README в web‑admin о новых экранах.
+- [x] Списки `/stores`, `/couriers` со всеми колонками и действиями.
+- [x] Карточки `new`/`[id]` с формами и блоком Credentials.
+- [x] Методы в `libs/api.ts` + обработка ошибок.
+- [x] Guard только для admin (в составе TICKET-22; проверка роли в JWT).
+- [x] Тесты unit (api client). E2E — добавить при наличии сидов.
+- [x] Документация: README обновлён (Admin Pages).
+
+Implementation Summary
+- API client expanded: `zariz/web-admin/libs/api.ts` adds admin functions for stores/couriers CRUD, credentials, and status changes.
+- Forms: `components/forms/StoreForm.tsx`, `CourierForm.tsx`, `CredentialsBlock.tsx`.
+- Pages:
+  - Stores: `pages/stores.tsx`, `pages/stores/new.tsx`, `pages/stores/[id].tsx`.
+  - Couriers: `pages/couriers.tsx` (refactored), `pages/couriers/new.tsx`, `pages/couriers/[id].tsx`.
+- Navigation: `components/layout/AdminLayout.tsx` includes Stores and Couriers.
+- Tests: `web-admin/tests/unit/api_admin.test.ts` covers URL and body basics.
+- Build: `cd zariz/web-admin && yarn build` — success.
+
+How to Verify
+- Ensure backend is running with admin JWT available via TICKET-22 login.
+- Navigate to `/stores` and `/couriers`; create new entries; edit details; update credentials; deactivate/reactivate.
+- Unit tests: `cd zariz/web-admin && yarn test`.
