@@ -36,7 +36,7 @@ async def add_request_id_and_log(request: Request, call_next):
     response.headers["X-Request-ID"] = req_id
     import logging as _logging
 
-    _logging.getLogger("uvicorn.access").info(
+    _logging.getLogger("app").info(
         json_log(
             method=request.method,
             path=request.url.path,

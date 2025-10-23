@@ -53,7 +53,10 @@ The application allows stores to create orders and couriers to view available on
 * Tables:
 
   * `users` (id, role, name, email, phone, store_id, password_hash)
-  * `orders` (id, store_id, courier_id, status, pickup_address, delivery_address, recipient_first_name, recipient_last_name, phone, street, building_no, floor, apartment, boxes_count, boxes_multiplier, price_total, created_at, updated_at)
+  * `orders` (id, store_id, courier_id, status, pickup_address, delivery_address,
+    recipient_first_name, recipient_last_name, phone, street, building_no, floor, apartment,
+    boxes_count, boxes_multiplier, price_total, created_at, updated_at)
+  * `users` additions (courier capacity, see Capacity section): capacity_boxes (default 8), optional occupied counter (implementation-specific)
   * `status_history` (order_id, status, timestamp, actor_type, actor_id, meta)
 
 **3. iOS Application**
@@ -88,6 +91,33 @@ The application allows stores to create orders and couriers to view available on
 * Scalability: up to 100 couriers and 10 stores
 * API latency: <300 ms (p95)
 * UI propagation SLA: ≤30 s from status change to iOS and admin web visibility (APNs silent push + jittered 30s foreground polling fallback; BGTask refresh for iOS)
+
+---
+
+## 3.1 Courier Capacity & Availability
+
+Concept
+- Each courier has 8 box-slots by default (configurable per courier). Order box counts consume slots.
+- Admin can assign an order to a courier even if the courier has other active orders, as long as remaining capacity is sufficient.
+- New assignment flow introduces an intermediate status:
+  - Status cascade: new → assigned → claimed → picked_up → delivered; canceled is terminal and can occur from assigned/claimed/picked_up by admin only.
+- Acceptance: After admin assigns, the courier receives a push and accepts (claims). Decline returns the order to new (unassigned).
+
+Backend constraints
+- Capacity check enforced at acceptance time to prevent oversubscription; assignment may optimistically require capacity but must re-check on accept.
+- Load calculation: sum of boxes_count for courier’s orders in statuses {claimed, picked_up}. “assigned” does not consume load (no race on most MVP flows), but may be treated as reserved in the future.
+- Admin endpoints:
+  - GET /v1/couriers — list couriers with load/8 (available slots) for selection (MVP+).
+  - POST /v1/orders/{id}/assign — sets status=assigned, sets courier_id, emits SSE+push.
+  - POST /v1/orders/{id}/claim — allows accept when status in {new, assigned} (assigned requires same courier).
+  - POST /v1/orders/{id}/cancel — sets canceled, emits SSE+push.
+
+Web Admin
+- Show availability “x/8 boxes used”; hide fully occupied couriers in the “available only” view.
+- Allow assignment to partially loaded couriers.
+
+iOS
+- Courier sees assigned orders and can Accept/Decline; acceptance calls claim; decline returns to new.
 * Reliability: SLA ≥99%
 * Offline queue: unsent store orders must persist locally until connectivity returns
 * Logging/monitoring via Prometheus / Grafana / Sentry

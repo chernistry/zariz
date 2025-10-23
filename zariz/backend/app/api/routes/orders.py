@@ -52,7 +52,7 @@ def list_orders(
 ):
     q = select(Order)
     if status_filter:
-        if status_filter not in {"new", "claimed", "picked_up", "delivered", "canceled"}:
+        if status_filter not in {"new", "assigned", "claimed", "picked_up", "delivered", "canceled"}:
             raise HTTPException(status_code=400, detail="Invalid status filter")
         q = q.where(Order.status == status_filter)
     # Object-level access + explicit filters
@@ -263,12 +263,18 @@ def assign_order(
     if not isinstance(courier_id, int):
         raise HTTPException(status_code=400, detail="courier_id required")
     o.courier_id = courier_id
-    if o.status == "new":
-        o.status = "claimed"
-        db.add(OrderEvent(order_id=o.id, type="claimed"))
+    # Move to 'assigned' (pending courier acceptance)
+    if o.status in {"new", "assigned"}:
+        o.status = "assigned"
     db.add(OrderEvent(order_id=o.id, type="assigned"))
     db.commit()
     events_bus.publish({"type": "order.assigned", "order_id": o.id, "courier_id": courier_id})
+    try:
+        tokens = [t for (t,) in db.query(Device.token).all()]
+        for t in tokens:
+            send_silent(t, {"type": "order.assigned", "order_id": o.id, "courier_id": courier_id})
+    except Exception:
+        pass
     return {"ok": True}
 
 
@@ -292,6 +298,12 @@ def cancel_order(
     db.add(OrderEvent(order_id=o.id, type="canceled"))
     db.commit()
     events_bus.publish({"type": "order.status_changed", "order_id": o.id, "status": "canceled"})
+    try:
+        tokens = [t for (t,) in db.query(Device.token).all()]
+        for t in tokens:
+            send_silent(t, {"type": "order.status_changed", "order_id": o.id, "status": "canceled"})
+    except Exception:
+        pass
     return {"ok": True}
 
 
@@ -323,7 +335,15 @@ def claim_order(
     if courier_id is None:
         raise HTTPException(status_code=400, detail="Invalid courier id")
     res = db.execute(
-        text("UPDATE orders SET status='claimed', courier_id=:cid WHERE id=:id AND status='new'"),
+        text(
+            """
+            UPDATE orders
+            SET status='claimed', courier_id=COALESCE(courier_id, :cid)
+            WHERE id=:id AND (
+                status='new' OR (status='assigned' AND (courier_id IS NULL OR courier_id=:cid))
+            )
+            """
+        ),
         {"cid": courier_id, "id": order_id},
     )
     if res.rowcount == 0:
