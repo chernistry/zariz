@@ -35,3 +35,23 @@ Verification
 
 Notes
 - Depends on TICKET-16 (`assigned` semantics and decline endpoint).
+
+---
+
+Status: Completed
+
+Implementation summary
+- Orders list shows assigned orders under Active:
+  - `zariz/ios/Zariz/Features/Orders/OrdersListView.swift` — include `assigned` in active filter.
+- Order detail actions for assigned:
+  - `zariz/ios/Zariz/Features/Orders/OrderDetailView.swift` — added `assigned` to actionConfiguration as “slide_to_accept”; added Decline destructive button; extended timeline/status mapping to include `assigned` state.
+- Networking:
+  - `zariz/ios/Zariz/Features/Orders/OrdersService.swift` — `claim(id:)` permits `new` or `assigned`; added `decline(id:)` POST `/orders/{id}/decline`; demo mode mirrors behavior.
+
+Verification
+- Run app (demo or real backend):
+  - Assigned order displays Accept slider and Decline button; Accept transitions to claimed; Decline transitions back to new (and disappears from courier’s list).
+- Silent push still triggers sync (unchanged).
+
+Follow-ups
+- Add localized strings for new keys: `status_assigned`, `slide_to_accept`, `decline_assignment`, `toast_declined`.

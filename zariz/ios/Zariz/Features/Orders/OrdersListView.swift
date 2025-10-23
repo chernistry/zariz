@@ -80,7 +80,7 @@ struct OrdersListView: View {
         case .new:
             return orders.filter { $0.status == "new" }
         case .active:
-            return orders.filter { $0.status == "claimed" || $0.status == "picked_up" }
+            return orders.filter { $0.status == "assigned" || $0.status == "claimed" || $0.status == "picked_up" }
         case .done:
             return orders.filter { $0.status == "delivered" }
         }

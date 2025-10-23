@@ -114,6 +114,27 @@ extension OrderDetailView {
             }
         }
     }
+
+    private func performDecline(orderId: Int) {
+        guard !isPerformingAction else { return }
+        isPerformingAction = true
+        Task {
+            do {
+                try await OrdersService.shared.decline(id: orderId)
+                await MainActor.run {
+                    Haptics.success()
+                    toast.show("toast_declined", style: .success)
+                    isPerformingAction = false
+                }
+            } catch {
+                await MainActor.run {
+                    Haptics.error()
+                    toast.show("toast_generic_error", style: .error)
+                    isPerformingAction = false
+                }
+            }
+        }
+    }
 }
 
 private extension OrderDetailView {
@@ -127,6 +148,10 @@ private extension OrderDetailView {
         switch order.status {
         case "new":
             return ActionConfiguration(promptKey: "slide_to_claim", isEnabled: true) {
+                performClaim(orderId: orderId)
+            }
+        case "assigned":
+            return ActionConfiguration(promptKey: "slide_to_accept", isEnabled: true) {
                 performClaim(orderId: orderId)
             }
         case "claimed":
@@ -250,6 +275,15 @@ private extension OrderDetailView {
                         )
                     }
                 }
+                if order.status == "assigned" {
+                    Button(role: .destructive) {
+                        performDecline(orderId: orderId)
+                    } label: {
+                        Text(String(localized: "decline_assignment"))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
         }
     }
@@ -280,11 +314,12 @@ private struct SectionRow: View {
 }
 
 private enum OrderStatusStep: CaseIterable {
-    case new, claimed, picked, delivered
+    case new, assigned, claimed, picked, delivered
 
     var localizedTitle: LocalizedStringKey {
         switch self {
         case .new: return "status_new"
+        case .assigned: return "status_assigned"
         case .claimed: return "status_claimed"
         case .picked: return "status_picked_up"
         case .delivered: return "status_delivered"
@@ -303,7 +338,7 @@ private enum OrderStatusStep: CaseIterable {
         return current == statusIndex
     }
 
-    private static let sequence: [String] = ["new", "claimed", "picked_up", "delivered"]
+    private static let sequence: [String] = ["new", "assigned", "claimed", "picked_up", "delivered"]
 }
 
 private struct TimelineRow: View {
@@ -338,6 +373,7 @@ extension String {
     var localizedStatus: String {
         switch self {
         case "new": return String(localized: "status_new")
+        case "assigned": return String(localized: "status_assigned")
         case "claimed": return String(localized: "status_claimed")
         case "picked_up": return String(localized: "status_picked_up")
         case "delivered": return String(localized: "status_delivered")
@@ -349,6 +385,7 @@ extension String {
     var statusColor: Color {
         switch self {
         case "new": return DS.Color.statusNew
+        case "assigned": return DS.Color.statusNew
         case "claimed": return DS.Color.statusClaimed
         case "picked_up": return DS.Color.statusPicked
         case "delivered": return DS.Color.statusDelivered

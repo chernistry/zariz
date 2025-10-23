@@ -222,7 +222,7 @@ actor OrdersService {
             await MainActor.run {
                 guard let context = ModelContextHolder.shared.context else { return }
                 let fetch = FetchDescriptor<OrderEntity>(predicate: #Predicate { $0.id == id })
-                if let existing = try? context.fetch(fetch).first, existing.status == "new" {
+                if let existing = try? context.fetch(fetch).first, ["new", "assigned"].contains(existing.status) {
                     existing.status = "claimed"
                     try? context.save()
                 }
@@ -230,6 +230,23 @@ actor OrdersService {
             return
         }
         let req = authorizedRequest(path: "orders/\(id)/claim", method: "POST", body: nil, idempotencyKey: UUID().uuidString)
+        _ = try await URLSession.shared.data(for: req)
+        await sync()
+    }
+
+    func decline(id: Int) async throws {
+        if demoRole(from: authToken()) != nil {
+            await MainActor.run {
+                guard let context = ModelContextHolder.shared.context else { return }
+                let fetch = FetchDescriptor<OrderEntity>(predicate: #Predicate { $0.id == id })
+                if let existing = try? context.fetch(fetch).first, existing.status == "assigned" {
+                    existing.status = "new"
+                    try? context.save()
+                }
+            }
+            return
+        }
+        let req = authorizedRequest(path: "orders/\(id)/decline", method: "POST", body: nil, idempotencyKey: UUID().uuidString)
         _ = try await URLSession.shared.data(for: req)
         await sync()
     }
