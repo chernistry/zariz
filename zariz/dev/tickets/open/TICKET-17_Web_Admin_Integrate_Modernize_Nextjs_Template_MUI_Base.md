@@ -58,3 +58,27 @@ Acceptance Criteria
 
 Notes
 - This ticket lays the shell/foundation; domain pages are finalized in TICKET-20.
+
+---
+
+Status: Completed
+
+Implementation summary
+- Added MUI (Modernize base stack) dependencies to `zariz/web-admin/package.json`:
+  - `@mui/material`, `@mui/icons-material`, `@emotion/react`, `@emotion/styled`.
+- Introduced MUI theme and admin shell:
+  - `zariz/web-admin/libs/theme.ts` — light theme.
+  - `zariz/web-admin/components/layout/AdminLayout.tsx` — AppBar + Drawer + content area.
+  - Wrapped pages via ThemeProvider and AdminLayout in `zariz/web-admin/pages/_app.tsx` (login excluded from layout).
+- Kept our existing auth/SSE/data contracts intact.
+- UI tweaks:
+  - Orders filter now includes `assigned` status.
+  - Stubbed `/couriers` and `/users` pages to avoid dead links (content to be finalized in TICKET-19).
+
+Verification
+- Build: `cd zariz/web-admin && yarn && yarn build` — build succeeds.
+- Dev: `yarn dev` — app loads with Modernize (MUI) shell; Orders page renders and SSE refresh still wired; CSV export works.
+- Auth redirect from `/` to `/login` remains; layout bypassed on login.
+
+Follow-ups
+- TICKET-18/19 to port domain UIs (Orders, Couriers availability with GET /v1/couriers, Users mgmt) and polish visuals.

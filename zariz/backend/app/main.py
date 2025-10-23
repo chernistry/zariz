@@ -31,20 +31,37 @@ app.include_router(api_router, prefix="/v1")
 async def add_request_id_and_log(request: Request, call_next):
     req_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
     start = time.perf_counter()
+    
+    # Read request body for logging errors
+    body = None
+    if request.method in ["POST", "PUT", "PATCH"]:
+        body = await request.body()
+        # Re-create request with body for downstream handlers
+        async def receive():
+            return {"type": "http.request", "body": body}
+        request._receive = receive
+    
     response = await call_next(request)
     duration_ms = (time.perf_counter() - start) * 1000
     response.headers["X-Request-ID"] = req_id
     import logging as _logging
 
-    _logging.getLogger("app").info(
-        json_log(
-            method=request.method,
-            path=request.url.path,
-            status_code=response.status_code,
-            duration_ms=round(duration_ms, 2),
-            request_id=req_id,
-        )
-    )
+    log_data = {
+        "method": request.method,
+        "path": request.url.path,
+        "status_code": response.status_code,
+        "duration_ms": round(duration_ms, 2),
+        "request_id": req_id,
+    }
+    
+    # Add request body for error responses
+    if response.status_code >= 400 and body:
+        try:
+            log_data["request_body"] = body.decode("utf-8")[:500]  # Limit to 500 chars
+        except:
+            pass
+    
+    _logging.getLogger("app").info(json_log(**log_data))
     return response
 
 

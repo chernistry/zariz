@@ -142,6 +142,8 @@ def create_order(
     if role == "store":
         store_id = _parse_int(identity.get("sub"))
     if store_id is None:
+        import logging
+        logging.getLogger("app").error(f"Store id required. Role: {role}, identity: {identity}, payload.store_id: {payload.store_id}")
         raise HTTPException(status_code=400, detail="Store id required")
 
     pickup_address = (payload.pickup_address or "").strip()

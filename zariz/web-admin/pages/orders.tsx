@@ -75,6 +75,7 @@ function Orders() {
         <select value={filter.status} onChange={e=>setFilter(f=>({...f, status:e.target.value}))}>
           <option value=''>All</option>
           <option value='new'>New</option>
+          <option value='assigned'>Assigned</option>
           <option value='claimed'>Claimed</option>
           <option value='picked_up'>Picked up</option>
           <option value='delivered'>Delivered</option>
