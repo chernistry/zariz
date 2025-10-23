@@ -42,8 +42,17 @@ struct OrdersListView: View {
             isLoading = true
             await OrdersService.shared.sync()
             isLoading = false
+            // Default to "Active" for couriers so assigned orders are visible
+            if session.role == .courier { selectedTab = 1 }
         }
-        .onAppear { ModelContextHolder.shared.context = ctx }
+        .onAppear {
+            ModelContextHolder.shared.context = ctx
+            OrdersSyncManager.shared.startForegroundLoop()
+            if session.role == .courier { selectedTab = 1 }
+        }
+        .onDisappear {
+            OrdersSyncManager.shared.stopForegroundLoop()
+        }
     }
 
     private var ordersSection: some View {

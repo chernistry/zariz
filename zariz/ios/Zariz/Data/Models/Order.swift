@@ -12,8 +12,8 @@ final class OrderEntity {
     var recipientPhone: String
     var street: String
     var buildingNumber: String
-    var floor: String
-    var apartment: String
+    var floor: String?
+    var apartment: String?
     var boxesCount: Int
     var boxesMultiplier: Int
     var priceTotal: Double
@@ -28,8 +28,8 @@ final class OrderEntity {
         recipientPhone: String = "",
         street: String = "",
         buildingNumber: String = "",
-        floor: String = "",
-        apartment: String = "",
+        floor: String? = nil,
+        apartment: String? = nil,
         boxesCount: Int = 0,
         boxesMultiplier: Int = 1,
         priceTotal: Double = 0
@@ -43,8 +43,16 @@ final class OrderEntity {
         self.recipientPhone = recipientPhone
         self.street = street
         self.buildingNumber = buildingNumber
-        self.floor = floor
-        self.apartment = apartment
+        if let floor, !floor.trimmingCharacters(in: .whitespaces).isEmpty {
+            self.floor = floor
+        } else {
+            self.floor = nil
+        }
+        if let apartment, !apartment.trimmingCharacters(in: .whitespaces).isEmpty {
+            self.apartment = apartment
+        } else {
+            self.apartment = nil
+        }
         self.boxesCount = boxesCount
         self.boxesMultiplier = boxesMultiplier
         self.priceTotal = priceTotal

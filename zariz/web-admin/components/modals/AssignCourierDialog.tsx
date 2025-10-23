@@ -74,7 +74,7 @@ export default function AssignCourierDialog({ open, onClose, onSelect }: AssignC
               <ListItem key={c.id} disablePadding>
                 <ListItemButton disabled={disabled} onClick={() => onSelect(c.id)}>
                   <ListItemText
-                    primary={c.name || `Courier ${c.id}`}
+                    primary={`#${c.id} ${c.name || `Courier ${c.id}`}`}
                     secondary={
                       <Box sx={{ display:'flex', alignItems:'center', gap: 1 }}>
                         <Box sx={{ width: 120 }}>

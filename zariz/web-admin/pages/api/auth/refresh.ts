@@ -15,12 +15,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const rt = match ? decodeURIComponent(match.split('=').slice(1).join('=')) : ''
     if (!rt) return res.status(401).send('No refresh token')
     for (const base of BASES) {
-      const r = await fetch(base + '/auth/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: rt })
-      })
-      if (r.ok) { const data = await r.json(); return res.status(200).json(data) }
+      try {
+        const r = await fetch(base + '/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: rt })
+        })
+        if (r.ok) {
+          const data = await r.json()
+          // Rotate refresh cookie to the new value returned by backend
+          if (data && data.refresh_token) {
+            const isProd = process.env.NODE_ENV === 'production'
+            const maxAge = 60 * 60 * 24 * 14
+            res.setHeader('Set-Cookie', `zariz_rt=${encodeURIComponent(data.refresh_token)}; Path=/; HttpOnly; SameSite=Strict; ${isProd ? 'Secure; ' : ''}Max-Age=${maxAge}`)
+          }
+          return res.status(200).json(data)
+        }
+      } catch (e) {
+        continue
+      }
     }
     return res.status(501).send('Refresh not available')
   } catch (e) {

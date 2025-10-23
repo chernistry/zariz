@@ -203,15 +203,21 @@ actor OrdersService {
 
         do {
             let req = await authorizedRequest(path: "orders")
+            Telemetry.sync.info("orders.sync.request path=orders")
             let (data, resp) = try await URLSession.shared.data(for: req)
-            if let http = resp as? HTTPURLResponse, http.statusCode >= 400 { return }
+            if let http = resp as? HTTPURLResponse {
+                Telemetry.sync.info("orders.sync.http code=\(http.statusCode, privacy: .public) bytes=\(data.count, privacy: .public)")
+                if http.statusCode >= 400 { return }
+            }
             let list = try JSONDecoder().decode([OrderDTO].self, from: data)
+            let ids = list.prefix(8).map { String($0.id) }.joined(separator: ",")
+            Telemetry.sync.info("orders.sync.parsed count=\(list.count, privacy: .public) ids=\(ids, privacy: .public)")
             await MainActor.run {
                 guard let context = ModelContextHolder.shared.context else { return }
                 for order in list { upsert(order, in: context) }
             }
         } catch {
-            // swallow sync errors for now
+            Telemetry.sync.error("orders.sync.error msg=\(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -329,8 +335,16 @@ actor OrdersService {
         let phone = dto.phone ?? ""
         let street = dto.street ?? ""
         let building = dto.buildingNumber ?? ""
-        let floor = dto.floor ?? ""
-        let apartment = dto.apartment ?? ""
+        let floorValueTrimmed = dto.floor?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let apartmentValueTrimmed = dto.apartment?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let floorValue: String? = {
+            guard let value = floorValueTrimmed, !value.isEmpty else { return nil }
+            return value
+        }()
+        let apartmentValue: String? = {
+            guard let value = apartmentValueTrimmed, !value.isEmpty else { return nil }
+            return value
+        }()
         let boxes = dto.boxesCount ?? 0
         let multiplier = dto.boxesMultiplier ?? OrderPricing.price(for: boxes).multiplier
         let price = dto.priceTotal ?? Double(OrderPricing.price(for: boxes).price)
@@ -344,8 +358,8 @@ actor OrdersService {
             existing.recipientPhone = phone
             existing.street = street
             existing.buildingNumber = building
-            existing.floor = floor
-            existing.apartment = apartment
+            existing.floor = floorValue
+            existing.apartment = apartmentValue
             existing.boxesCount = boxes
             existing.boxesMultiplier = multiplier
             existing.priceTotal = price
@@ -360,8 +374,8 @@ actor OrdersService {
                 recipientPhone: phone,
                 street: street,
                 buildingNumber: building,
-                floor: floor,
-                apartment: apartment,
+                floor: floorValue,
+                apartment: apartmentValue,
                 boxesCount: boxes,
                 boxesMultiplier: multiplier,
                 priceTotal: price

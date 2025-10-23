@@ -16,21 +16,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     let lastErr: Response | null = null
     for (const base of BASES) {
-      const r = await fetch(base + LOGIN_PASSWORD_PATH, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password })
-      })
-      if (r.ok) {
-        const data = await r.json()
-        if (data && data.refresh_token) {
-          const isProd = process.env.NODE_ENV === 'production'
-          const maxAge = 60 * 60 * 24 * 14
-          res.setHeader('Set-Cookie', `zariz_rt=${encodeURIComponent(data.refresh_token)}; Path=/; HttpOnly; SameSite=Strict; ${isProd ? 'Secure; ' : ''}Max-Age=${maxAge}`)
+      try {
+        const r = await fetch(base + LOGIN_PASSWORD_PATH, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier, password })
+        })
+        if (r.ok) {
+          const data = await r.json()
+          if (data && data.refresh_token) {
+            const isProd = process.env.NODE_ENV === 'production'
+            const maxAge = 60 * 60 * 24 * 14
+            res.setHeader('Set-Cookie', `zariz_rt=${encodeURIComponent(data.refresh_token)}; Path=/; HttpOnly; SameSite=Strict; ${isProd ? 'Secure; ' : ''}Max-Age=${maxAge}`)
+          }
+          return res.status(200).json(data)
         }
-        return res.status(200).json(data)
+        lastErr = r
+      } catch (e) {
+        // network error, try next base
+        continue
       }
-      lastErr = r
     }
     if (lastErr) {
       const text = await lastErr.text().catch(() => '')
