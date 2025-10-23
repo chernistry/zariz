@@ -276,13 +276,17 @@ private extension OrderDetailView {
                     }
                 }
                 if order.status == "assigned" {
-                    Button(role: .destructive) {
-                        performDecline(orderId: orderId)
-                    } label: {
-                        Text(String(localized: "decline_assignment"))
-                            .frame(maxWidth: .infinity)
+                    VStack(spacing: 0) {
+                        Divider().background(DS.Color.divider)
+                        SlideToConfirmSlider(
+                            prompt: String(localized: "decline_assignment"),
+                            confirmationPrompt: String(localized: "release_to_confirm"),
+                            isEnabled: true,
+                            onActivated: { performDecline(orderId: orderId) }
+                        )
+                        .frame(height: 64)
+                        .background(DS.Color.surface)
                     }
-                    .buttonStyle(.bordered)
                 }
             }
         }

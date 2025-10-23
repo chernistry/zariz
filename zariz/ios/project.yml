@@ -14,6 +14,9 @@ packages:
   Shimmer:
     url: https://github.com/markiv/SwiftUI-Shimmer
     from: 1.5.1
+  SwiftUIX:
+    url: https://github.com/SwiftUIX/SwiftUIX
+    from: 0.2.2
   Lottie:
     url: https://github.com/airbnb/lottie-spm
     from: 4.4.0
@@ -47,6 +50,8 @@ targets:
         product: AlertToast
       - package: Shimmer
         product: Shimmer
+      - package: SwiftUIX
+        product: SwiftUIX
       - package: Lottie
         product: Lottie
   ZarizTests:

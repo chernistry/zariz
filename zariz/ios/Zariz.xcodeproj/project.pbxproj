@@ -39,6 +39,7 @@
 		754B7B5475715BFE1A88ECA4 /* AuthSessionConcurrencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB57A10226C40BD4776401D9 /* AuthSessionConcurrencyTests.swift */; };
 		7C6ACF5453ABB25037DBC24D /* PushManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDEBF3B6806226144A8EBFE /* PushManager.swift */; };
 		7F217E67C49F4DDF91C065B4 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 085C9579D18A11406FFE1007 /* Haptics.swift */; };
+		8A948646A0B06EBAD70E5C31 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = F0E60C89D34C1C3F5691BB25 /* Lottie */; };
 		9221949AACF5E8F349C3ADC2 /* AppSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2509478F261F4155B34A18E6 /* AppSession.swift */; };
 		9F24442340C119A5B626E5D2 /* OrderDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11BBDBE5EFBCEC508259BD2 /* OrderDetailView.swift */; };
 		9FAA0412FE29CE4F99F5415B /* Shimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3838694143FFCEB35D9FEBE1 /* Shimmer.swift */; };
@@ -55,7 +56,7 @@
 		E8EFAE5CFF326B4A23A3480B /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD146120977A760D18C12711 /* SSEClient.swift */; };
 		E9375A66727C7662E763B5B0 /* StoreOrdersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F090E43AE1CCF879F8FABEB2 /* StoreOrdersListView.swift */; };
 		E9E28118B5164453B8E4DB85 /* AuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9392DB0AD9C64D47FC26F28 /* AuthServiceTests.swift */; };
-		F034F6E5B6F6A2854FC63002 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = F0E60C89D34C1C3F5691BB25 /* Lottie */; };
+		F034F6E5B6F6A2854FC63002 /* SwiftUIX in Frameworks */ = {isa = PBXBuildFile; productRef = BD499EE3C6AB3AD788DE6EF9 /* SwiftUIX */; };
 		F342316107F076C7844421CD /* Popovers in Frameworks */ = {isa = PBXBuildFile; productRef = 0F4DABB45AA2E65839140A02 /* Popovers */; };
 		F6B5D748CBE46B71D837FE0F /* ZarizApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF5D6D4550CCC35AAFE48876 /* ZarizApp.swift */; };
 /* End PBXBuildFile section */
@@ -143,7 +144,8 @@
 				F342316107F076C7844421CD /* Popovers in Frameworks */,
 				CA5F1BFEFD4E5896474AC4C2 /* AlertToast in Frameworks */,
 				029F1AAC187B31761D4CEA2A /* Shimmer in Frameworks */,
-				F034F6E5B6F6A2854FC63002 /* Lottie in Frameworks */,
+				F034F6E5B6F6A2854FC63002 /* SwiftUIX in Frameworks */,
+				8A948646A0B06EBAD70E5C31 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,7 +378,7 @@
 			path = ZarizUITests;
 			sourceTree = "<group>";
 		};
-		"TEMP_4D756981-471B-4BC4-A7B9-EA25592D4911" /* L10n */ = {
+		"TEMP_D4E5BD4E-EAA2-470E-81E5-54D8B32AFA0B" /* L10n */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -421,6 +423,7 @@
 				0F4DABB45AA2E65839140A02 /* Popovers */,
 				16354204D8673CC6D77B771C /* AlertToast */,
 				D94D89E7EB33C5A157B3C315 /* Shimmer */,
+				BD499EE3C6AB3AD788DE6EF9 /* SwiftUIX */,
 				F0E60C89D34C1C3F5691BB25 /* Lottie */,
 			);
 			productName = Zariz;
@@ -477,6 +480,7 @@
 				71815C2D185B80506D50C4CA /* XCRemoteSwiftPackageReference "lottie-spm" */,
 				0138BB366963A02CC695FCE2 /* XCRemoteSwiftPackageReference "Popovers" */,
 				E7FC2D841BC1D9F9A27EACE7 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
+				048080D8759C6588E59AEB57 /* XCRemoteSwiftPackageReference "SwiftUIX" */,
 			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
@@ -869,6 +873,14 @@
 				minimumVersion = 1.0.4;
 			};
 		};
+		048080D8759C6588E59AEB57 /* XCRemoteSwiftPackageReference "SwiftUIX" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SwiftUIX/SwiftUIX";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.2;
+			};
+		};
 		438155481BC4416F74A33AA4 /* XCRemoteSwiftPackageReference "AlertToast" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/elai950/AlertToast";
@@ -905,6 +917,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 438155481BC4416F74A33AA4 /* XCRemoteSwiftPackageReference "AlertToast" */;
 			productName = AlertToast;
+		};
+		BD499EE3C6AB3AD788DE6EF9 /* SwiftUIX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 048080D8759C6588E59AEB57 /* XCRemoteSwiftPackageReference "SwiftUIX" */;
+			productName = SwiftUIX;
 		};
 		D94D89E7EB33C5A157B3C315 /* Shimmer */ = {
 			isa = XCSwiftPackageProductDependency;

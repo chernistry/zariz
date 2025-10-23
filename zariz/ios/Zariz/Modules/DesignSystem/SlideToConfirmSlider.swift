@@ -53,14 +53,22 @@ struct SlideToConfirmSlider: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(.easeOut(duration: 0.2), value: progress)
             .gesture(
-                DragGesture(minimumDistance: 5)
+                DragGesture(minimumDistance: 15)
                     .updating($dragTranslation) { value, state, _ in
                         guard isEnabled else { return }
-                        state = value.translation.width
+                        let translation = value.translation.width
+                        if translation > 0 {
+                            state = translation
+                        }
                     }
                     .onEnded { value in
                         guard isEnabled else { return }
-                        let predicted = (committedOffset + value.translation.width)
+                        let translation = value.translation.width
+                        guard translation > 10 else {
+                            resetSlider(animated: true)
+                            return
+                        }
+                        let predicted = (committedOffset + translation)
                             .clamped(min: 0, max: maxOffset)
                         let threshold = maxOffset * 0.8
 

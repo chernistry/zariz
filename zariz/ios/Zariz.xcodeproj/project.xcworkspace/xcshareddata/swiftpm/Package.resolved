@@ -1,5 +1,5 @@
 {
-  "originHash" : "d7ed318449e691255380d7e70b31bffae02d2818996343c995573a141d5cbca8",
+  "originHash" : "09ecef4a466ae15147f6a68ae7d6a20f0fdbf6e87c988a970a78b3aed10d364b",
   "pins" : [
     {
       "identity" : "alerttoast",
@@ -35,6 +35,15 @@
       "state" : {
         "revision" : "0226e21f9bf355d40e07e5f5e1c33679d50e167f",
         "version" : "1.5.1"
+      }
+    },
+    {
+      "identity" : "swiftuix",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SwiftUIX/SwiftUIX",
+      "state" : {
+        "revision" : "d9f903b214b9d56e3c1e4533b03359aee94acd5d",
+        "version" : "0.2.4"
       }
     }
   ],

@@ -48,6 +48,7 @@
 "delivered" = "Delivered";
 "invalid_demo_login" = "Enter courier, store or admin to continue.";
 "status_new" = "New";
+"status_assigned" = "Assigned";
 "status_claimed" = "Claimed";
 "status_picked_up" = "Picked";
 "status_delivered" = "Delivered";
@@ -58,8 +59,10 @@
 "toast_delivered" = "Order delivered";
 "toast_generic_error" = "Something went wrong. Try again.";
 "slide_to_claim" = "Slide to claim";
+"slide_to_accept" = "Slide to accept";
 "slide_to_pickup" = "Slide to pick up";
 "slide_to_deliver" = "Slide to deliver";
+"decline_assignment" = "Decline assignment";
 "release_to_confirm" = "Release to confirm";
 "push_new_order_title" = "New order assigned";
 "push_new_order_body" = "Order #%d assigned to you";
