@@ -24,6 +24,7 @@
 		4F65F5ADB1952B0D8938F843 /* ModelContextHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBCEFA717E696436ACD8C4AC /* ModelContextHolder.swift */; };
 		50E88351DA9ABDC8830D7B50 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54D24F53D19AB75CDBF9B8EF /* APIClient.swift */; };
 		52CEB3BA1F838E9904781C0E /* OrdersService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21AB1E66206F81D9C7A79F2E /* OrdersService.swift */; };
+		BB4B3B9EF13EB0B2E1E29DF9 /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC8D6A5007F4AA0B1A456A5 /* Telemetry.swift */; };
 		C2AAE1F5A3B94F1187629D4C /* OrdersSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32B59C7D84A4EFC81A9D20B /* OrdersSyncManager.swift */; };
 		54182D18F34F90FCC4723E82 /* OrdersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 334CC652083F335B3DA8A8DF /* OrdersListView.swift */; };
 		58A3AFDBBCF8292BBE4CD2F3 /* SkeletonOrderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBB2B3121301D0031517353 /* SkeletonOrderRow.swift */; };
@@ -76,6 +77,7 @@
 		334CC652083F335B3DA8A8DF /* OrdersListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrdersListView.swift; sourceTree = "<group>"; };
 		3838694143FFCEB35D9FEBE1 /* Shimmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shimmer.swift; sourceTree = "<group>"; };
 		3FDEBF3B6806226144A8EBFE /* PushManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushManager.swift; sourceTree = "<group>"; };
+		7BC8D6A5007F4AA0B1A456A5 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
 		43C88EA393E23C78A6E94D40 /* Zariz.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Zariz.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		54D24F53D19AB75CDBF9B8EF /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		5C290D6AF581A1429B24E668 /* Toast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toast.swift; sourceTree = "<group>"; };
@@ -277,6 +279,7 @@
 				5E808588FAAAC21F2209F26B /* GlobalToolbar.swift */,
 				E49E7B597C7DD3EDD24B2D5C /* LanguageMenuButton.swift */,
 				F32B59C7D84A4EFC81A9D20B /* OrdersSyncManager.swift */,
+				7BC8D6A5007F4AA0B1A456A5 /* Telemetry.swift */,
 				3FDEBF3B6806226144A8EBFE /* PushManager.swift */,
 				DF5D6D4550CCC35AAFE48876 /* ZarizApp.swift */,
 			);
@@ -468,6 +471,7 @@
 				54182D18F34F90FCC4723E82 /* OrdersListView.swift in Sources */,
 				52CEB3BA1F838E9904781C0E /* OrdersService.swift in Sources */,
 				48719651DCC78156DC53DEEA /* ProfileView.swift in Sources */,
+				BB4B3B9EF13EB0B2E1E29DF9 /* Telemetry.swift in Sources */,
 				C2AAE1F5A3B94F1187629D4C /* OrdersSyncManager.swift in Sources */,
 				7C6ACF5453ABB25037DBC24D /* PushManager.swift in Sources */,
 				33ADAE9B4BABAB3E082E81DD /* RemoteAvatarView.swift in Sources */,

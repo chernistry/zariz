@@ -40,12 +40,11 @@ final class OrdersSyncManager: ObservableObject {
         if monitor.currentPath.status != .satisfied { return }
         let started = Date()
         await OrdersService.shared.sync()
-        let duration = Date().timeIntervalSince(started) * 1000
-        Telemetry.log.info("orders.sync.duration_ms=\(duration, format: .fixed(precision: 0))")
+        let durationMs = Int((Date().timeIntervalSince(started) * 1000).rounded())
+        Telemetry.log.info("orders.sync.duration_ms=\(durationMs, privacy: .public)")
     }
 
     func triggerImmediateSync() {
         Task { await OrdersService.shared.sync() }
     }
 }
-
