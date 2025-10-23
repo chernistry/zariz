@@ -83,7 +83,9 @@ enum AuthKeychainStore {
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
         if let prompt {
-            baseQuery[kSecUseOperationPrompt as String] = prompt
+            let context = LAContext()
+            context.localizedReason = prompt
+            baseQuery[kSecUseAuthenticationContext as String] = context
         } else {
             baseQuery[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUISkip
         }

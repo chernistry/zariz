@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftUIX
 
 struct AuthView: View {
     @StateObject private var vm = AuthViewModel()
@@ -135,8 +136,9 @@ struct AuthView: View {
                 Button(action: signInTapped) {
                     HStack {
                         if vm.isLoading {
-                            ProgressView()
-                                .tint(.white)
+                            ActivityIndicator()
+                                .style(.regular)
+                                .foregroundColor(.white)
                         } else {
                             Text("sign_in")
                                 .font(DS.Font.body.weight(.semibold))

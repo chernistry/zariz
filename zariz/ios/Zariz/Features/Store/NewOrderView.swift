@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import SwiftUIX
 
 struct NewOrderView: View {
     @EnvironmentObject private var session: AppSession

@@ -392,9 +392,9 @@ def claim_order(
         text(
             """
             UPDATE orders
-            SET status='claimed', courier_id=COALESCE(courier_id, :cid)
+            SET status='claimed', courier_id=:cid
             WHERE id=:id AND (
-                status='new' OR (status='assigned' AND (courier_id IS NULL OR courier_id=:cid))
+                status='new' OR (status='assigned' AND courier_id=:cid)
             )
             """
         ),

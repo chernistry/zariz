@@ -1,6 +1,6 @@
 import Foundation
 
-final class SSEClient: NSObject {
+final class SSEClient: NSObject, @unchecked Sendable {
     private let delegateQueue: OperationQueue = {
         let q = OperationQueue()
         q.maxConcurrentOperationCount = 1
@@ -8,7 +8,7 @@ final class SSEClient: NSObject {
         return q
     }()
 
-    private var session: URLSession!
+    private let session: URLSession
 
     private var task: URLSessionDataTask?
     private var buffer = Data()
@@ -18,10 +18,10 @@ final class SSEClient: NSObject {
     init(url: URL, onEvent: @escaping (Any) -> Void) {
         self.url = url
         self.onEvent = onEvent
-        super.init()
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 0
-        self.session = URLSession(configuration: config, delegate: self, delegateQueue: delegateQueue)
+        self.session = URLSession(configuration: config, delegate: nil, delegateQueue: delegateQueue)
+        super.init()
     }
 
     func start() {

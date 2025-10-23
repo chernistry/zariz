@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import SwiftUIX
 
 struct OrdersListView: View {
     @Environment(\.modelContext) private var ctx
@@ -58,7 +59,16 @@ struct OrdersListView: View {
     private var ordersSection: some View {
         Group {
             if isLoading {
-                skeletonList
+                VStack(spacing: DS.Spacing.lg) {
+                    ActivityIndicator()
+                        .style(.large)
+                        .foregroundColor(DS.Color.brandPrimary)
+                    Text("loading_orders")
+                        .font(DS.Font.caption)
+                        .foregroundStyle(DS.Color.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DS.Spacing.xxl)
             } else {
                 let list = ordersFiltered(currentFilter)
                 if list.isEmpty {

@@ -80,6 +80,8 @@ extension OrderDetailView {
                     toast.show("toast_claimed", style: .success)
                     isPerformingAction = false
                 }
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                await OrdersService.shared.sync()
             } catch {
                 await MainActor.run {
                     Haptics.error()

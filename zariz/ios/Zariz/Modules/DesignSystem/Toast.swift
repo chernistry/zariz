@@ -14,13 +14,13 @@ final class ToastCenter: ObservableObject {
         toastPayload ?? AlertToast(displayMode: .hud, type: .regular, title: "")
     }
 
-    func show(_ titleKey: LocalizedStringKey,
-              subtitle subtitleKey: LocalizedStringKey? = nil,
+    func show(_ titleKey: String,
+              subtitle subtitleKey: String? = nil,
               style: Style = .info,
               icon: String? = nil,
               duration: TimeInterval = 1.8) {
-        let title = String(localized: String.LocalizationValue(stringLiteral: "\(titleKey)"))
-        let subtitle = subtitleKey.map { String(localized: String.LocalizationValue(stringLiteral: "\($0)")) }
+        let title = String(localized: String.LocalizationValue(titleKey))
+        let subtitle = subtitleKey.map { String(localized: String.LocalizationValue($0)) }
         toastPayload = AlertToast(
             displayMode: .hud,
             type: style.alertType(fallbackIcon: icon),

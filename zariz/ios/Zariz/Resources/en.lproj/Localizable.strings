@@ -111,3 +111,5 @@
 "orders_service_unavailable" = "Order creation is unavailable for this role.";
 "orders_service_server_error" = "Server error (%d).";
 "orders_service_unknown_error" = "Unknown error.";
+"loading_orders" = "Loading orders...";
+"loading_orders" = "Loading orders...";
