@@ -7,6 +7,7 @@ import { InputField } from '../components/InputField';
 import { ButtonWithIcon } from '../components/ButtonWithIcon';
 import { Button } from '../components/Button';
 import AssignCourierDialog from '../components/modals/AssignCourierDialog';
+import { Box, Button as MUIButton, MenuItem, Paper, Select, SelectChangeEvent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@mui/material';
 
 type Order = { id: string | number; status: string; store_id?: number; courier_id?: number | null; created_at?: string };
 type Filter = { status: string; store: string; courier: string; from: string; to: string };
@@ -71,59 +72,74 @@ function Orders() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Orders</h1>
-      <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
-        <button onClick={() => router.push('/orders/new')}>New Order</button>
-        <button onClick={() => { localStorage.removeItem('token'); router.push('/login'); }}>Logout</button>
-      </div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:8, marginBottom: 12 }}>
-        <select value={filter.status} onChange={e=>setFilter(f=>({...f, status:e.target.value}))}>
-          <option value=''>All</option>
-          <option value='new'>New</option>
-          <option value='assigned'>Assigned</option>
-          <option value='claimed'>Claimed</option>
-          <option value='picked_up'>Picked up</option>
-          <option value='delivered'>Delivered</option>
-          <option value='canceled'>Canceled</option>
-        </select>
-        <InputField color="#6A7D8B" placeholder="Store ID" value={filter.store} onChange={(v)=>setFilter(f=>({...f, store:v}))} />
-        <InputField color="#6A7D8B" placeholder="Courier ID" value={filter.courier} onChange={(v)=>setFilter(f=>({...f, courier:v}))} />
-        <InputField color="#6A7D8B" placeholder="From (YYYY-MM-DD)" value={filter.from} onChange={(v)=>setFilter(f=>({...f, from:v}))} />
-        <InputField color="#6A7D8B" placeholder="To (YYYY-MM-DD)" value={filter.to} onChange={(v)=>setFilter(f=>({...f, to:v}))} />
-      </div>
+    <Box sx={{ p: 3 }}>
+      <Box sx={{ display:'flex', alignItems:'center', justifyContent:'space-between', mb: 2 }}>
+        <Typography variant="h5">Orders</Typography>
+        <Box sx={{ display:'flex', gap: 1 }}>
+          <MUIButton variant="contained" onClick={() => router.push('/orders/new')}>New Order</MUIButton>
+          <MUIButton variant="outlined" color="inherit" onClick={() => { localStorage.removeItem('token'); router.push('/login'); }}>Logout</MUIButton>
+        </Box>
+      </Box>
 
-      <div style={{ marginBottom: 8, display:'flex', gap:8 }}>
-        <Button color="#333" label="Export CSV" onClick={exportCSV} />
-      </div>
+      <Box sx={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:1, mb: 2 }}>
+        <Select size="small" value={filter.status} onChange={(e: SelectChangeEvent<string>)=>setFilter(f=>({...f, status:e.target.value}))} displayEmpty>
+          <MenuItem value=''><em>All</em></MenuItem>
+          <MenuItem value='new'>New</MenuItem>
+          <MenuItem value='assigned'>Assigned</MenuItem>
+          <MenuItem value='claimed'>Claimed</MenuItem>
+          <MenuItem value='picked_up'>Picked up</MenuItem>
+          <MenuItem value='delivered'>Delivered</MenuItem>
+          <MenuItem value='canceled'>Canceled</MenuItem>
+        </Select>
+        <TextField size="small" label="Store ID" value={filter.store} onChange={(e)=>setFilter(f=>({...f, store:e.target.value}))} />
+        <TextField size="small" label="Courier ID" value={filter.courier} onChange={(e)=>setFilter(f=>({...f, courier:e.target.value}))} />
+        <TextField size="small" label="From (YYYY-MM-DD)" value={filter.from} onChange={(e)=>setFilter(f=>({...f, from:e.target.value}))} />
+        <TextField size="small" label="To (YYYY-MM-DD)" value={filter.to} onChange={(e)=>setFilter(f=>({...f, to:e.target.value}))} />
+      </Box>
 
-      {error && <div style={{ color: 'crimson' }}>{error}</div>}
+      <Box sx={{ display:'flex', gap:1, mb: 1 }}>
+        <MUIButton size="small" variant="outlined" onClick={exportCSV}>Export CSV</MUIButton>
+      </Box>
 
-      <table width="100%" cellPadding={8}>
-        <thead><tr><th>ID</th><th>Status</th><th>Store</th><th>Courier</th><th>Actions</th></tr></thead>
-        <tbody>
-          {orders.map(o => (
-            <tr key={o.id}>
-              <td>#{String(o.id)}</td>
-              <td>{o.status === 'assigned' ? 'Awaiting acceptance' : o.status}</td>
-              <td>{o.store_id ?? '-'}</td>
-              <td>{o.courier_id ?? '-'}</td>
-              <td style={{ display:'flex', gap:6 }}>
-                <ButtonWithIcon color="#444" leftIcon="rightArrow" value="View" onClick={()=>router.push(`/orders/${o.id}`)} />
-                <ButtonWithIcon color="#0a6" leftIcon="checked" value="Assign" onClick={()=>openAssign(o.id)} />
-                <ButtonWithIcon color="#c33" leftIcon="delete" value="Cancel" onClick={()=>openCancel(o.id)} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {error && <Typography color="error" variant="body2" sx={{ mb: 1 }}>{error}</Typography>}
+
+      <TableContainer component={Paper}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Store</TableCell>
+              <TableCell>Courier</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {orders.map(o => (
+              <TableRow key={String(o.id)}>
+                <TableCell>#{String(o.id)}</TableCell>
+                <TableCell>{o.status === 'assigned' ? 'Awaiting acceptance' : o.status}</TableCell>
+                <TableCell>{o.store_id ?? '-'}</TableCell>
+                <TableCell>{o.courier_id ?? '-'}</TableCell>
+                <TableCell>
+                  <Box sx={{ display:'flex', gap: 1 }}>
+                    <MUIButton size="small" onClick={()=>router.push(`/orders/${o.id}`)}>View</MUIButton>
+                    <MUIButton size="small" onClick={()=>openAssign(o.id)}>Assign</MUIButton>
+                    <MUIButton size="small" color="error" onClick={()=>openCancel(o.id)}>Cancel</MUIButton>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <AssignCourierDialog
         open={assignFor !== null}
         onClose={() => setAssignFor(null)}
         onSelect={selectCourier}
       />
-    </div>
+    </Box>
   );
 }
 

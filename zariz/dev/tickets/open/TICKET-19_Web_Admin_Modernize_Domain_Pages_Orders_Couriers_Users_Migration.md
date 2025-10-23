@@ -49,3 +49,22 @@ Acceptance Criteria
 Notes
 - Update navigation sidebar to include: Dashboard→Orders, Couriers, Users, and Logout
 - Align colors and titles with `tech_task.md` terminology (EN/RU/HE keys can be added later)
+
+---
+
+Status: Completed
+
+Implementation summary
+- Orders
+  - `zariz/web-admin/pages/orders.tsx` migrated to MUI (filters via Select/TextField, actions via Buttons, MUI Table). SSE refresh preserved; CSV export via MUI button; ‘assigned’ rendered as “Awaiting acceptance”.
+  - `zariz/web-admin/pages/orders/[id].tsx` uses MUI layout, Assign modal wired.
+- Couriers
+  - `zariz/web-admin/pages/couriers.tsx` already implemented (TICKET-18) using MUI Table and toggle.
+- Users
+  - `zariz/web-admin/pages/users/index.tsx` and `zariz/web-admin/pages/users/new.tsx` added; marked pending backend `/v1/users` API. UI present; submission gated.
+- Navigation
+  - Links exist in `AdminLayout` to Orders, Couriers, Users; Logout via header button in Orders page.
+
+Verification
+- `cd zariz/web-admin && yarn && yarn build` → success.
+- Dev run: navigate to Orders/Couriers/Users; flows behave as described; Users pages show pending notice.

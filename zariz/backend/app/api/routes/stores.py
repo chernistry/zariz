@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from ..deps import get_db, require_role
 from ...db.models.store import Store
 
-router = APIRouter()
+router = APIRouter(prefix="/stores", tags=["stores"])
 
 
 @router.get("")
