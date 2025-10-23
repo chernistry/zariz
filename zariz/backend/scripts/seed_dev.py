@@ -56,11 +56,12 @@ def main():
 
         # Courier user
         ensure_user(db, phone="courier", name="Courier User", role="courier", password="12345678")
-        print("Seeded: shop / courier users and Dev Store")
+        # Admin user
+        ensure_user(db, phone="admin", name="Admin", role="admin", password="12345", status="active")
+        print("Seeded: admin / shop / courier users and Dev Store")
     finally:
         db.close()
 
 
 if __name__ == "__main__":
     main()
-

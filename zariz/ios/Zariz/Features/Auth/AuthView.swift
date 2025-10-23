@@ -4,18 +4,35 @@ struct AuthView: View {
     @StateObject private var vm = AuthViewModel()
     @EnvironmentObject private var session: AppSession
     @FocusState private var isLoginFocused: Bool
+    @State private var animateGradient = false
 
     var body: some View {
         ZStack(alignment: .top) {
-            DS.Color.background.ignoresSafeArea()
+            // Animated gradient background
+            LinearGradient(
+                colors: [
+                    DS.Color.brandPrimary.opacity(0.15),
+                    DS.Color.background,
+                    DS.Color.background
+                ],
+                startPoint: animateGradient ? .topLeading : .topTrailing,
+                endPoint: animateGradient ? .bottomTrailing : .bottomLeading
+            )
+            .ignoresSafeArea()
+            .onAppear {
+                withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
+                    animateGradient = true
+                }
+            }
+            
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: DS.Spacing.xxl) {
                     header
-                    heroCard
+                    logoSection
                     formCard
                 }
                 .padding(.horizontal, DS.Spacing.xl)
-                .padding(.top, DS.Spacing.xl * 1.2)
+                .padding(.top, DS.Spacing.xl * 1.5)
                 .padding(.bottom, 80)
             }
         }
@@ -27,9 +44,9 @@ struct AuthView: View {
 
     private var header: some View {
         HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
                 Text("welcome_title")
-                    .font(DS.Font.largeTitle)
+                    .font(DS.Font.largeTitle.weight(.bold))
                     .foregroundStyle(DS.Color.textPrimary)
                 Text("welcome_tagline")
                     .font(DS.Font.body)
@@ -40,104 +57,125 @@ struct AuthView: View {
         }
     }
 
-    private var heroCard: some View {
-        Card {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                        Text("auth_hero_title")
-                            .font(DS.Font.title)
-                            .foregroundStyle(DS.Color.textPrimary)
-                        Text("auth_hero_subtitle")
-                            .font(DS.Font.body)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                    Spacer()
+    private var logoSection: some View {
+        HStack {
+            Spacer()
+            VStack(spacing: DS.Spacing.md) {
+                // Modern glassmorphic logo container
+                ZStack {
+                    Circle()
+                        .fill(DS.Color.brandPrimary.opacity(0.1))
+                        .frame(width: 100, height: 100)
+                        .blur(radius: 20)
+                    
+                    Circle()
+                        .fill(.ultraThinMaterial)
+                        .frame(width: 90, height: 90)
+                        .overlay {
+                            Image(systemName: "shippingbox.fill")
+                                .font(.system(size: 40))
+                                .foregroundStyle(DS.Color.brandPrimary)
+                        }
+                        .shadow(color: DS.Color.brandPrimary.opacity(0.3), radius: 20, y: 10)
                 }
-                Image("AuthHero")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 140)
-                    .clipShape(RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous))
-                    .overlay(alignment: .bottomLeading) {
-                        Text("auth_hero_badge")
-                            .font(DS.Font.caption)
-                            .padding(.horizontal, DS.Spacing.sm)
-                            .padding(.vertical, DS.Spacing.xs)
-                            .background(
-                                Capsule()
-                                    .fill(DS.Color.brandPrimary.opacity(0.85))
-                            )
-                            .foregroundStyle(.white)
-                            .padding(DS.Spacing.sm)
-                    }
+                
+                Text("Zariz")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(DS.Color.textPrimary)
             }
+            Spacer()
         }
+        .padding(.vertical, DS.Spacing.lg)
     }
 
     private var formCard: some View {
-        Card {
+        VStack(spacing: DS.Spacing.xl) {
+            // Modern glassmorphic card
             VStack(alignment: .leading, spacing: DS.Spacing.lg) {
                 VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                    Text("auth_login_label")
-                        .font(DS.Font.caption)
+                    Label("phone_or_email", systemImage: "person.circle.fill")
+                        .font(DS.Font.caption.weight(.medium))
                         .foregroundStyle(DS.Color.textSecondary)
-                        .padding(.horizontal, 2)
-                    TextField("phone_or_email", text: $vm.identifier)
+                    
+                    TextField("", text: $vm.identifier, prompt: Text("Enter your email or phone").foregroundStyle(DS.Color.textSecondary.opacity(0.5)))
                         .focused($isLoginFocused)
                         .textContentType(.username)
+                        .textInputAutocapitalization(.never)
                         .keyboardType(.emailAddress)
-                        .padding(.vertical, 14)
+                        .padding(.vertical, 16)
                         .padding(.horizontal, DS.Spacing.lg)
-                        .background(
-                            RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous)
-                                .fill(DS.Color.surfaceElevated)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous)
-                                .stroke(DS.Color.brandPrimary.opacity(0.2), lineWidth: 1.2)
-                        )
-                        .submitLabel(.done)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.large, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: DS.Radius.large, style: .continuous)
+                                .stroke(DS.Color.brandPrimary.opacity(isLoginFocused ? 0.5 : 0.2), lineWidth: 1.5)
+                        }
+                        .submitLabel(.next)
                 }
+                
                 VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                    Text("auth_password_label")
-                        .font(DS.Font.caption)
+                    Label("password_placeholder", systemImage: "lock.circle.fill")
+                        .font(DS.Font.caption.weight(.medium))
                         .foregroundStyle(DS.Color.textSecondary)
-                        .padding(.horizontal, 2)
-                    SecureField("password_placeholder", text: $vm.password)
+                    
+                    SecureField("", text: $vm.password, prompt: Text("Enter your password").foregroundStyle(DS.Color.textSecondary.opacity(0.5)))
                         .textContentType(.password)
-                        .padding(.vertical, 14)
+                        .padding(.vertical, 16)
                         .padding(.horizontal, DS.Spacing.lg)
-                        .background(
-                            RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous)
-                                .fill(DS.Color.surfaceElevated)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous)
-                                .stroke(DS.Color.brandPrimary.opacity(0.2), lineWidth: 1.2)
-                        )
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.large, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: DS.Radius.large, style: .continuous)
+                                .stroke(DS.Color.brandPrimary.opacity(0.2), lineWidth: 1.5)
+                        }
                         .submitLabel(.go)
+                        .onSubmit { signInTapped() }
                 }
 
                 Button(action: signInTapped) {
-                    Text("sign_in")
-                        .frame(maxWidth: .infinity)
+                    HStack {
+                        if vm.isLoading {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("sign_in")
+                                .font(DS.Font.body.weight(.semibold))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
                 }
-                .buttonStyle(PrimaryButtonStyle())
+                .buttonStyle(.borderedProminent)
+                .tint(DS.Color.brandPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.large, style: .continuous))
+                .shadow(color: DS.Color.brandPrimary.opacity(0.4), radius: 15, y: 8)
                 .disabled(vm.isLoading)
 
-                Button(action: { openSupport() }) {
-                    Text("forgot_password_cta")
-                        .font(DS.Font.caption)
-                        .foregroundStyle(DS.Color.textSecondary)
-                }
-
                 if let err = vm.error {
-                    Text(err)
-                        .font(DS.Font.caption)
-                        .foregroundStyle(DS.Color.error)
-                        .padding(.top, DS.Spacing.xs)
+                    HStack(spacing: DS.Spacing.sm) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                        Text(err)
+                            .font(DS.Font.caption)
+                    }
+                    .foregroundStyle(DS.Color.error)
+                    .padding(.horizontal, DS.Spacing.md)
+                    .padding(.vertical, DS.Spacing.sm)
+                    .background(DS.Color.error.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous))
                 }
+            }
+            .padding(DS.Spacing.xl)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.large, style: .continuous))
+            .shadow(color: .black.opacity(0.1), radius: 30, y: 15)
+            
+            Button(action: { openSupport() }) {
+                HStack(spacing: DS.Spacing.xs) {
+                    Image(systemName: "questionmark.circle.fill")
+                    Text("forgot_password_cta")
+                }
+                .font(DS.Font.caption.weight(.medium))
+                .foregroundStyle(DS.Color.textSecondary)
             }
         }
     }

@@ -76,8 +76,8 @@ struct SlideToConfirmSlider: View {
             )
             .opacity(isEnabled ? 1 : 0.5)
             .allowsHitTesting(isEnabled)
-            .onChange(of: isEnabled) { enabled in
-                if !enabled {
+            .onChange(of: isEnabled) {
+                if !isEnabled {
                     resetSlider(animated: true)
                 }
             }

@@ -138,13 +138,13 @@ extension OrderDetailView {
 }
 
 private extension OrderDetailView {
-    fileprivate struct ActionConfiguration {
+    struct ActionConfiguration {
         let promptKey: String
         let isEnabled: Bool
         let trigger: () -> Void
     }
 
-    fileprivate func actionConfiguration(for order: OrderEntity) -> ActionConfiguration? {
+    func actionConfiguration(for order: OrderEntity) -> ActionConfiguration? {
         switch order.status {
         case "new":
             return ActionConfiguration(promptKey: "slide_to_claim", isEnabled: true) {

@@ -361,7 +361,7 @@
 			path = ZarizUITests;
 			sourceTree = "<group>";
 		};
-		"TEMP_2CD526C2-08C6-4BF7-AA72-331FE0329CBE" /* L10n */ = {
+		"TEMP_2D5427AE-BD17-416C-88AF-7D636829D67C" /* L10n */ = {
 			isa = PBXGroup;
 			children = (
 			);

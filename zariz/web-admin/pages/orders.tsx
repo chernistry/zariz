@@ -71,6 +71,13 @@ function Orders() {
       .catch(() => setError('Failed to cancel'));
   }
 
+  function deleteOrder(id: number | string) {
+    if (!confirm(`Delete order #${id}? This cannot be undone.`)) return;
+    api(`orders/${id}`, { method: 'DELETE' })
+      .then(refresh)
+      .catch(() => setError('Failed to delete'));
+  }
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display:'flex', alignItems:'center', justifyContent:'space-between', mb: 2 }}>
@@ -125,7 +132,8 @@ function Orders() {
                   <Box sx={{ display:'flex', gap: 1 }}>
                     <MUIButton size="small" onClick={()=>router.push(`/orders/${o.id}`)}>View</MUIButton>
                     <MUIButton size="small" onClick={()=>openAssign(o.id)}>Assign</MUIButton>
-                    <MUIButton size="small" color="error" onClick={()=>openCancel(o.id)}>Cancel</MUIButton>
+                    <MUIButton size="small" color="warning" onClick={()=>openCancel(o.id)}>Cancel</MUIButton>
+                    <MUIButton size="small" color="error" onClick={()=>deleteOrder(o.id)}>Delete</MUIButton>
                   </Box>
                 </TableCell>
               </TableRow>

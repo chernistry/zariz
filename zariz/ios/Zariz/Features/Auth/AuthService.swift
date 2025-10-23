@@ -131,7 +131,7 @@ actor AuthService {
         var req = URLRequest(url: AppConfig.baseURL.appendingPathComponent("auth/logout"))
         req.httpMethod = "POST"
         do {
-            if let stored = try AuthKeychainStore.load(prompt: "Authenticate to logout") {
+            if let stored = try? AuthKeychainStore.load(prompt: "Authenticate to logout") {
                 req.addValue("application/json", forHTTPHeaderField: "Content-Type")
                 let body = ["refresh_token": stored.refreshToken]
                 req.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
