@@ -28,13 +28,6 @@ final class PushManager: NSObject, ObservableObject {
         }
     }
 
-    @MainActor
-    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-        let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
-        self.deviceToken = token
-        Task { await self.registerDeviceWithBackend(token: token) }
-    }
-
     private func authHeader() async -> String? {
         if let token = try? await AuthSession.shared.validAccessToken() { return token }
         return nil
@@ -113,24 +106,46 @@ final class PushManager: NSObject, ObservableObject {
         }
         updateNotifiedIDs(add: unseen, remove: [])
     }
-}
 
-@objc private extension PushManager {
-    @MainActor func onAuthConfigured(_ note: Notification) {
+    @MainActor
+    @objc private func onAuthConfigured(_ note: Notification) {
         guard let token = self.deviceToken else { return }
         Task { await self.registerDeviceWithBackend(token: token) }
     }
 }
 
-extension PushManager: UNUserNotificationCenterDelegate, UIApplicationDelegate {
-    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.banner, .sound])
+@MainActor
+extension PushManager: UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        UNUserNotificationCenter.current().delegate = self
+        return true
     }
 
-    nonisolated func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        completionHandler(.noData)
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        self.deviceToken = token
+        Task { await self.registerDeviceWithBackend(token: token) }
+    }
+
+    func application(_ application: UIApplication,
+                     didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completion: @escaping (UIBackgroundFetchResult) -> Void) {
+        completion(.noData)
         Task { await OrdersService.shared.sync() }
     }
 }
 
-// Notification names moved to Shared/Notifications.swift
+extension PushManager: UNUserNotificationCenterDelegate {
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completion: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completion([.banner, .sound, .list])
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completion: @escaping () -> Void) {
+        completion()
+        Task { @MainActor in await OrdersService.shared.sync() }
+    }
+}

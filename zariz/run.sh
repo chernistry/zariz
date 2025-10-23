@@ -74,11 +74,23 @@ EOF
     echo "iOS config updated!"
     ;;
     
-  ios:build)
-    echo "Building iOS project..."
+  ios:generate)
+    echo "Generating Xcode project..."
     cd "$IOS_DIR"
     xcodegen generate
     echo "iOS project generated!"
+    ;;
+    
+  ios:build)
+    echo "Building iOS app..."
+    cd "$IOS_DIR"
+    xcodebuild -project Zariz.xcodeproj -scheme Zariz -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15' build
+    ;;
+    
+  ios:test)
+    echo "Running iOS tests..."
+    cd "$IOS_DIR"
+    xcodebuild test -project Zariz.xcodeproj -scheme Zariz -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 15'
     ;;
     
   clean)
@@ -100,7 +112,9 @@ EOF
     echo "  backend:shell      - Open backend container shell"
     echo "  db:shell           - Open PostgreSQL shell"
     echo "  ios:config         - Configure iOS app with local backend URL"
-    echo "  ios:build          - Generate Xcode project"
+    echo "  ios:generate       - Generate Xcode project"
+    echo "  ios:build          - Build iOS app in simulator"
+    echo "  ios:test           - Run iOS tests"
     echo "  clean              - Stop and remove all containers and volumes"
     exit 1
     ;;

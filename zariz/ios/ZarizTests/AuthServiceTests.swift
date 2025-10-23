@@ -11,16 +11,17 @@ final class AuthServiceTests: XCTestCase {
     override func tearDown() async throws {
         URLProtocol.unregisterClass(MockURLProtocol.self)
         AuthKeychainStore.clear()
-        AuthSession.shared.clear()
+        await AuthSession.shared.clear()
     }
 
     func testLoginSuccess() async throws {
         let now = ISO8601DateFormatter().string(from: Date().addingTimeInterval(3600))
         let rnow = ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400))
         MockURLProtocol.requestHandler = { request in
-            guard request.url?.absoluteString.hasSuffix("/auth/login") == true else { throw URLError(.badURL) }
+            guard request.url?.absoluteString.contains("/auth/login_password") == true else { throw URLError(.badURL) }
+            let token = Self.makeJWT(sub: "u1", role: "courier", exp: Int(Date().addingTimeInterval(3600).timeIntervalSince1970), storeIds: [1])
             let json = """
-            {"access_token":"a.b.c","refresh_token":"r1","expires_at":"\(now)","refresh_expires_at":"\(rnow)","role":"courier","user_id":"u1","store_ids":[1],"identifier":"c@example.com"}
+            {"access_token":"\(token)","refresh_token":"r1"}
             """.data(using: .utf8)!
             let resp = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
             return (resp, json)
@@ -32,7 +33,7 @@ final class AuthServiceTests: XCTestCase {
 
     func testLoginFailure401() async throws {
         MockURLProtocol.requestHandler = { request in
-            guard request.url?.absoluteString.hasSuffix("/auth/login") == true else { throw URLError(.badURL) }
+            guard request.url?.absoluteString.contains("/auth/login_password") == true else { throw URLError(.badURL) }
             let resp = HTTPURLResponse(url: request.url!, statusCode: 401, httpVersion: nil, headerFields: nil)!
             return (resp, Data())
         }
@@ -47,6 +48,18 @@ final class AuthServiceTests: XCTestCase {
 
 final class MockURLProtocol: URLProtocol {
     static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+    static func makeJWT(sub: String, role: String, exp: Int, storeIds: [Int]?) -> String {
+        func b64url(_ data: Data) -> String {
+            data.base64EncodedString().replacingOccurrences(of: "+", with: "-")
+                .replacingOccurrences(of: "/", with: "_")
+                .replacingOccurrences(of: "=", with: "")
+        }
+        let header = b64url(try! JSONSerialization.data(withJSONObject: ["alg": "HS256"]))
+        var payloadDict: [String: Any] = ["sub": sub, "role": role, "exp": exp]
+        if let s = storeIds { payloadDict["store_ids"] = s }
+        let payload = b64url(try! JSONSerialization.data(withJSONObject: payloadDict))
+        return "\(header).\(payload).sig"
+    }
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
@@ -62,4 +75,3 @@ final class MockURLProtocol: URLProtocol {
     }
     override func stopLoading() {}
 }
-

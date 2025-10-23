@@ -20,6 +20,9 @@ packages:
 settings:
   base:
     SWIFT_VERSION: '6.0'
+    SWIFT_STRICT_CONCURRENCY: complete
+    DEAD_CODE_STRIPPING: YES
+    VALIDATE_WORKSPACE: YES
     PRODUCT_BUNDLE_IDENTIFIER: com.example.zariz
     INFOPLIST_FILE: Zariz/Supporting/Info.plist
 targets:

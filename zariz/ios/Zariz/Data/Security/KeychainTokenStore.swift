@@ -27,20 +27,19 @@ enum KeychainTokenStore {
         }
     }
 
-    static func load(prompt: String = "Authenticate to access") throws -> String? {
+    static func load(prompt: String? = nil) throws -> String? {
+        let context = makeLAContext(prompt: prompt)
         var baseQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne
+            kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecUseAuthenticationContext as String: context
         ]
-        let context = LAContext()
-        context.localizedReason = prompt
-        let canAuth = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil) ||
-                      context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
-        context.interactionNotAllowed = !canAuth
-        baseQuery[kSecUseAuthenticationContext as String] = context
+        if prompt == nil {
+            baseQuery[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUISkip
+        }
         var item: CFTypeRef?
         let status = SecItemCopyMatching(baseQuery as CFDictionary, &item)
         switch status {
@@ -51,11 +50,25 @@ enum KeychainTokenStore {
             return String(data: data, encoding: .utf8)
         case errSecItemNotFound:
             return nil
+        case errSecAuthFailed:
+            if prompt == nil { return nil }
+            throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
         case errSecUserCanceled:
             return nil
         default:
             throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
         }
+    }
+
+    private static func makeLAContext(prompt: String?) -> LAContext {
+        let ctx = LAContext()
+        if let reason = prompt {
+            ctx.localizedReason = reason
+            ctx.interactionNotAllowed = false
+        } else {
+            ctx.interactionNotAllowed = true
+        }
+        return ctx
     }
 
     static func clear() {

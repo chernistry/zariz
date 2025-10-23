@@ -32,8 +32,8 @@ struct ZarizApp: App {
             )
             .id(session.languageCode)
             .onAppear {
-                // Bootstrap session from Keychain (will prompt biometrics)
-                if let s = try? AuthKeychainStore.load() {
+                // Bootstrap session from Keychain (silent; no UI)
+                if let s = try? AuthKeychainStore.load(prompt: nil) {
                     let user = AuthenticatedUser(userId: s.userId, role: UserRole(rawValue: s.role) ?? .courier, storeIds: s.storeIds, identifier: s.identifier)
                     session.applyLogin(user: user)
                 }

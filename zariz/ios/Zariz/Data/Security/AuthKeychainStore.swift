@@ -2,7 +2,7 @@ import Foundation
 import LocalAuthentication
 import Security
 
-/// Stores refresh token and related metadata. Access requires biometrics.
+/// Stores refresh token and related metadata. Access can require biometrics/passcode based on availability.
 enum AuthKeychainStore {
     private static let service = "app.zariz.auth"
     private static let account = "session"
@@ -72,7 +72,9 @@ enum AuthKeychainStore {
         return nil
     }
 
-    static func load(prompt: String = "Authenticate to access session") throws -> StoredSession? {
+    /// Load session from Keychain.
+    /// - Parameter prompt: If provided, allows authentication UI with this message. If nil, skips UI.
+    static func load(prompt: String? = nil) throws -> StoredSession? {
         var baseQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -80,12 +82,11 @@ enum AuthKeychainStore {
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
-        let context = LAContext()
-        context.localizedReason = prompt
-        let canAuth = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil) ||
-                      context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
-        context.interactionNotAllowed = !canAuth
-        baseQuery[kSecUseAuthenticationContext as String] = context
+        if let prompt {
+            baseQuery[kSecUseOperationPrompt as String] = prompt
+        } else {
+            baseQuery[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUISkip
+        }
         var item: CFTypeRef?
         let status = SecItemCopyMatching(baseQuery as CFDictionary, &item)
         switch status {
@@ -96,11 +97,25 @@ enum AuthKeychainStore {
             return try JSONDecoder().decode(StoredSession.self, from: data)
         case errSecItemNotFound:
             return nil
+        case errSecAuthFailed:
+            if prompt == nil { return nil }
+            throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
         case errSecUserCanceled:
             return nil
         default:
             throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
         }
+    }
+
+    private static func makeLAContext(prompt: String?) -> LAContext {
+        let ctx = LAContext()
+        if let reason = prompt {
+            ctx.localizedReason = reason
+            ctx.interactionNotAllowed = false
+        } else {
+            ctx.interactionNotAllowed = true
+        }
+        return ctx
     }
 
     static func clear() {

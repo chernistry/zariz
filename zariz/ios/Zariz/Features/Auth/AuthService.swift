@@ -28,12 +28,18 @@ actor AuthSession {
         monitor.start(queue: queue)
     }
 
-    func configure(pair: AuthTokenPair, user: AuthenticatedUser) throws {
+    func configure(pair: AuthTokenPair, user: AuthenticatedUser) {
         self.accessToken = pair.accessToken
         self.accessTokenExp = pair.expiresAt
         self.currentUser = user
-        try AuthKeychainStore.save(refreshToken: pair.refreshToken, user: user)
-        NotificationCenter.default.post(name: .authSessionConfigured, object: user)
+        do {
+            try AuthKeychainStore.save(refreshToken: pair.refreshToken, user: user)
+        } catch {
+            Telemetry.auth.error("auth.keychain.save_failure msg=\(error.localizedDescription)")
+        }
+        Task { @MainActor in
+            NotificationCenter.default.post(name: .authSessionConfigured, object: user)
+        }
     }
 
     func clear() {
@@ -95,7 +101,7 @@ actor AuthService {
         let exp = Date(timeIntervalSince1970: TimeInterval(claims.exp))
         let pair = AuthTokenPair(accessToken: access, refreshToken: refresh, expiresAt: exp)
         let user = AuthenticatedUser(userId: claims.sub, role: UserRole(rawValue: claims.role) ?? .courier, storeIds: claims.store_ids ?? [], identifier: identifier)
-        try await AuthSession.shared.configure(pair: pair, user: user)
+        await AuthSession.shared.configure(pair: pair, user: user)
         Telemetry.auth.info("auth.login.success latency_ms=\(latency, privacy: .public)")
         return (pair, user)
     }
@@ -123,7 +129,7 @@ actor AuthService {
         let exp = Date(timeIntervalSince1970: TimeInterval(claims.exp))
         let pair = AuthTokenPair(accessToken: access, refreshToken: refresh, expiresAt: exp)
         let user = AuthenticatedUser(userId: claims.sub, role: UserRole(rawValue: claims.role) ?? .courier, storeIds: claims.store_ids ?? [], identifier: stored.identifier)
-        try await AuthSession.shared.configure(pair: pair, user: user)
+        await AuthSession.shared.configure(pair: pair, user: user)
         return pair
     }
 
