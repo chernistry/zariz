@@ -27,10 +27,6 @@ function NewOrder() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    if (!token) router.replace('/login');
-    
-    // Fetch stores
     api('stores').then((data: Store[]) => {
       setStores(data);
       if (data.length > 0) {

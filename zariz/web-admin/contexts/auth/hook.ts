@@ -1,26 +1,28 @@
-import { setCookie } from "cookies-next";
 import { useContext } from "react"
 import { AppContext } from "."
 import { User } from "../../types/User";
-import { Actions } from "./types";
+import { Actions, AuthActions } from "./types";
+import { authClient } from "../../libs/authClient";
 
 export const useAuthContext = () => {
     const { state, dispatch } = useContext(AppContext);
-
-    return {
-        ...state,
+    const actions: AuthActions = {
         setToken: (token: string) => {
-            setCookie('token', token);
-            dispatch({
-                type: Actions.SET_TOKEN,
-                payload: { token }
-            });
+            authClient._set(token || null);
+            dispatch({ type: Actions.SET_TOKEN, payload: { token } });
         },
         setUser: (user: User | null) => {
-            dispatch({
-                type: Actions.SET_USER,
-                payload: { user }
-            });
-        }
+            dispatch({ type: Actions.SET_USER, payload: { user } });
+        },
+        login: async (identifier: string, password: string) => {
+            const { token } = await authClient.login(identifier, password)
+            dispatch({ type: Actions.SET_TOKEN, payload: { token } });
+        },
+        logout: async () => {
+            await authClient.logout();
+            dispatch({ type: Actions.SET_TOKEN, payload: { token: '' } });
+            dispatch({ type: Actions.SET_USER, payload: { user: null } });
+        },
     }
+    return { ...state, ...actions }
 }

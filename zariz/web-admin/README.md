@@ -1,35 +1,41 @@
-# <div align="center"> Next Delivery </div>
+# Zariz — Admin Web Panel (Next.js + TypeScript)
 
-<div align="center">
-    <img src="https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" />
-    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white"/>
-    <img src="https://img.shields.io/badge/Material%20UI-007FFF?style=for-the-badge&logo=mui&logoColor=white"/>
-</div>
+Secure admin-only panel with JWT auth, httpOnly refresh cookie, and in-memory access tokens.
 
-### Prerequisites
+## Prerequisites
+- Node 18+
+- Yarn
+- Backend running on `http://localhost:8000` (default) with seeded admin user
 
-- Yarn 
-- Typescript (Global)
+## Environment
+Create `.env.local` and set as needed:
 
-### Installation
+```
+NEXT_PUBLIC_API_BASE=http://localhost:8000/v1
+# Name for refresh cookie; in prod will be prefixed with __Host-
+AUTH_COOKIE_NAME=zariz_refresh
+```
 
-- Clone the repo
+Notes:
+- In production, the refresh cookie is set as `__Host-zariz_refresh` (httpOnly, Secure, SameSite=Strict, Path=/).
+- Access token is stored in memory only (never in localStorage). Refresh rotates automatically when <2 minutes left.
 
-       git clone https://github.com/LucasAlvaresA/next-delivery.git
-       
-- Install YARN packages
+## Install & Run
+```
+yarn
+yarn dev
+```
 
-      yarn
+## Tests
+- Unit (Jest): `yarn test`
+- E2E (Playwright): `E2E_BACKEND=1 E2E_ADMIN_ID=email E2E_ADMIN_PWD=pwd yarn test:e2e --project=chromium --grep "@auth"`
 
-- Run the project
+## Auth Flow Summary
+- `POST /api/auth/login` → proxies to backend `/v1/auth/login_password`, sets httpOnly refresh cookie; returns `access_token` to client.
+- `POST /api/auth/refresh` → rotates refresh cookie and returns a new `access_token`.
+- `POST /api/auth/logout` → revokes session and clears cookie.
+- Client stores access token in memory (`libs/authClient.ts`), schedules auto-refresh, and enforces `role=admin`.
 
-      yarn dev
-
-## Warnings
-
-- This project has a [Admin Panel](https://github.com/LucasAlvaresA/next-delivery-admin/)
-- This project is **only responsive for cell phones and tablets**, the desktop version is still in progress    
-
-### Routes:
-- /NextBurger
-- /NextPizza
+## Security
+- CSRF: refresh token is `httpOnly; Secure; SameSite=Strict; Path=/`.
+- No tokens in localStorage; logs sanitized; do not print tokens.

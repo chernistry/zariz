@@ -52,7 +52,7 @@ Progress: mark done items with [x] and adjust the above ETA line-by-line as you 
 
 ## Stage C — Store Web Panel
 
- - [ ] 10. Web panel scaffold (Next.js/TS), auth, routes _(blocked by TICKET-22)_
+ - [x] 10. Web panel scaffold (Next.js/TS), auth, routes _(requires TICKET-22)_
  - [ ] 11. RBAC + security hardening _(needs TICKET-21 & TICKET-22)_
  - [x] 12. Realtime status (SSE), list filters, UX polish
 

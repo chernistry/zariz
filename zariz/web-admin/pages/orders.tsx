@@ -77,7 +77,7 @@ function Orders() {
         <Typography variant="h5">Orders</Typography>
         <Box sx={{ display:'flex', gap: 1 }}>
           <MUIButton variant="contained" onClick={() => router.push('/orders/new')}>New Order</MUIButton>
-          <MUIButton variant="outlined" color="inherit" onClick={() => { localStorage.removeItem('token'); router.push('/login'); }}>Logout</MUIButton>
+      <MUIButton variant="outlined" color="inherit" onClick={async () => { try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}; router.push('/login'); }}>Logout</MUIButton>
         </Box>
       </Box>
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AppBar, Box, CssBaseline, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, CssBaseline, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -21,18 +21,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <Toolbar />
       <Divider />
       <List>
-        <ListItem button onClick={() => router.push('/orders')}>
+        <ListItemButton onClick={() => router.push('/orders')}>
           <ListItemIcon><AssignmentIcon /></ListItemIcon>
           <ListItemText primary="Orders" />
-        </ListItem>
-        <ListItem button onClick={() => router.push('/couriers')}>
+        </ListItemButton>
+        <ListItemButton onClick={() => router.push('/couriers')}>
           <ListItemIcon><LocalShippingIcon /></ListItemIcon>
           <ListItemText primary="Couriers" />
-        </ListItem>
-        <ListItem button onClick={() => router.push('/users')}>
+        </ListItemButton>
+        <ListItemButton onClick={() => router.push('/users')}>
           <ListItemIcon><PeopleIcon /></ListItemIcon>
           <ListItemText primary="Users" />
-        </ListItem>
+        </ListItemButton>
       </List>
     </div>
   );
@@ -75,4 +75,3 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </Box>
   );
 }
-
