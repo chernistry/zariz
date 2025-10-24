@@ -28,6 +28,7 @@ services:
       POSTGRES_PORT: 5432
       POSTGRES_DB: zariz
       API_JWT_SECRET: dev_secret_change_me_in_production
+      CORS_ALLOW_ORIGINS: "http://localhost:3000,http://localhost:3002,http://localhost:3003"
       GORUSH_URL: http://gorush:8088/api/push
       GORUSH_TOPIC: ${GORUSH_TOPIC:-com.example.zariz}
       GORUSH_SANDBOX: ${GORUSH_SANDBOX:-1}
