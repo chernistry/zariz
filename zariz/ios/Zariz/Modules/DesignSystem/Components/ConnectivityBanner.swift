@@ -7,9 +7,10 @@ final class ConnectivityMonitor {
     private let monitor = NWPathMonitor()
     private(set) var isConnected = true
     
-    init() {
-        monitor.pathUpdateHandler = { [weak self] path in
-            Task { @MainActor in
+    nonisolated init() {
+        let monitor = self.monitor
+        monitor.pathUpdateHandler = { path in
+            Task { @MainActor [weak self] in
                 self?.isConnected = path.status == .satisfied
             }
         }
