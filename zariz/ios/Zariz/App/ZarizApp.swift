@@ -10,11 +10,16 @@ struct ZarizApp: App {
     @UIApplicationDelegateAdaptor(PushManager.self) var pushManager
     @StateObject private var session = AppSession()
     @StateObject private var toast = ToastCenter()
+    @State private var isRestoringSession = true
 
     var body: some Scene {
         WindowGroup {
             Group {
-                if session.isAuthenticated {
+                if isRestoringSession {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .scaleEffect(1.5)
+                } else if session.isAuthenticated {
                     if session.role == .store {
                         StoreTabView()
                     } else {
@@ -32,11 +37,28 @@ struct ZarizApp: App {
                 alert: { toast.currentToast }
             )
             .id(session.languageCode)
-            .onAppear {
+            .task {
                 // Bootstrap session from Keychain (silent; no UI)
                 if let s = try? AuthKeychainStore.load(prompt: nil) {
+                    Telemetry.auth.info("auth.bootstrap.start userId=\(s.userId)")
                     let user = AuthenticatedUser(userId: s.userId, role: UserRole(rawValue: s.role) ?? .courier, storeIds: s.storeIds, identifier: s.identifier)
-                    session.applyLogin(user: user)
+                    await AuthSession.shared.restoreUser(user)
+                    do {
+                        _ = try await AuthService.shared.refresh()
+                        await MainActor.run {
+                            session.applyLogin(user: user)
+                        }
+                        Telemetry.auth.info("auth.bootstrap.success")
+                    } catch {
+                        Telemetry.auth.error("auth.bootstrap.refresh_failed error=\(error.localizedDescription)")
+                        // Clear invalid session
+                        await AuthSession.shared.clear()
+                    }
+                } else {
+                    Telemetry.auth.info("auth.bootstrap.no_stored_session")
+                }
+                await MainActor.run {
+                    isRestoringSession = false
                 }
                 pushManager.registerForPush()
                 if session.storePickupAddress.isEmpty {

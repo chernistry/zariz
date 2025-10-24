@@ -41,6 +41,10 @@ actor AuthSession {
             NotificationCenter.default.post(name: .authSessionConfigured, object: user)
         }
     }
+    
+    func restoreUser(_ user: AuthenticatedUser) {
+        self.currentUser = user
+    }
 
     func clear() {
         accessToken = nil
