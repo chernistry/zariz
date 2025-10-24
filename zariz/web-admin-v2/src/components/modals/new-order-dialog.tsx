@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { listStores } from '@/lib/api';
+import { listStores, api } from '@/lib/api';
 import {
   Dialog,
   DialogContent,
@@ -58,10 +58,8 @@ export function NewOrderDialog({ open, onClose, onSuccess }: NewOrderDialogProps
     setLoading(true);
     
     try {
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/v1';
-      const res = await fetch(`${API_BASE}/orders`, {
+      await api('orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           store_id: Number(form.store_id),
           recipient_first_name: form.recipient_first_name,
@@ -76,8 +74,6 @@ export function NewOrderDialog({ open, onClose, onSuccess }: NewOrderDialogProps
           delivery_address: form.delivery_address || undefined
         })
       });
-      
-      if (!res.ok) throw new Error('Failed to create order');
       
       toast.success('Order created successfully');
       onSuccess();
