@@ -55,6 +55,12 @@ export function NewOrderDialog({ open, onClose, onSuccess }: NewOrderDialogProps
   
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    
+    if (!form.store_id) {
+      toast.error('Please select a store');
+      return;
+    }
+    
     setLoading(true);
     
     try {
@@ -114,17 +120,22 @@ export function NewOrderDialog({ open, onClose, onSuccess }: NewOrderDialogProps
             <Select
               value={form.store_id}
               onValueChange={(value) => setForm({ ...form, store_id: value })}
-              required
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select store" />
               </SelectTrigger>
               <SelectContent>
-                {stores.map((store) => (
-                  <SelectItem key={store.id} value={String(store.id)}>
-                    {store.name}
+                {stores.length === 0 ? (
+                  <SelectItem value="none" disabled>
+                    No stores available
                   </SelectItem>
-                ))}
+                ) : (
+                  stores.map((store) => (
+                    <SelectItem key={store.id} value={String(store.id)}>
+                      {store.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
