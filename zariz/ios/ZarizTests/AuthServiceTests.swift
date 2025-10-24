@@ -19,7 +19,7 @@ final class AuthServiceTests: XCTestCase {
         let rnow = ISO8601DateFormatter().string(from: Date().addingTimeInterval(86400))
         MockURLProtocol.requestHandler = { request in
             guard request.url?.absoluteString.contains("/auth/login_password") == true else { throw URLError(.badURL) }
-            let token = Self.makeJWT(sub: "u1", role: "courier", exp: Int(Date().addingTimeInterval(3600).timeIntervalSince1970), storeIds: [1])
+            let token = MockURLProtocol.makeJWT(sub: "u1", role: "courier", exp: Int(Date().addingTimeInterval(3600).timeIntervalSince1970), storeIds: [1])
             let json = """
             {"access_token":"\(token)","refresh_token":"r1"}
             """.data(using: .utf8)!

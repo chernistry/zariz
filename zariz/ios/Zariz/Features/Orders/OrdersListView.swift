@@ -13,7 +13,7 @@ struct OrdersListView: View {
         ZStack {
             DS.Color.background.ignoresSafeArea()
             ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.xl) {
+                VStack(alignment: .leading, spacing: DS.Spacing.md) {
                     heroHeader
                     Picker("", selection: $selectedTab) {
                         Text("filter_new").tag(0)
@@ -26,8 +26,9 @@ struct OrdersListView: View {
 
                     ordersSection
                 }
-                .padding(.horizontal, DS.Spacing.xl)
-                .padding(.vertical, DS.Spacing.xl)
+                .padding(.horizontal, DS.Spacing.lg)
+                .padding(.top, DS.Spacing.sm)
+                .padding(.bottom, DS.Spacing.xl)
             }
             .refreshable {
                 isLoading = true
@@ -36,7 +37,7 @@ struct OrdersListView: View {
             }
         }
         .navigationDestination(for: Int.self) { id in OrderDetailView(orderId: id) }
-        .navigationTitle("orders")
+        .navigationBarTitleDisplayMode(.inline)
         .globalNavToolbar()
         .task {
             await MainActor.run { ModelContextHolder.shared.context = ctx }
@@ -117,24 +118,23 @@ struct OrdersListView: View {
 
     private var heroHeader: some View {
         Card {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                        Text("orders_hero_title")
-                            .font(DS.Font.title)
-                            .foregroundStyle(DS.Color.textPrimary)
-                        Text("orders_hero_subtitle")
-                            .font(DS.Font.body)
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                    Spacer()
+            HStack(alignment: .center, spacing: DS.Spacing.md) {
+                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                    Text("orders_hero_title")
+                        .font(DS.Font.headline)
+                        .foregroundStyle(DS.Color.textPrimary)
+                    Text("orders_hero_subtitle")
+                        .font(DS.Font.caption)
+                        .foregroundStyle(DS.Color.textSecondary)
                 }
+                Spacer()
                 Image("OrdersHero")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(height: 120)
+                    .frame(width: 60, height: 60)
                     .clipShape(RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous))
             }
+            .padding(DS.Spacing.md)
         }
     }
 
@@ -144,18 +144,16 @@ struct OrdersListView: View {
         let activeCount = ordersFiltered(.active).count
 
         return ViewThatFits(in: .horizontal) {
-            HStack(spacing: DS.Spacing.md) {
+            HStack(spacing: DS.Spacing.sm) {
                 summaryChips(total: total, newCount: newCount, activeCount: activeCount)
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, DS.Spacing.sm)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: DS.Spacing.md) {
+                HStack(spacing: DS.Spacing.sm) {
                     summaryChips(total: total, newCount: newCount, activeCount: activeCount)
                 }
-                .padding(.horizontal, DS.Spacing.md)
-                .padding(.vertical, DS.Spacing.sm)
+                .padding(.horizontal, DS.Spacing.sm)
             }
         }
     }
@@ -197,20 +195,20 @@ private struct SummaryChip: View {
     let value: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(titleKey)
                 .font(DS.Font.caption)
                 .foregroundStyle(DS.Color.textSecondary)
             Text("\(value)")
-                .font(DS.Font.numeric(weight: .bold))
+                .font(DS.Font.body)
                 .foregroundStyle(DS.Color.textPrimary)
         }
-        .padding(.vertical, DS.Spacing.md)
-        .padding(.horizontal, DS.Spacing.lg)
+        .padding(.vertical, DS.Spacing.sm)
+        .padding(.horizontal, DS.Spacing.md)
         .background(
-            RoundedRectangle(cornerRadius: DS.Radius.large, style: .continuous)
+            RoundedRectangle(cornerRadius: DS.Radius.medium, style: .continuous)
                 .fill(DS.Color.surfaceElevated)
-                .shadow(color: DS.Color.brandPrimary.opacity(0.08), radius: 12, x: 0, y: 6)
+                .shadow(color: DS.Color.brandPrimary.opacity(0.08), radius: 8, x: 0, y: 4)
         )
     }
 }

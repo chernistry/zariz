@@ -30,7 +30,7 @@ final class AuthSessionConcurrencyTests: XCTestCase {
             }
             refreshCallCount += 1
             let token = MockURLProtocol.makeJWT(sub: "u1", role: "courier", exp: Int(Date().addingTimeInterval(3600).timeIntervalSince1970), storeIds: [1])
-            let json = "{" + "\"access_token\":\"\(token)\",\"refresh_token\":\"r1\"}".data(using: .utf8)!
+            let json = "{\"access_token\":\"\(token)\",\"refresh_token\":\"r1\"}".data(using: .utf8)!
             let resp = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
             return (resp, json)
         }

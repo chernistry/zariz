@@ -48,6 +48,7 @@ enum DS {
         static let display = SwiftUI.Font.system(size: 36, weight: .bold, design: .rounded)
         static let largeTitle = SwiftUI.Font.system(size: 28, weight: .bold, design: .rounded)
         static let title = SwiftUI.Font.system(size: 22, weight: .semibold, design: .rounded)
+        static let headline = SwiftUI.Font.system(size: 17, weight: .semibold, design: .rounded)
         static let body = SwiftUI.Font.system(size: 17, weight: .regular, design: .rounded)
         static let caption = SwiftUI.Font.system(size: 13, weight: .medium, design: .rounded)
 
