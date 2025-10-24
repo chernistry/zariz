@@ -12,13 +12,51 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 
 export function UserNav() {
   const router = useRouter();
-  // Placeholder user - will be replaced with real auth in TICKET-22
-  const user = {
-    fullName: 'Admin User',
-    emailAddresses: [{ emailAddress: 'admin@zariz.local' }],
+  const { user, logout } = useAuth();
+  
+  async function handleLogout() {
+    await logout();
+    router.push('/auth/login');
+  }
+  
+  if (!user) {
+    // Fallback for SSR or loading state
+    const placeholderUser = {
+      fullName: 'Admin User',
+      emailAddresses: [{ emailAddress: 'admin@zariz.local' }],
+      imageUrl: undefined
+    };
+    
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
+            <UserAvatarProfile user={placeholderUser} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className='w-56'
+          align='end'
+          sideOffset={10}
+          forceMount
+        >
+          <DropdownMenuLabel className='font-normal'>
+            <div className='flex flex-col space-y-1'>
+              <p className='text-sm leading-none font-medium'>Loading...</p>
+            </div>
+          </DropdownMenuLabel>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+  
+  const displayUser = {
+    fullName: user.name,
+    emailAddresses: [{ emailAddress: user.email }],
     imageUrl: undefined
   };
 
@@ -26,7 +64,7 @@ export function UserNav() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
-          <UserAvatarProfile user={user} />
+          <UserAvatarProfile user={displayUser} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -38,10 +76,10 @@ export function UserNav() {
         <DropdownMenuLabel className='font-normal'>
           <div className='flex flex-col space-y-1'>
             <p className='text-sm leading-none font-medium'>
-              {user.fullName}
+              {user.name}
             </p>
             <p className='text-muted-foreground text-xs leading-none'>
-              {user.emailAddresses[0].emailAddress}
+              {user.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -55,7 +93,7 @@ export function UserNav() {
           <DropdownMenuItem>New Team</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push('/auth/login')}>
+        <DropdownMenuItem onClick={handleLogout}>
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

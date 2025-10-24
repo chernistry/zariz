@@ -1,7 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export default function middleware(req: NextRequest) {
-  // Placeholder - will implement auth check in TICKET-22
+export default async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  
+  // Allow public routes
+  if (pathname.startsWith('/auth/login') || pathname.startsWith('/api/auth')) {
+    return NextResponse.next();
+  }
+  
+  // Protect dashboard routes
+  if (pathname.startsWith('/dashboard')) {
+    const refreshToken = req.cookies.get('refresh_token')?.value;
+    
+    if (!refreshToken) {
+      return NextResponse.redirect(new URL('/auth/login', req.url));
+    }
+  }
+  
   return NextResponse.next();
 }
 

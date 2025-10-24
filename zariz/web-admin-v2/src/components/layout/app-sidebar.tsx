@@ -31,6 +31,7 @@ import {
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
 import { navItems } from '@/constants/data';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useAuth } from '@/hooks/use-auth';
 import {
   IconBell,
   IconChevronRight,
@@ -60,15 +61,26 @@ const tenants = [
 export default function AppSidebar() {
   const pathname = usePathname();
   const { isOpen } = useMediaQuery();
-  // Placeholder user - will be replaced with real auth in TICKET-22
-  const user = {
-    fullName: 'Admin User',
-    emailAddresses: [{ emailAddress: 'admin@zariz.local' }],
-    imageUrl: undefined
-  };
+  const { user, logout } = useAuth();
   const router = useRouter();
   const handleSwitchTenant = (_tenantId: string) => {
     // Tenant switching functionality would be implemented here
+  };
+  
+  async function handleLogout() {
+    await logout();
+    router.push('/auth/login');
+  }
+  
+  // Fallback user for SSR/loading
+  const displayUser = user ? {
+    fullName: user.name,
+    emailAddresses: [{ emailAddress: user.email }],
+    imageUrl: undefined
+  } : {
+    fullName: 'Admin User',
+    emailAddresses: [{ emailAddress: 'admin@zariz.local' }],
+    imageUrl: undefined
   };
 
   const activeTenant = tenants[0];
@@ -155,13 +167,11 @@ export default function AppSidebar() {
                   size='lg'
                   className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
                 >
-                  {user && (
-                    <UserAvatarProfile
-                      className='h-8 w-8 rounded-lg'
-                      showInfo
-                      user={user}
-                    />
-                  )}
+                  <UserAvatarProfile
+                    className='h-8 w-8 rounded-lg'
+                    showInfo
+                    user={displayUser}
+                  />
                   <IconChevronsDown className='ml-auto size-4' />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
@@ -173,13 +183,11 @@ export default function AppSidebar() {
               >
                 <DropdownMenuLabel className='p-0 font-normal'>
                   <div className='px-1 py-1.5'>
-                    {user && (
-                      <UserAvatarProfile
-                        className='h-8 w-8 rounded-lg'
-                        showInfo
-                        user={user}
-                      />
-                    )}
+                    <UserAvatarProfile
+                      className='h-8 w-8 rounded-lg'
+                      showInfo
+                      user={displayUser}
+                    />
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -201,7 +209,7 @@ export default function AppSidebar() {
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/auth/login')}>
+                <DropdownMenuItem onClick={handleLogout}>
                   <IconLogout className='mr-2 h-4 w-4' />
                   Log out
                 </DropdownMenuItem>
