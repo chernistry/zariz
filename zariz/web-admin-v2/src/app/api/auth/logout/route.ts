@@ -10,9 +10,9 @@ export async function POST(req: NextRequest) {
       await fetch(`${API_BASE}/auth/logout`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${refreshToken}`
-        }
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ refresh_token: refreshToken })
       }).catch(() => {});
     }
     
