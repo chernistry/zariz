@@ -53,12 +53,21 @@ extension OrderDetailView {
         if let order = items.first, let action = actionConfiguration(for: order) {
             VStack(spacing: 0) {
                 Divider().background(DS.Color.divider)
-                SlideToConfirmSlider(
-                    prompt: localized(action.promptKey),
-                    confirmationPrompt: localized("release_to_confirm"),
-                    isEnabled: action.isEnabled && !isPerformingAction,
-                    onActivated: action.trigger
-                )
+                ZStack {
+                    SlideToConfirmSlider(
+                        prompt: localized(action.promptKey),
+                        confirmationPrompt: localized("release_to_confirm"),
+                        isEnabled: action.isEnabled && !isPerformingAction,
+                        onActivated: action.trigger
+                    )
+                    .opacity(isPerformingAction ? 0.5 : 1)
+                    
+                    if isPerformingAction {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .tint(DS.Color.brandPrimary)
+                    }
+                }
                 .frame(height: 64)
                 .padding(.horizontal, DS.Spacing.lg)
                 .padding(.vertical, DS.Spacing.md)

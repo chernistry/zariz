@@ -126,6 +126,39 @@ struct GhostButtonStyle: ButtonStyle {
     }
 }
 
+struct LoadingButtonStyle: ButtonStyle {
+    @Binding var isLoading: Bool
+    
+    func makeBody(configuration: Configuration) -> some View {
+        ZStack {
+            configuration.label
+                .opacity(isLoading ? 0 : 1)
+            if isLoading {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .tint(.white)
+            }
+        }
+        .font(DS.Font.body.weight(.semibold))
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(
+            DS.Gradient.accent
+                .opacity(configuration.isPressed || isLoading ? 0.8 : 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.medium))
+        .animation(.easeInOut(duration: 0.2), value: isLoading)
+        .disabled(isLoading)
+    }
+}
+
+extension ButtonStyle where Self == LoadingButtonStyle {
+    static func loading(isLoading: Binding<Bool>) -> LoadingButtonStyle {
+        LoadingButtonStyle(isLoading: isLoading)
+    }
+}
+
 struct Card<Content: View>: View {
     private let content: Content
     init(@ViewBuilder content: () -> Content) { self.content = content() }
