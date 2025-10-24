@@ -158,3 +158,6 @@ Acceptance Checklist
 ✅ Thorough Testing: The test suite covers happy paths, edge cases, and malicious scenarios. Tests assert expected outputs and state changes, including for unusual inputs. All new features have associated tests, and no known critical bug is untested. Tests are reliable (no flickering tests) and maintainable.
 
 ✅ No Undocumented Modules: There are no hidden local ML models, no unvetted scripts, and no hardcoded prompt or policy content lingering in the code. All configuration is loaded from designated sources, and all machine learning or AI behavior is through official channels (e.g., calls to approved APIs). The codebase conforms to the No-Heuristic/No-Hardcode rules above in letter and spirit.
+
+
+Build with cd /Users/sasha/IdeaProjects/ios/zariz/ios && xcodebuild -project Zariz.xcodeproj -scheme Zariz -destination 'platform=iOS Simulator,name=iPhone 17' build 2>&1 | grep -E "(error:|warning:|BUILD SUCCEEDED|BUILD FAILED)" | tail -5

@@ -2,13 +2,14 @@ import SwiftUI
 import Network
 
 @Observable
+@MainActor
 final class ConnectivityMonitor {
     private let monitor = NWPathMonitor()
     private(set) var isConnected = true
     
     init() {
         monitor.pathUpdateHandler = { [weak self] path in
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self?.isConnected = path.status == .satisfied
             }
         }
@@ -21,13 +22,13 @@ final class ConnectivityMonitor {
 }
 
 struct ConnectivityBanner: View {
-    @State private var connectivity = ConnectivityMonitor()
+    @Environment(ConnectivityMonitor.self) private var connectivity
     
     var body: some View {
         if !connectivity.isConnected {
             HStack(spacing: DS.Spacing.sm) {
                 Image(systemName: "wifi.slash")
-                Text("No Internet Connection")
+                Text("connectivity_offline")
                     .font(DS.Font.caption)
             }
             .foregroundStyle(.white)
@@ -38,3 +39,4 @@ struct ConnectivityBanner: View {
         }
     }
 }
+

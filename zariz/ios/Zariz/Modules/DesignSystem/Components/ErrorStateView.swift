@@ -11,7 +11,7 @@ struct ErrorStateView: View {
                 .foregroundStyle(DS.Color.error)
             
             VStack(spacing: DS.Spacing.xs) {
-                Text("Something Went Wrong")
+                Text("error_title")
                     .font(DS.Font.title)
                     .foregroundStyle(DS.Color.textPrimary)
                 
@@ -22,9 +22,9 @@ struct ErrorStateView: View {
             }
             
             Button(action: retryAction) {
-                Label("Try Again", systemImage: "arrow.clockwise")
+                Label("error_retry", systemImage: "arrow.clockwise")
             }
-            .buttonStyle(.primary)
+            .buttonStyle(PrimaryButtonStyle())
             .frame(maxWidth: 280)
         }
         .padding(DS.Spacing.xl)
