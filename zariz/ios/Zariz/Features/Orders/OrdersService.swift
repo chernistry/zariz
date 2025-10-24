@@ -199,7 +199,7 @@ actor OrdersService {
         if demoRole(from: try? KeychainTokenStore.load(prompt: "Authenticate to sync orders")) != nil {
             let list: [OrderDTO] = [
                 .init(id: 1, storeId: 1, courierId: nil, status: "new", pickupAddress: "Warehouse A", deliveryAddress: "Main St 12", recipientFirstName: "Noa", recipientLastName: "Levi", phone: "+972500000001", street: "Main", buildingNumber: "12", floor: "2", apartment: "5", boxesCount: 4, boxesMultiplier: 1, priceTotal: 35),
-                .init(id: 2, storeId: 1, courierId: 101, status: "claimed", pickupAddress: "Warehouse A", deliveryAddress: "Elm St 5", recipientFirstName: "Lior", recipientLastName: "Bar", phone: "+972500000002", street: "Elm", buildingNumber: "5", floor: "1", apartment: "1", boxesCount: 10, boxesMultiplier: 2, priceTotal: 70),
+                .init(id: 2, storeId: 1, courierId: 101, status: "accepted", pickupAddress: "Warehouse A", deliveryAddress: "Elm St 5", recipientFirstName: "Lior", recipientLastName: "Bar", phone: "+972500000002", street: "Elm", buildingNumber: "5", floor: "1", apartment: "1", boxesCount: 10, boxesMultiplier: 2, priceTotal: 70),
                 .init(id: 3, storeId: 2, courierId: 102, status: "picked_up", pickupAddress: "Warehouse C", deliveryAddress: "Pine Ave 9", recipientFirstName: "Anna", recipientLastName: "Cohen", phone: "+972500000003", street: "Pine", buildingNumber: "9", floor: "", apartment: "", boxesCount: 18, boxesMultiplier: 3, priceTotal: 105)
             ]
             let stats = await MainActor.run { () -> SyncStats in
@@ -283,19 +283,19 @@ actor OrdersService {
         }
     }
 
-    func claim(id: Int) async throws {
+    func accept(id: Int) async throws {
         if demoRole(from: try? KeychainTokenStore.load(prompt: "Authenticate to sync orders")) != nil {
             await MainActor.run {
                 guard let context = ModelContextHolder.shared.context else { return }
                 let fetch = FetchDescriptor<OrderEntity>(predicate: #Predicate { $0.id == id })
-                if let existing = try? context.fetch(fetch).first, ["new", "assigned"].contains(existing.status) {
-                    existing.status = "claimed"
+                if let existing = try? context.fetch(fetch).first, existing.status == "assigned" {
+                    existing.status = "accepted"
                     try? context.save()
                 }
             }
             return
         }
-        let req = await authorizedRequest(path: "orders/\(id)/claim", method: "POST", body: nil, idempotencyKey: UUID().uuidString)
+        let req = await authorizedRequest(path: "orders/\(id)/accept", method: "POST", body: nil, idempotencyKey: UUID().uuidString)
         _ = try await URLSession.shared.data(for: req)
         await sync()
     }
@@ -324,7 +324,7 @@ actor OrdersService {
                 let fetch = FetchDescriptor<OrderEntity>(predicate: #Predicate { $0.id == id })
                 if let existing = try? context.fetch(fetch).first {
                     let allowed: [String: Set<String>] = [
-                        "claimed": ["picked_up", "canceled"],
+                        "accepted": ["picked_up", "canceled"],
                         "picked_up": ["delivered", "canceled"],
                     ]
                     if allowed[existing.status, default: []].contains(status) {

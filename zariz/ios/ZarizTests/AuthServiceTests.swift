@@ -47,7 +47,7 @@ final class AuthServiceTests: XCTestCase {
 }
 
 final class MockURLProtocol: URLProtocol {
-    static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+    nonisolated(unsafe) static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
     static func makeJWT(sub: String, role: String, exp: Int, storeIds: [Int]?) -> String {
         func b64url(_ data: Data) -> String {
             data.base64EncodedString().replacingOccurrences(of: "+", with: "-")

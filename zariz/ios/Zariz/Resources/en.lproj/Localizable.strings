@@ -49,12 +49,12 @@
 "invalid_demo_login" = "Enter courier, store or admin to continue.";
 "status_new" = "New";
 "status_assigned" = "Assigned";
-"status_claimed" = "Claimed";
+"status_accepted" = "Accepted";
 "status_picked_up" = "Picked";
 "status_delivered" = "Delivered";
 "status_canceled" = "Canceled";
 "cancel" = "Cancel";
-"toast_claimed" = "Order claimed";
+"toast_accepted" = "Order accepted";
 "toast_picked_up" = "Order picked up";
 "toast_delivered" = "Order delivered";
 "toast_generic_error" = "Something went wrong. Try again.";

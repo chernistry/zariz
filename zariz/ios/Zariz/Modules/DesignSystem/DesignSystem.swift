@@ -32,7 +32,7 @@ enum DS {
         static let divider = SwiftUI.Color.white.opacity(0.12)
 
         static let statusNew = SwiftUI.Color(red: 0.96, green: 0.58, blue: 0.25)
-        static let statusClaimed = SwiftUI.Color(red: 0.25, green: 0.64, blue: 0.96)
+        static let statusAccepted = SwiftUI.Color(red: 0.25, green: 0.64, blue: 0.96)
         static let statusPicked = SwiftUI.Color(red: 0.53, green: 0.37, blue: 0.94)
         static let statusDelivered = SwiftUI.Color(red: 0.30, green: 0.73, blue: 0.42)
         static let statusCanceled = SwiftUI.Color(red: 0.92, green: 0.32, blue: 0.32)

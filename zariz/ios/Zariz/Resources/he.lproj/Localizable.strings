@@ -48,12 +48,12 @@
 "delivered" = "נמסר";
 "invalid_demo_login" = "הזינו courier, store או admin.";
 "status_new" = "חדש";
-"status_claimed" = "נתפס";
+"status_accepted" = "התקבל";
 "status_picked_up" = "נאסף";
 "status_delivered" = "נמסר";
 "status_canceled" = "בוטל";
 "cancel" = "ביטול";
-"toast_claimed" = "ההזמנה נתפסה";
+"toast_accepted" = "ההזמנה התקבלה";
 "toast_picked_up" = "ההזמנה נאספה";
 "toast_delivered" = "ההזמנה נמסרה";
 "toast_generic_error" = "אירעה שגיאה. נסו שוב.";

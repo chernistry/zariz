@@ -22,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { EditCourierDialog } from '@/components/modals/edit-courier-dialog';
 import { toast } from 'sonner';
 import { IconDotsVertical, IconPlus } from '@tabler/icons-react';
 
@@ -31,6 +32,7 @@ export default function CouriersPage() {
   const [courierLoads, setCourierLoads] = useState<Map<number, CourierInfo>>(new Map());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [editCourierId, setEditCourierId] = useState<number | null>(null);
   
   async function refresh() {
     try {
@@ -164,9 +166,7 @@ export default function CouriersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() =>
-                              router.push(`/dashboard/couriers/${courier.id}`)
-                            }
+                            onClick={() => setEditCourierId(courier.id)}
                           >
                             Edit
                           </DropdownMenuItem>
@@ -196,6 +196,13 @@ export default function CouriersPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      <EditCourierDialog
+        open={editCourierId !== null}
+        courierId={editCourierId}
+        onClose={() => setEditCourierId(null)}
+        onSuccess={refresh}
+      />
     </div>
   );
 }

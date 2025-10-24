@@ -21,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { EditStoreDialog } from '@/components/modals/edit-store-dialog';
 import { toast } from 'sonner';
 import { IconDotsVertical, IconPlus } from '@tabler/icons-react';
 
@@ -29,6 +30,7 @@ export default function StoresPage() {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [editStoreId, setEditStoreId] = useState<number | null>(null);
   
   async function refresh() {
     try {
@@ -136,9 +138,7 @@ export default function StoresPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() =>
-                              router.push(`/dashboard/stores/${store.id}`)
-                            }
+                            onClick={() => setEditStoreId(store.id)}
                           >
                             Edit
                           </DropdownMenuItem>
@@ -167,6 +167,13 @@ export default function StoresPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      <EditStoreDialog
+        open={editStoreId !== null}
+        storeId={editStoreId}
+        onClose={() => setEditStoreId(null)}
+        onSuccess={refresh}
+      />
     </div>
   );
 }

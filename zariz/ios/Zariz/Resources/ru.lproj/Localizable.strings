@@ -48,12 +48,12 @@
 "delivered" = "Доставил";
 "invalid_demo_login" = "Введите courier, store или admin.";
 "status_new" = "Новый";
-"status_claimed" = "Взято";
+"status_accepted" = "Принят";
 "status_picked_up" = "Забран";
 "status_delivered" = "Доставлен";
 "status_canceled" = "Отменён";
 "cancel" = "Отмена";
-"toast_claimed" = "Заказ взят";
+"toast_accepted" = "Заказ принят";
 "toast_picked_up" = "Заказ забран";
 "toast_delivered" = "Заказ доставлен";
 "toast_generic_error" = "Ошибка. Попробуйте снова.";

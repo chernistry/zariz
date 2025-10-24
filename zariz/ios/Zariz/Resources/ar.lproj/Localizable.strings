@@ -48,12 +48,12 @@
 "delivered" = "تم التسليم";
 "invalid_demo_login" = "أدخل courier أو store أو admin.";
 "status_new" = "جديد";
-"status_claimed" = "تم الاستلام";
+"status_accepted" = "مقبول";
 "status_picked_up" = "تم الالتقاط";
 "status_delivered" = "تم التسليم";
 "status_canceled" = "أُلغي";
 "cancel" = "إلغاء";
-"toast_claimed" = "تم استلام الطلب";
+"toast_accepted" = "تم قبول الطلب";
 "toast_picked_up" = "تم التقاط الطلب";
 "toast_delivered" = "تم تسليم الطلب";
 "toast_generic_error" = "حدث خطأ، حاول مرة أخرى.";

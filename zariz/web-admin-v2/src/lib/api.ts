@@ -187,3 +187,23 @@ export async function getCourierLoad(id: number): Promise<CourierInfo> {
   return api(`couriers/${id}/load`);
 }
 
+export async function setCourierCredentials(
+  id: number,
+  credentials: { email?: string; phone?: string; password?: string }
+): Promise<{ ok: boolean }> {
+  return api(`admin/couriers/${id}/credentials`, {
+    method: 'POST',
+    body: JSON.stringify(credentials)
+  });
+}
+
+export async function setStoreCredentials(
+  id: number,
+  credentials: { email?: string; phone?: string; password?: string }
+): Promise<{ ok: boolean }> {
+  return api(`admin/stores/${id}/credentials`, {
+    method: 'POST',
+    body: JSON.stringify(credentials)
+  });
+}
+

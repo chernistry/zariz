@@ -69,15 +69,15 @@ extension OrderDetailView {
         }
     }
 
-    private func performClaim(orderId: Int) {
+    private func performAccept(orderId: Int) {
         guard !isPerformingAction else { return }
         isPerformingAction = true
         Task {
             do {
-                try await OrdersService.shared.claim(id: orderId)
+                try await OrdersService.shared.accept(id: orderId)
                 await MainActor.run {
                     Haptics.success()
-                    toast.show("toast_claimed", style: .success)
+                    toast.show("toast_accepted", style: .success)
                     isPerformingAction = false
                 }
                 try? await Task.sleep(nanoseconds: 500_000_000)
@@ -148,15 +148,11 @@ private extension OrderDetailView {
 
     func actionConfiguration(for order: OrderEntity) -> ActionConfiguration? {
         switch order.status {
-        case "new":
-            return ActionConfiguration(promptKey: "slide_to_claim", isEnabled: true) {
-                performClaim(orderId: orderId)
-            }
         case "assigned":
             return ActionConfiguration(promptKey: "slide_to_accept", isEnabled: true) {
-                performClaim(orderId: orderId)
+                performAccept(orderId: orderId)
             }
-        case "claimed":
+        case "accepted":
             return ActionConfiguration(promptKey: "slide_to_pickup", isEnabled: true) {
                 performStatusUpdate("picked_up")
             }
@@ -320,13 +316,13 @@ private struct SectionRow: View {
 }
 
 private enum OrderStatusStep: CaseIterable {
-    case new, assigned, claimed, picked, delivered
+    case new, assigned, accepted, picked, delivered
 
     var localizedTitle: LocalizedStringKey {
         switch self {
         case .new: return "status_new"
         case .assigned: return "status_assigned"
-        case .claimed: return "status_claimed"
+        case .accepted: return "status_accepted"
         case .picked: return "status_picked_up"
         case .delivered: return "status_delivered"
         }
@@ -344,7 +340,7 @@ private enum OrderStatusStep: CaseIterable {
         return current == statusIndex
     }
 
-    private static let sequence: [String] = ["new", "assigned", "claimed", "picked_up", "delivered"]
+    private static let sequence: [String] = ["new", "assigned", "accepted", "picked_up", "delivered"]
 }
 
 private struct TimelineRow: View {
@@ -380,7 +376,7 @@ extension String {
         switch self {
         case "new": return String(localized: "status_new")
         case "assigned": return String(localized: "status_assigned")
-        case "claimed": return String(localized: "status_claimed")
+        case "accepted": return String(localized: "status_accepted")
         case "picked_up": return String(localized: "status_picked_up")
         case "delivered": return String(localized: "status_delivered")
         case "canceled": return String(localized: "status_canceled")
@@ -392,7 +388,7 @@ extension String {
         switch self {
         case "new": return DS.Color.statusNew
         case "assigned": return DS.Color.statusNew
-        case "claimed": return DS.Color.statusClaimed
+        case "accepted": return DS.Color.statusAccepted
         case "picked_up": return DS.Color.statusPicked
         case "delivered": return DS.Color.statusDelivered
         case "canceled": return DS.Color.statusCanceled

@@ -29,6 +29,16 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { AssignCourierDialog } from '@/components/modals/assign-courier-dialog';
 import { NewOrderDialog } from '@/components/modals/new-order-dialog';
 import { ViewOrderDialog } from '@/components/modals/view-order-dialog';
@@ -57,6 +67,7 @@ export default function OrdersPage() {
   const [assignFor, setAssignFor] = useState<number | string | null>(null);
   const [showNewOrder, setShowNewOrder] = useState(false);
   const [viewOrderId, setViewOrderId] = useState<number | string | null>(null);
+  const [deleteOrderId, setDeleteOrderId] = useState<number | string | null>(null);
   
   const refresh = useCallback(async () => {
     try {
@@ -136,11 +147,16 @@ export default function OrdersPage() {
   }
   
   async function handleDelete(id: number | string) {
-    if (!confirm(`Delete order #${id}? This cannot be undone.`)) return;
+    setDeleteOrderId(id);
+  }
+  
+  async function confirmDelete() {
+    if (!deleteOrderId) return;
     
     try {
-      await deleteOrder(id);
+      await deleteOrder(deleteOrderId);
       toast.success('Order deleted');
+      setDeleteOrderId(null);
       await refresh();
     } catch (error) {
       toast.error('Failed to delete order');
@@ -178,7 +194,7 @@ export default function OrdersPage() {
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="new">New</SelectItem>
                 <SelectItem value="assigned">Assigned</SelectItem>
-                <SelectItem value="claimed">Claimed</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
                 <SelectItem value="picked_up">Picked up</SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>
                 <SelectItem value="canceled">Canceled</SelectItem>
@@ -326,6 +342,23 @@ export default function OrdersPage() {
         onClose={() => setViewOrderId(null)}
         onSuccess={refresh}
       />
+      
+      <AlertDialog open={deleteOrderId !== null} onOpenChange={(open) => !open && setDeleteOrderId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete order #{deleteOrderId}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

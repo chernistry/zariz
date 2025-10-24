@@ -54,7 +54,7 @@ def list_orders(
 ):
     q = select(Order)
     if status_filter:
-        if status_filter not in {"new", "assigned", "claimed", "picked_up", "delivered", "canceled"}:
+        if status_filter not in {"new", "assigned", "accepted", "picked_up", "delivered", "canceled"}:
             raise HTTPException(status_code=400, detail="Invalid status filter")
         q = q.where(Order.status == status_filter)
     # Object-level access + explicit filters
@@ -76,8 +76,8 @@ def list_orders(
             courier_id = int(sub)
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid courier id")
-        from sqlalchemy import or_
-        q = q.where(or_(Order.courier_id == courier_id, Order.status == "new"))
+        # Courier can only see orders assigned to them
+        q = q.where(Order.courier_id == courier_id)
     else:
         # Admin can filter by store/courier
         if store is not None:
@@ -254,7 +254,8 @@ def get_order(order_id: int, db: Session = Depends(get_db), identity: dict = Dep
             courier_id = int(sub)
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid courier id")
-        if o.courier_id not in (None, courier_id) and o.status != "new":
+        # Courier can only see orders assigned to them
+        if o.courier_id != courier_id:
             raise HTTPException(status_code=403, detail="Forbidden")
     return OrderRead(
         id=o.id,
@@ -351,8 +352,8 @@ def _parse_int(s: str) -> Optional[int]:
 
 
 @limiter.limit("20/minute")
-@router.post("/{order_id}/claim")
-def claim_order(
+@router.post("/{order_id}/accept")
+def accept_order(
     order_id: int,
     db: Session = Depends(get_db),
     identity: dict = Depends(require_role("courier")),
@@ -377,7 +378,7 @@ def claim_order(
     load = (
         db.execute(
             select(func.coalesce(func.sum(Order.boxes_count), 0)).where(
-                Order.courier_id == courier_id, Order.status.in_(["claimed", "picked_up"])
+                Order.courier_id == courier_id, Order.status.in_(["accepted", "picked_up"])
             )
         ).scalar()
         or 0
@@ -392,24 +393,22 @@ def claim_order(
         text(
             """
             UPDATE orders
-            SET status='claimed', courier_id=:cid
-            WHERE id=:id AND (
-                status='new' OR (status='assigned' AND courier_id=:cid)
-            )
+            SET status='accepted'
+            WHERE id=:id AND status='assigned' AND courier_id=:cid
             """
         ),
         {"cid": courier_id, "id": order_id},
     )
     if res.rowcount == 0:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Order already claimed or not found")
-    db.add(OrderEvent(order_id=order_id, type="claimed"))
+        raise HTTPException(status_code=409, detail="Order not assigned to you or already accepted")
+    db.add(OrderEvent(order_id=order_id, type="accepted"))
     db.commit()
-    events_bus.publish({"type": "order.claimed", "order_id": order_id, "courier_id": courier_id})
+    events_bus.publish({"type": "order.accepted", "order_id": order_id, "courier_id": courier_id})
     try:
         tokens = [t for (t,) in db.query(Device.token).filter(Device.platform == "ios").all()]
         for t in tokens:
-            send_silent(t, {"type": "order.claimed", "order_id": order_id})
+            send_silent(t, {"type": "order.accepted", "order_id": order_id})
     except Exception:
         pass
     out = {"ok": True}
@@ -448,11 +447,11 @@ def update_status(
         raise HTTPException(status_code=403, detail="Not allowed to update this order")
 
     allowed = {
-        "claimed": {"picked_up", "canceled"},
+        "accepted": {"picked_up", "canceled"},
         "picked_up": {"delivered", "canceled"},
     }
-    if o.status == "new":
-        raise HTTPException(status_code=400, detail="Claim first")
+    if o.status in {"new", "assigned"}:
+        raise HTTPException(status_code=400, detail="Accept first")
     next_status = payload.status
     if next_status not in allowed.get(o.status, set()):
         raise HTTPException(status_code=400, detail="Illegal transition")

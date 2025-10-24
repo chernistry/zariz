@@ -109,7 +109,7 @@ export function ViewOrderDialog({ open, orderId, onClose, onSuccess }: ViewOrder
                   <SelectContent>
                     <SelectItem value="new">New</SelectItem>
                     <SelectItem value="assigned">Assigned</SelectItem>
-                    <SelectItem value="claimed">Claimed</SelectItem>
+                    <SelectItem value="accepted">Accepted</SelectItem>
                     <SelectItem value="picked_up">Picked up</SelectItem>
                     <SelectItem value="delivered">Delivered</SelectItem>
                     <SelectItem value="canceled">Canceled</SelectItem>
