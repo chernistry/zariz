@@ -33,7 +33,7 @@ services:
       POSTGRES_DB: zariz
       API_JWT_SECRET: dev_secret_change_me_in_production
       CORS_ALLOW_ORIGINS: "http://localhost:3000,http://localhost:3002,http://localhost:3003"
-      GORUSH_URL: http://gorush:8088/api/push
+      # GORUSH_URL not set = push notifications disabled
       GORUSH_TOPIC: ${GORUSH_TOPIC:-com.example.zariz}
       GORUSH_SANDBOX: ${GORUSH_SANDBOX:-1}
     ports:
@@ -41,8 +41,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      gorush:
-        condition: service_started
     volumes:
       - ./backend:/app
     command: >

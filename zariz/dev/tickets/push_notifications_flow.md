@@ -1,4 +1,124 @@
-# Push Notifications Flow Documentation
+# Push Notifications & Real-time Updates Documentation
+
+## Current Architecture (Development)
+
+### Real-time Updates: SSE (Server-Sent Events)
+
+**Works ONLY when app is in foreground**
+
+```
+Backend → SSE stream (/events/sse) → iOS app (foreground) → Local notification
+```
+
+**Implementation:**
+- `SSEClient.swift` - HTTP connection with `text/event-stream`
+- `OrdersSyncManager.swift` - Manages SSE lifecycle
+- Connection opens when app enters foreground
+- Connection closes when app enters background (iOS limitation)
+
+**Limitations:**
+- ❌ Does NOT work when app is closed/background
+- ❌ Requires active HTTP connection
+- ✅ Works great for web admin (always foreground)
+- ✅ Instant updates when app is open
+
+### Background Updates: Polling
+
+**Fallback when SSE is not available**
+
+- Polls every 30 seconds (with jitter) when in foreground
+- No updates when app is in background
+- See `OrdersSyncManager.tick()`
+
+## Production Architecture (Requires Apple Developer Account)
+
+### APNs Push Notifications
+
+**Works even when app is closed**
+
+```
+Backend → Gorush Gateway → APNs → iOS Device → App wakes up → Fetch data
+```
+
+**Requirements:**
+1. **Apple Developer Account** ($99/year)
+2. **APNs Authentication Key** (.p8 file)
+3. **App Configuration** (Bundle ID, Team ID, Key ID)
+
+## Why Notifications Don't Work in Background
+
+### Current Behavior:
+- ✅ Notifications appear when app is OPEN (via SSE)
+- ❌ Notifications DON'T appear when app is CLOSED
+
+### Reason:
+iOS **terminates HTTP connections** when app goes to background. SSE is an HTTP connection, so it stops working.
+
+### Solution:
+Use **APNs Push Notifications** which work independently of app state.
+
+## How to Enable Real Push Notifications
+
+### Step 1: Get Apple Developer Account
+1. Sign up at https://developer.apple.com
+2. Pay $99/year membership fee
+3. Wait for approval (usually instant)
+
+### Step 2: Create APNs Key
+1. Go to https://developer.apple.com/account/resources/authkeys/list
+2. Click "+" to create new key
+3. Check "Apple Push Notifications service (APNs)"
+4. Click "Continue" → "Register"
+5. Download `AuthKey_XXXXXXXXXX.p8` file
+6. **IMPORTANT**: Save the file, you can only download it once!
+
+### Step 3: Get Required IDs
+- **Key ID**: 10 characters, shown after creating key (e.g., `AB12CD34EF`)
+- **Team ID**: Account → Membership (e.g., `XYZ1234567`)
+- **Bundle ID**: Your iOS app identifier (e.g., `com.zariz.app`)
+
+### Step 4: Configure Backend
+
+```bash
+# Copy the key file
+cp ~/Downloads/AuthKey_XXXXXXXXXX.p8 /Users/sasha/IdeaProjects/ios/zariz/dev/ops/gorush/keys/AuthKey.p8
+
+# Create .env file
+cat > /Users/sasha/IdeaProjects/ios/zariz/.env << EOF
+APNS_KEY_ID=AB12CD34EF
+APNS_TEAM_ID=XYZ1234567
+APNS_TOPIC=com.zariz.app
+GORUSH_IOS_MOCK=false
+APNS_USE_SANDBOX=1
+EOF
+
+# Restart services
+./run.sh restart
+```
+
+### Step 5: Update gorush.yml
+
+```yaml
+ios:
+  enabled: true
+  key_type: "p8"
+  key_path: "/config/AuthKey.p8"
+  key_id: "AB12CD34EF"
+  team_id: "XYZ1234567"
+  topic: "com.zariz.app"
+  production: false  # true for production builds
+  mock: false        # false for real push
+```
+
+### Step 6: Enable in docker-compose.yml
+
+```yaml
+backend:
+  environment:
+    GORUSH_URL: http://gorush:8088/api/push
+    GORUSH_TOPIC: com.zariz.app
+    GORUSH_SANDBOX: "1"  # "0" for production
+```
 
 ## Overview
 The Zariz system uses APNs (Apple Push Notification service) to deliver real-time notifications to iOS devices about order status changes.
