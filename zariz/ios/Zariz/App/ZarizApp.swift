@@ -10,6 +10,7 @@ struct ZarizApp: App {
     @UIApplicationDelegateAdaptor(PushManager.self) var pushManager
     @StateObject private var session = AppSession()
     @StateObject private var toast = ToastCenter()
+    @State private var connectivity = ConnectivityMonitor()
     @State private var isRestoringSession = true
 
     var body: some Scene {
@@ -69,6 +70,7 @@ struct ZarizApp: App {
         .modelContainer(for: [OrderEntity.self, OrderDraftEntity.self])
         .environmentObject(session)
         .environmentObject(toast)
+        .environment(connectivity)
         .environment(\.locale, session.locale)
         .environment(\.layoutDirection, session.isRTL ? .rightToLeft : .leftToRight)
         .backgroundTask(.appRefresh("app.zariz.orderUpdates")) {

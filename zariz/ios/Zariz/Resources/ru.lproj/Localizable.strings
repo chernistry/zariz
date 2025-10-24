@@ -105,3 +105,10 @@
 "orders_service_unavailable" = "Создание заказа недоступно для этой роли.";
 "orders_service_server_error" = "Ошибка сервера (%d).";
 "orders_service_unknown_error" = "Неизвестная ошибка.";
+
+/* Error States */
+"error_title" = "Что-то пошло не так";
+"error_retry" = "Попробовать снова";
+
+/* Connectivity */
+"connectivity_offline" = "Нет подключения к интернету";

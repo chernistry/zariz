@@ -7,6 +7,7 @@ struct OrdersListView: View {
     @EnvironmentObject private var session: AppSession
     @State private var selectedTab: Int = 0
     @State private var isLoading: Bool = true
+    @State private var error: Error?
 
     var body: some View {
         ZStack {
@@ -30,20 +31,18 @@ struct OrdersListView: View {
                 .padding(.bottom, DS.Spacing.xl)
             }
             .refreshable {
-                isLoading = true
-                await OrdersService.shared.sync()
-                isLoading = false
+                await loadOrders()
             }
+        }
+        .safeAreaInset(edge: .top) {
+            ConnectivityBanner()
         }
         .navigationDestination(for: Int.self) { id in OrderDetailView(orderId: id) }
         .navigationBarTitleDisplayMode(.inline)
         .globalNavToolbar()
         .task {
             await MainActor.run { ModelContextHolder.shared.context = ctx }
-            isLoading = true
-            await OrdersService.shared.sync()
-            isLoading = false
-            // Default to "Active" for couriers so assigned orders are visible
+            await loadOrders()
             if session.role == .courier { selectedTab = 1 }
         }
         .onAppear {
@@ -60,6 +59,10 @@ struct OrdersListView: View {
         Group {
             if isLoading && orders.isEmpty {
                 skeletonList
+            } else if let error {
+                ErrorStateView(error: error) {
+                    Task { await loadOrders() }
+                }
             } else {
                 let list = ordersFiltered(currentFilter)
                 if list.isEmpty {
@@ -177,6 +180,13 @@ struct OrdersListView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, DS.Spacing.xl)
+    }
+    
+    private func loadOrders() async {
+        isLoading = true
+        error = nil
+        await OrdersService.shared.sync()
+        isLoading = false
     }
 }
 

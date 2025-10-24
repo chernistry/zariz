@@ -105,3 +105,10 @@
 "orders_service_unavailable" = "إنشاء الطلب غير متاح لهذا الدور.";
 "orders_service_server_error" = "خطأ في الخادم (%d).";
 "orders_service_unknown_error" = "خطأ غير معروف.";
+
+/* Error States */
+"error_title" = "حدث خطأ ما";
+"error_retry" = "حاول مرة أخرى";
+
+/* Connectivity */
+"connectivity_offline" = "لا يوجد اتصال بالإنترنت";

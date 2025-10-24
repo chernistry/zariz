@@ -105,3 +105,10 @@
 "orders_service_unavailable" = "יצירת הזמנה אינה זמינה עבור תפקיד זה.";
 "orders_service_server_error" = "שגיאת שרת (%d).";
 "orders_service_unknown_error" = "שגיאה לא ידועה.";
+
+/* Error States */
+"error_title" = "משהו השתבש";
+"error_retry" = "נסה שוב";
+
+/* Connectivity */
+"connectivity_offline" = "אין חיבור לאינטרנט";
