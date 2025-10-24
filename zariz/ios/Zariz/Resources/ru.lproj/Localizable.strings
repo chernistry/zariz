@@ -112,3 +112,7 @@
 
 /* Connectivity */
 "connectivity_offline" = "Нет подключения к интернету";
+
+/* Badge Labels */
+"badge_new" = "Новый";
+"badge_tip" = "Совет";

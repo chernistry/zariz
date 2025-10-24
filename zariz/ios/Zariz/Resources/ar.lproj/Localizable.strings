@@ -112,3 +112,7 @@
 
 /* Connectivity */
 "connectivity_offline" = "لا يوجد اتصال بالإنترنت";
+
+/* Badge Labels */
+"badge_new" = "جديد";
+"badge_tip" = "نصيحة";

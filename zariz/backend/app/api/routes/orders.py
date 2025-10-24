@@ -190,8 +190,18 @@ def create_order(
     ev = OrderEvent(order_id=o.id, type="created")
     db.add(ev)
     db.commit()
-    # Emit event (SSE) and silent push
-    events_bus.publish({"type": "order.created", "order_id": o.id, "store_id": o.store_id})
+    # Emit event (SSE) and silent push with order details
+    event_data = {
+        "type": "order.created",
+        "order_id": o.id,
+        "store_id": o.store_id,
+        "pickup_address": o.pickup_address,
+        "delivery_address": delivery_address,
+        "boxes_count": o.boxes_count,
+        "price_total": o.price_total,
+        "created_at": o.created_at.isoformat() if o.created_at else None,
+    }
+    events_bus.publish(event_data)
     # Push to all devices (MVP); refine targeting later
     try:
         tokens = (

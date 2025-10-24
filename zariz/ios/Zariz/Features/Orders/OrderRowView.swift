@@ -29,6 +29,9 @@ struct OrderRowView: View {
                             .font(DS.Font.numeric())
                             .foregroundStyle(DS.Color.textPrimary)
                         badge(for: status)
+                        if status == "new" {
+                            BadgeView(type: .new)
+                        }
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.footnote)

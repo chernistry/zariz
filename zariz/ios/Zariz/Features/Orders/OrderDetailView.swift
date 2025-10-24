@@ -191,9 +191,14 @@ private extension OrderDetailView {
                         Text("\(String(localized: "order")) #\(order.id)")
                             .font(DS.Font.title)
                             .foregroundStyle(DS.Color.textPrimary)
-                        Text(order.status.localizedStatus)
-                            .font(DS.Font.body)
-                            .foregroundStyle(DS.Color.textSecondary)
+                        HStack(spacing: 8) {
+                            Text(order.status.localizedStatus)
+                                .font(DS.Font.body)
+                                .foregroundStyle(DS.Color.textSecondary)
+                            if order.status == "new" {
+                                BadgeView(type: .new)
+                            }
+                        }
                     }
                     Spacer()
                     StatusBadge(text: order.status.localizedStatus.uppercased(), color: order.status.statusColor)
@@ -221,24 +226,37 @@ private extension OrderDetailView {
     @ViewBuilder
     func recipientSection(order: OrderEntity) -> some View {
         Card {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("order_recipient_header")
                     .font(DS.Font.body.weight(.semibold))
                     .foregroundStyle(DS.Color.textPrimary)
-                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                    if !order.recipientFullName.isEmpty {
-                        Label(order.recipientFullName, systemImage: "person")
-                    }
-                    if !order.recipientPhone.isEmpty {
-                        Label(order.recipientPhone, systemImage: "phone")
-                    }
-                    if !order.deliveryAddress.isEmpty {
-                        Label(order.deliveryAddress, systemImage: "house")
-                    }
+                    .padding(.horizontal)
+                    .padding(.top)
+                
+                if !order.recipientFullName.isEmpty {
+                    TitleAndValueRow(
+                        title: String(localized: "store_new_order_recipient"),
+                        titleSuffixIcon: (Image(systemName: "person"), .secondary),
+                        value: .text(order.recipientFullName)
+                    )
                 }
-                .labelStyle(.titleAndIcon)
-                .foregroundStyle(DS.Color.textSecondary)
-                .font(DS.Font.caption)
+                if !order.recipientPhone.isEmpty {
+                    Divider().padding(.leading)
+                    TitleAndValueRow(
+                        title: String(localized: "store_new_order_phone"),
+                        titleSuffixIcon: (Image(systemName: "phone"), .secondary),
+                        value: .text(order.recipientPhone)
+                    )
+                }
+                if !order.deliveryAddress.isEmpty {
+                    Divider().padding(.leading)
+                    TitleAndValueRow(
+                        title: String(localized: "delivery"),
+                        titleSuffixIcon: (Image(systemName: "house"), .secondary),
+                        value: .text(order.deliveryAddress),
+                        isMultiline: true
+                    )
+                }
             }
         }
     }

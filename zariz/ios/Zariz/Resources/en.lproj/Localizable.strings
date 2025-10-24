@@ -119,3 +119,7 @@
 
 /* Connectivity */
 "connectivity_offline" = "No Internet Connection";
+
+/* Badge Labels */
+"badge_new" = "New";
+"badge_tip" = "Tip";

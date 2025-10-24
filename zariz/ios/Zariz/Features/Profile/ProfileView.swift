@@ -10,6 +10,7 @@ struct ProfileView: View {
                 VStack(alignment: .leading, spacing: DS.Spacing.xl) {
                     profileCard
                     if session.isDemoMode { demoNotice }
+                    settingsCard
                     logoutCard
                 }
                 .padding(.horizontal, DS.Spacing.xl)
@@ -30,9 +31,14 @@ struct ProfileView: View {
                         Text("profile_title")
                             .font(DS.Font.title)
                             .foregroundStyle(DS.Color.textPrimary)
-                        Text(session.isDemoMode ? String(localized: "profile_demo_role") : String(localized: "profile_real_role"))
-                            .font(DS.Font.body)
-                            .foregroundStyle(DS.Color.textSecondary)
+                        HStack(spacing: 8) {
+                            Text(session.isDemoMode ? String(localized: "profile_demo_role") : String(localized: "profile_real_role"))
+                                .font(DS.Font.body)
+                                .foregroundStyle(DS.Color.textSecondary)
+                            if session.isDemoMode {
+                                BadgeView(text: "Demo", customizations: .init(textColor: .white, backgroundColor: .orange))
+                            }
+                        }
                     }
                 }
                 Text("profile_tagline")
@@ -56,6 +62,30 @@ struct ProfileView: View {
                         .font(DS.Font.caption)
                         .foregroundStyle(DS.Color.textSecondary)
                 }
+            }
+        }
+    }
+    
+    private var settingsCard: some View {
+        Card {
+            VStack(spacing: 0) {
+                NavigationRow(content: {
+                    HStack {
+                        Image(systemName: "globe")
+                            .foregroundStyle(.blue)
+                            .frame(width: 24)
+                        Text("language_picker")
+                            .font(DS.Font.body)
+                    }
+                }, action: {})
+                
+                Divider().padding(.leading, 48)
+                
+                TitleAndValueRow(
+                    title: "Role",
+                    titleSuffixIcon: (Image(systemName: "person.badge.key"), .secondary),
+                    value: .text(session.isDemoMode ? "Demo" : "Courier")
+                )
             }
         }
     }
