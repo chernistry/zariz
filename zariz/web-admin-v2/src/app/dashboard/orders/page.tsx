@@ -162,16 +162,16 @@ export default function OrdersPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Select
-              value={filter.status}
+              value={filter.status || 'all'}
               onValueChange={(value) =>
-                setFilter((f) => ({ ...f, status: value }))
+                setFilter((f) => ({ ...f, status: value === 'all' ? '' : value }))
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="new">New</SelectItem>
                 <SelectItem value="assigned">Assigned</SelectItem>
                 <SelectItem value="claimed">Claimed</SelectItem>
