@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AssignCourierDialog } from '@/components/modals/assign-courier-dialog';
+import { NewOrderDialog } from '@/components/modals/new-order-dialog';
 import { toast } from 'sonner';
 import { IconDownload, IconPlus } from '@tabler/icons-react';
 
@@ -53,6 +54,7 @@ export default function OrdersPage() {
     to: ''
   });
   const [assignFor, setAssignFor] = useState<number | string | null>(null);
+  const [showNewOrder, setShowNewOrder] = useState(false);
   
   const refresh = useCallback(async () => {
     try {
@@ -148,7 +150,7 @@ export default function OrdersPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Orders</h2>
         <div className="flex items-center gap-2">
-          <Button onClick={() => router.push('/dashboard/orders/new')}>
+          <Button onClick={() => setShowNewOrder(true)}>
             <IconPlus className="mr-2 h-4 w-4" />
             New Order
           </Button>
@@ -307,6 +309,12 @@ export default function OrdersPage() {
         open={assignFor !== null}
         onClose={() => setAssignFor(null)}
         onSelect={handleAssign}
+      />
+      
+      <NewOrderDialog
+        open={showNewOrder}
+        onClose={() => setShowNewOrder(false)}
+        onSuccess={refresh}
       />
     </div>
   );
