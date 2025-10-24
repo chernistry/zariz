@@ -37,7 +37,7 @@ Progress: mark done items with [x] and adjust the above ETA line-by-line as you 
 
 ## Stage A — Foundation
 
- - [x] 1. Monorepo structure, tooling, Docker baseline
+ - [x] 1. Monorepo structure, tooling, Docker baseline _(TICKET-01 complete)_
  - [x] 2. Backend scaffold (FastAPI, SQLAlchemy, Alembic, JWT)
  - [x] 3. Core APIs: auth + orders CRUD/idempotency _(TICKET-21 complete)_
  - [x] 4. Notifications: APNs worker, device registry, SSE for web

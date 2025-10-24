@@ -8,6 +8,10 @@ core:
 log:
   format: "text"
   level: "info"
+  access_log: "stdout"
+  access_level: "info"
+  error_log: "stderr"
+  error_level: "error"
 
 api:
   push_uri: "/api/push"
@@ -22,11 +26,4 @@ android:
   enabled: false
 
 ios:
-  enabled: true
-  key_type: "p8"
-  key_path: "/config/AuthKey.p8"
-  key_id: ""
-  team_id: ""
-  topic: "com.example.zariz"
-  production: false
-  mock: true
+  enabled: false

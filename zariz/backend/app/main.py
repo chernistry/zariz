@@ -11,6 +11,11 @@ from slowapi.middleware import SlowAPIMiddleware
 setup_logging()
 app = FastAPI(title="Zariz API", version="0.1.0")
 
+# Rate limiting (add first, executes last)
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+# CORS (add last, executes first)
 origins = [o.strip() for o in os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
@@ -19,10 +24,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Rate limiting
-app.state.limiter = limiter
-app.add_middleware(SlowAPIMiddleware)
 
 app.include_router(api_router, prefix="/v1")
 
