@@ -16,9 +16,9 @@ Delivery management system with iOS app, web admin, and backend API.
 ```
 
 This will start:
-- **PostgreSQL** on `localhost:5432`
+- **PostgreSQL** on `localhost:5433`
 - **Backend API** on `http://localhost:8000`
-- **Web Admin** on `http://localhost:3000`
+- **Web Admin** on `http://localhost:3002`
 - **Gorush push gateway** on `http://localhost:8088`
 
 > ℹ️  Gorush is pre-configured in sandbox/mock mode, so push requests succeed without Apple
@@ -80,7 +80,7 @@ zariz/
 
 - Backend API: http://localhost:8000
 - API Docs: http://localhost:8000/docs
-- Web Admin: http://localhost:3000
+- Web Admin: http://localhost:3002
 
 ## iOS Development
 

@@ -1,7 +1,7 @@
 import Foundation
 
 enum AppConfig {
-    // Use host loopback for Simulator to reach backend on developer machine
-    static let baseURL = URL(string: "http://127.0.0.1:8000/v1")!
+    // Local WiFi IP for physical device testing
+    static let baseURL = URL(string: "http://192.168.3.47:8000/v1")!
     static let defaultPickupAddress = "Main Warehouse"
 }
