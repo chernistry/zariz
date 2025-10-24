@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { listCouriersAdmin, setCourierStatus, type CourierAdmin } from '@/lib/api';
+import { listCouriersAdmin, setCourierStatus, getCouriers, type CourierAdmin, type CourierInfo } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import {
   Table,
   TableBody,
@@ -27,13 +28,21 @@ import { IconDotsVertical, IconPlus } from '@tabler/icons-react';
 export default function CouriersPage() {
   const router = useRouter();
   const [couriers, setCouriers] = useState<CourierAdmin[]>([]);
+  const [courierLoads, setCourierLoads] = useState<Map<number, CourierInfo>>(new Map());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
   async function refresh() {
     try {
-      const data = await listCouriersAdmin();
-      setCouriers(data);
+      const [adminData, loadData] = await Promise.all([
+        listCouriersAdmin(),
+        getCouriers(false)
+      ]);
+      setCouriers(adminData);
+      
+      const loadMap = new Map<number, CourierInfo>();
+      loadData.forEach(c => loadMap.set(c.id, c));
+      setCourierLoads(loadMap);
     } catch (error) {
       toast.error('Failed to load couriers');
     } finally {
@@ -99,6 +108,7 @@ export default function CouriersPage() {
                 <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Current Load</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Capacity</TableHead>
@@ -108,26 +118,44 @@ export default function CouriersPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center">
+                  <TableCell colSpan={8} className="text-center">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : filteredCouriers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center">
+                  <TableCell colSpan={8} className="text-center">
                     No couriers found
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredCouriers.map((courier) => (
-                  <TableRow key={courier.id}>
-                    <TableCell>{courier.id}</TableCell>
-                    <TableCell className="font-medium">{courier.name}</TableCell>
-                    <TableCell>{getStatusBadge(courier.status)}</TableCell>
-                    <TableCell>{courier.email || '-'}</TableCell>
-                    <TableCell>{courier.phone || '-'}</TableCell>
-                    <TableCell>{courier.capacity_boxes || 8}</TableCell>
-                    <TableCell className="text-right">
+                filteredCouriers.map((courier) => {
+                  const loadInfo = courierLoads.get(courier.id);
+                  const loadPct = loadInfo 
+                    ? (loadInfo.load_boxes / loadInfo.capacity_boxes) * 100 
+                    : 0;
+                  
+                  return (
+                    <TableRow key={courier.id}>
+                      <TableCell>{courier.id}</TableCell>
+                      <TableCell className="font-medium">{courier.name}</TableCell>
+                      <TableCell>{getStatusBadge(courier.status)}</TableCell>
+                      <TableCell>
+                        {loadInfo ? (
+                          <div className="space-y-1 min-w-[150px]">
+                            <div className="flex items-center justify-between text-sm">
+                              <span>{loadInfo.load_boxes}/{loadInfo.capacity_boxes} boxes</span>
+                            </div>
+                            <Progress value={loadPct} className="h-2" />
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{courier.email || '-'}</TableCell>
+                      <TableCell>{courier.phone || '-'}</TableCell>
+                      <TableCell>{courier.capacity_boxes || 8}</TableCell>
+                      <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
@@ -161,7 +189,8 @@ export default function CouriersPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>

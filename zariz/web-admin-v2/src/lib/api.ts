@@ -183,3 +183,7 @@ export async function setCourierStatus(
   });
 }
 
+export async function getCourierLoad(id: number): Promise<CourierInfo> {
+  return api(`couriers/${id}/load`);
+}
+

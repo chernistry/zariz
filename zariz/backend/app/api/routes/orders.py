@@ -499,6 +499,65 @@ def delete_order(
         pass
     return {"ok": True}
 
+
+@limiter.limit("30/minute")
+@router.put("/{order_id}", response_model=OrderRead)
+@router.patch("/{order_id}", response_model=OrderRead)
+def update_order(
+    order_id: int,
+    payload: OrderCreate,
+    db: Session = Depends(get_db),
+    identity: dict = Depends(require_role("admin")),
+    request: Request = None,
+):
+    o = db.get(Order, order_id)
+    if not o:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Update fields
+    if payload.store_id is not None:
+        o.store_id = payload.store_id
+    o.pickup_address = (payload.pickup_address or "").strip()
+    o.delivery_address = (payload.delivery_address or delivery_address_from_payload(payload)).strip()
+    o.recipient_first_name = payload.recipient_first_name
+    o.recipient_last_name = payload.recipient_last_name
+    o.phone = payload.phone
+    o.street = payload.street
+    o.building_no = payload.building_no
+    o.floor = payload.floor or ""
+    o.apartment = payload.apartment or ""
+    o.boxes_count = payload.boxes_count
+    
+    # Recalculate price
+    price, multiplier = price_for_boxes(payload.boxes_count)
+    o.boxes_multiplier = multiplier
+    o.price_total = price
+    
+    db.add(OrderEvent(order_id=o.id, type="updated"))
+    db.commit()
+    
+    events_bus.publish({"type": "order.updated", "order_id": o.id})
+    
+    return OrderRead(
+        id=o.id,
+        store_id=o.store_id,
+        courier_id=o.courier_id,
+        status=o.status,
+        pickup_address=o.pickup_address,
+        delivery_address=o.delivery_address,
+        recipient_first_name=o.recipient_first_name,
+        recipient_last_name=o.recipient_last_name,
+        phone=o.phone,
+        street=o.street,
+        building_no=o.building_no,
+        floor=o.floor,
+        apartment=o.apartment,
+        boxes_count=o.boxes_count,
+        boxes_multiplier=o.boxes_multiplier,
+        price_total=o.price_total,
+        created_at=o.created_at.isoformat() if getattr(o, "created_at", None) else None,
+    )
+
 @limiter.limit("20/minute")
 @router.post("/{order_id}/decline")
 def decline_order(

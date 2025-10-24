@@ -9,9 +9,12 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    setToken(authClient.getAccessToken());
-    setClaims(authClient.getClaims());
-    setLoading(false);
+    // Initialize auth client (will try to refresh if needed)
+    authClient.init().finally(() => {
+      setToken(authClient.getAccessToken());
+      setClaims(authClient.getClaims());
+      setLoading(false);
+    });
     
     const unsubscribe = authClient.subscribe((newToken, newClaims) => {
       setToken(newToken);

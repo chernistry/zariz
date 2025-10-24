@@ -231,7 +231,7 @@ export function NewOrderDialog({ open, onClose, onSuccess }: NewOrderDialogProps
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="pickup_address">Pickup Address (optional)</Label>
+            <Label htmlFor="pickup_address">Pickup Address *</Label>
             <Textarea
               id="pickup_address"
               value={form.pickup_address}
@@ -239,11 +239,12 @@ export function NewOrderDialog({ open, onClose, onSuccess }: NewOrderDialogProps
                 setForm({ ...form, pickup_address: e.target.value })
               }
               rows={2}
+              required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="delivery_address">Delivery Address (optional)</Label>
+            <Label htmlFor="delivery_address">Delivery Address *</Label>
             <Textarea
               id="delivery_address"
               value={form.delivery_address}
@@ -251,6 +252,7 @@ export function NewOrderDialog({ open, onClose, onSuccess }: NewOrderDialogProps
                 setForm({ ...form, delivery_address: e.target.value })
               }
               rows={2}
+              required
             />
           </div>
           

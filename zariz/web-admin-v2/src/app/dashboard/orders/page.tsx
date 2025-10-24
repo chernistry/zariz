@@ -31,6 +31,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AssignCourierDialog } from '@/components/modals/assign-courier-dialog';
 import { NewOrderDialog } from '@/components/modals/new-order-dialog';
+import { ViewOrderDialog } from '@/components/modals/view-order-dialog';
 import { toast } from 'sonner';
 import { IconDownload, IconPlus } from '@tabler/icons-react';
 
@@ -55,6 +56,7 @@ export default function OrdersPage() {
   });
   const [assignFor, setAssignFor] = useState<number | string | null>(null);
   const [showNewOrder, setShowNewOrder] = useState(false);
+  const [viewOrderId, setViewOrderId] = useState<number | string | null>(null);
   
   const refresh = useCallback(async () => {
     try {
@@ -234,6 +236,7 @@ export default function OrdersPage() {
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Boxes</TableHead>
                 <TableHead>Store</TableHead>
                 <TableHead>Courier</TableHead>
                 <TableHead>Actions</TableHead>
@@ -248,7 +251,7 @@ export default function OrdersPage() {
                 </TableRow>
               ) : orders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
+                  <TableCell colSpan={6} className="text-center">
                     No orders found
                   </TableCell>
                 </TableRow>
@@ -261,6 +264,7 @@ export default function OrdersPage() {
                         ? 'Awaiting acceptance'
                         : order.status}
                     </TableCell>
+                    <TableCell>{order.boxes_count ?? 0}</TableCell>
                     <TableCell>{order.store_id ?? '-'}</TableCell>
                     <TableCell>{order.courier_id ?? '-'}</TableCell>
                     <TableCell>
@@ -268,9 +272,7 @@ export default function OrdersPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() =>
-                            router.push(`/dashboard/orders/${order.id}`)
-                          }
+                          onClick={() => setViewOrderId(order.id)}
                         >
                           View
                         </Button>
@@ -307,6 +309,7 @@ export default function OrdersPage() {
       
       <AssignCourierDialog
         open={assignFor !== null}
+        orderId={assignFor}
         onClose={() => setAssignFor(null)}
         onSelect={handleAssign}
       />
@@ -314,6 +317,13 @@ export default function OrdersPage() {
       <NewOrderDialog
         open={showNewOrder}
         onClose={() => setShowNewOrder(false)}
+        onSuccess={refresh}
+      />
+
+      <ViewOrderDialog
+        open={viewOrderId !== null}
+        orderId={viewOrderId}
+        onClose={() => setViewOrderId(null)}
         onSuccess={refresh}
       />
     </div>

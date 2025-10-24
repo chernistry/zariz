@@ -18,6 +18,8 @@ type Claims = {
 
 type Subscriber = (token: string | null, claims: Claims | null) => void;
 
+const TOKEN_KEY = 'zariz_access_token';
+
 let accessToken: string | null = null;
 let claims: Claims | null = null;
 let refreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -28,6 +30,24 @@ let backoffMs = 0;
 const MAX_BACKOFF = 60_000;
 const BASE_BACKOFF = 1_000;
 const JITTER = 250;
+
+// Initialize from localStorage on client
+if (typeof window !== 'undefined') {
+  try {
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (stored) {
+      accessToken = stored;
+      claims = parseJwt(stored);
+      
+      // Check if token is expired
+      if (claims?.exp && claims.exp < Math.floor(Date.now() / 1000)) {
+        accessToken = null;
+        claims = null;
+        localStorage.removeItem(TOKEN_KEY);
+      }
+    }
+  } catch {}
+}
 
 function base64UrlToBase64(input: string) {
   input = input.replace(/-/g, '+').replace(/_/g, '/');
@@ -90,11 +110,23 @@ function setAccessToken(token: string | null) {
   accessToken = token;
   claims = token ? parseJwt(token) : null;
   
+  // Persist to localStorage
+  if (typeof window !== 'undefined') {
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  }
+  
   // Enforce admin-only
   if (claims && claims.role !== 'admin') {
     accessToken = null;
     claims = null;
     clearTimer();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(TOKEN_KEY);
+    }
     notify();
     authClient.logout().catch(() => {});
     return;
@@ -132,6 +164,24 @@ export const authClient = {
   
   getClaims() {
     return claims;
+  },
+  
+  async init() {
+    // Try to refresh if we have a token that's close to expiry
+    if (accessToken && claims?.exp) {
+      const nowSec = Math.floor(Date.now() / 1000);
+      if (claims.exp - nowSec < 300) { // Less than 5 minutes left
+        try {
+          await this.refresh();
+        } catch {
+          // If refresh fails, clear token
+          setAccessToken(null);
+        }
+      } else {
+        // Token is still valid, schedule refresh
+        scheduleRefresh();
+      }
+    }
   },
   
   async login(identifier: string, password: string) {

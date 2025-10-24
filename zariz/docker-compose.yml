@@ -21,6 +21,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: zariz-backend
+    networks:
+      default:
+        aliases:
+          - backend
     environment:
       POSTGRES_USER: zariz
       POSTGRES_PASSWORD: zariz
@@ -63,19 +67,18 @@ services:
 
   web-admin:
     build:
-      context: ./web-admin
+      context: ./web-admin-v2
       dockerfile: Dockerfile
     container_name: zariz-web-admin
     ports:
       - "3002:3000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - NEXT_PUBLIC_API_BASE=http://localhost:8000/v1
+      - INTERNAL_API_BASE=http://backend:8000/v1
       - NEXT_PUBLIC_AUTH_REFRESH=1
-    volumes:
-      - ./web-admin:/app
-      - /app/node_modules
-    command: npm run dev
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
