@@ -42,7 +42,7 @@ import { NewOrderDialog } from '@/components/modals/new-order-dialog';
 import { ViewOrderDialog } from '@/components/modals/view-order-dialog';
 import { toast } from 'sonner';
 import { IconDownload, IconPlus } from '@tabler/icons-react';
-import { useAdminEvents } from '@/hooks/use-admin-events';
+import { useOrderEvents } from '@/hooks/use-order-events';
 
 type Filter = {
   status: string;
@@ -82,8 +82,9 @@ export default function OrdersPage() {
       setLoading(false);
     }
   }, [filter]);
-  
-  useAdminEvents((evt) => {
+
+  const handleOrderEvent = useCallback((evt: any) => {
+    console.log('[Orders] Event received:', evt);
     if ([
       'order.created',
       'order.deleted',
@@ -92,9 +93,14 @@ export default function OrdersPage() {
       'order.status_changed',
       'order.updated'
     ].includes(evt.event)) {
+      console.log('[Orders] Refreshing on event:', evt.event);
       refresh();
+    } else {
+      console.log('[Orders] Ignoring event:', evt.event);
     }
-  });
+  }, [refresh]);
+  
+  useOrderEvents(handleOrderEvent);
   
   useEffect(() => {
     refresh();

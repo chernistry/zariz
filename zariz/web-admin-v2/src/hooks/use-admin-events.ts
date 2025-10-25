@@ -1,3 +1,9 @@
+/**
+ * @deprecated Use useSSEEvents from '@/hooks/use-sse-events' instead.
+ * This hook creates its own EventSource connection which can lead to multiple connections.
+ * The new useSSEEvents uses a singleton SSE client to ensure only one connection per tab.
+ */
+
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -26,6 +32,11 @@ export function useAdminEvents(onEvent?: (event: OrderEvent) => void) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const reconnectDelayRef = useRef(1000);
+  const onEventRef = useRef(onEvent);
+
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  }, [onEvent]);
 
   useEffect(() => {
     if (loading || !isAuthenticated || !token) {
@@ -66,7 +77,7 @@ export function useAdminEvents(onEvent?: (event: OrderEvent) => void) {
             ? { event: raw.event || raw.type, data: raw.data || raw }
             : { event: 'unknown', data: raw };
           console.log('[SSE] Normalized event:', normalized);
-          if (onEvent) onEvent(normalized as any);
+          if (onEventRef.current) onEventRef.current(normalized as any);
         } catch (err) {
           console.error('[SSE] Parse error:', err);
         }
@@ -106,7 +117,7 @@ export function useAdminEvents(onEvent?: (event: OrderEvent) => void) {
         eventSourceRef.current.close();
       }
     };
-  }, [token, isAuthenticated, loading, onEvent]);
+  }, [token, isAuthenticated, loading]);
 
   return { status };
 }

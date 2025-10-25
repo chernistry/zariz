@@ -20,6 +20,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      cache_from:
+        - zariz-backend:latest
     container_name: zariz-backend
     networks:
       default:
@@ -67,6 +69,8 @@ services:
     build:
       context: ./web-admin-v2
       dockerfile: Dockerfile
+      cache_from:
+        - zariz-web-admin:latest
     container_name: zariz-web-admin
     ports:
       - "3002:3000"

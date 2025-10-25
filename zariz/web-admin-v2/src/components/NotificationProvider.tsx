@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useAdminEvents } from '@/hooks/use-admin-events';
+import { useSSEEvents } from '@/hooks/use-sse-events';
 import { notificationManager } from '@/lib/notificationManager';
+import { eventBus } from '@/lib/event-bus';
 import { OrderNotification } from './OrderNotification';
 import { ConnectionStatus } from './ConnectionStatus';
 import { AssignCourierDialog } from './modals/assign-courier-dialog';
@@ -14,6 +15,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [assignOrderId, setAssignOrderId] = useState<number | null>(null);
 
   const handleEvent = useCallback((event: any) => {
+    eventBus.publish(event);
+
     if (event?.event !== 'order.created') {
       if (event?.event === 'order.deleted' && event?.data?.order_id) {
         const idToRemove = `order.created-${event.data.order_id}`;
@@ -37,7 +40,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  const { status } = useAdminEvents(handleEvent);
+  const { status } = useSSEEvents(handleEvent);
 
   const handleDismiss = useCallback((id: string) => {
     notificationManager.remove(id);
