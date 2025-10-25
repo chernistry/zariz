@@ -14,6 +14,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [assignOrderId, setAssignOrderId] = useState<number | null>(null);
 
   const handleEvent = useCallback((event: any) => {
+    if (event?.event !== 'order.created') {
+      if (event?.event === 'order.deleted' && event?.data?.order_id) {
+        const idToRemove = `order.created-${event.data.order_id}`;
+        notificationManager.remove(idToRemove);
+        setNotifications((prev) => prev.filter(n => n.orderId !== event.data.order_id));
+      }
+      return;
+    }
+
     const added = notificationManager.add(event);
     if (added) {
       const id = `${event.event}-${event.data.order_id}`;
@@ -22,7 +31,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         {
           id,
           orderId: event.data.order_id,
-          pickupAddress: event.data.pickup_address
+          pickupAddress: event.data.pickup_address || ''
         }
       ]);
     }

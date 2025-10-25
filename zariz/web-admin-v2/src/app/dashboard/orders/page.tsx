@@ -84,7 +84,14 @@ export default function OrdersPage() {
   }, [filter]);
   
   useAdminEvents((evt) => {
-    if (evt.event === 'order.created') {
+    if ([
+      'order.created',
+      'order.deleted',
+      'order.assigned',
+      'order.accepted',
+      'order.status_changed',
+      'order.updated'
+    ].includes(evt.event)) {
       refresh();
     }
   });
