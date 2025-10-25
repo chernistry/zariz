@@ -26,12 +26,13 @@ export async function POST(req: NextRequest) {
     
     const response = NextResponse.json({ access_token });
     
-    // Set refresh token as HTTP-only cookie
+    const isHttps = req.headers.get('x-forwarded-proto') === 'https' || req.nextUrl.protocol === 'https:';
+    
     response.cookies.set('refresh_token', refresh_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isHttps,
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
       path: '/'
     });
     

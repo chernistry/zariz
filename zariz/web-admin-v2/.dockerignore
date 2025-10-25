@@ -19,3 +19,11 @@ dist
 .husky
 .vscode
 .github
+*.md
+.eslintrc*
+.prettierrc*
+jest.config.*
+tsconfig.tsbuildinfo
+.turbo
+out
+build

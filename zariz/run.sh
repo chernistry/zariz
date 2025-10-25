@@ -40,7 +40,7 @@ case "$1" in
     
   build)
     echo "Building Docker images..."
-    docker compose build
+    DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose build --parallel
     echo "Build complete!"
     ;;
     

@@ -49,26 +49,42 @@ export function NotificationSettingsDialog({
 
   const testBrowserNotification = () => {
     if (!('Notification' in window)) {
-      alert('Browser notifications not supported');
+      alert('This browser does not support desktop notifications.');
       return;
     }
 
+    const createNotification = () => {
+      try {
+        const notification = new Notification('Test Notification', {
+          body: 'This is a test notification from Zariz.',
+          icon: '/favicon.ico',
+        });
+        console.log('[Notification] Test notification sent successfully.');
+        setTimeout(() => notification.close(), 4000);
+
+        if (document.hidden) {
+          alert('Test notification sent! Check your system notifications.');
+        }
+      } catch (error) {
+        console.error('[Notification] Failed to create notification:', error);
+        alert(`Failed to create notification: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    };
+
     if (Notification.permission === 'granted') {
-      new Notification('Test Notification', {
-        body: 'This is a test notification from Zariz',
-        icon: '/favicon.ico'
-      });
+      createNotification();
     } else if (Notification.permission !== 'denied') {
       Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
-          new Notification('Test Notification', {
-            body: 'This is a test notification from Zariz',
-            icon: '/favicon.ico'
-          });
+          console.log('[Notification] Permission granted.');
+          createNotification();
+        } else {
+          console.log('[Notification] Permission not granted.');
+          alert('Notification permission was not granted.');
         }
       });
     } else {
-      alert('Notification permission denied. Enable in browser settings.');
+      alert('Notification permission has been denied. You must enable it in your browser settings.');
     }
   };
 

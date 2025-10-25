@@ -8,14 +8,25 @@ Read /Users/sasha/IdeaProjects/ios/zariz/dev/tickets/coding_rules.md first.
 
 ## 🎯 Problem Statement
 
-SSE notifications are failing with 401 Unauthorized errors, preventing real-time order notifications. Investigation shows EventSource connections are made without authentication tokens. Additionally, the browser notification test fails silently, providing no feedback to the user.
+SSE notifications and real-time updates are unreliable across browsers:
+- In Chrome/Brave, orders do not appear automatically after creation; only after page reload.
+- In Firefox, the SSE indicator shows Disconnected and initial data (orders/couriers/stores) may not load despite successful login.
+- In Safari, login does not proceed (submit appears to do nothing).
+
+Investigation shows that while auth race conditions were mitigated, there are additional root causes:
+- Event payload schema mismatch between backend and frontend (backend uses `type`, frontend expects `{ event, data }`).
+- Orders page does not subscribe to SSE to refresh the list on new orders.
+- Dev cookie security settings cause the refresh cookie to be set with `Secure` under HTTP in Docker (NODE_ENV=production), breaking Safari (cookie is rejected) and sometimes Firefox behavior.
+- Previously identified auth/SSE timing remain relevant and should stay fixed.
 
 ### Issues Identified
 
-1.  **SSE 401 Errors**: Requests to `/v1/events/sse` have empty query strings (no token).
-2.  **No Real-time Notifications**: Orders don't trigger notifications due to the failed SSE connection.
-3.  **Browser Notification Test Silent Failure**: The "Test" button for browser notifications produces no visible result or feedback.
-4.  **Token Expiration Handling**: No mechanism to refresh tokens during long-lived SSE connections
+1.  SSE 401 Errors: Requests to `/v1/events/sse` may be made without token due to timing (mitigated in prior changes but keep hardening).
+2.  No Real-time Updates in UI: Orders page does not react to SSE events to refresh list.
+3.  Event Schema Mismatch: Backend emits `{"type":"order.created", ...}` while frontend expects `{ event: 'order.created', data: {...} }`, so events are ignored.
+4.  Cookie Security in Dev: `Secure` cookie set by Next API under `NODE_ENV=production` (in Docker) over HTTP is rejected (Safari), so middleware keeps redirecting to login.
+5.  Token Expiration Handling: Reconnect path should avoid loops and re-check token (keep from prior ticket).
+6.  Browser Notification Test: Ensure user feedback (already improved).
 
 ### Evidence
 - HAR file shows: `http://localhost:8000/v1/events/sse` with `"queryString": []`
@@ -84,9 +95,25 @@ useEffect(() => {
 
 ---
 
+### Issue 5: Event Schema Mismatch (Backend vs Frontend)
+**Files**: Backend `backend/app/api/routes/orders.py`, Frontend `web-admin-v2/src/hooks/use-admin-events.ts`
+
+**Problem**: Backend publishes events as a flat object with `type` and order fields, while the frontend expects `{ event, data }` and checks `parsed.event === 'order.created'` before handling. As a result, messages are ignored and no UI updates occur.
+
+**Evidence**:
+- Backend test asserts `event["type"] == "order.created"` (backend/tests/test_admin_events.py:36)
+- Frontend checks `parsed.event === 'order.created'` and uses `event.data.order_id` (web-admin-v2/src/hooks/use-admin-events.ts:64, web-admin-v2/src/lib/notificationManager.ts:54)
+
+### Issue 6: Orders Page Not Subscribed to SSE
+**File**: `web-admin-v2/src/app/dashboard/orders/page.tsx`
+
+**Problem**: The Orders page loads data once and never refreshes on SSE events. Even if notifications are displayed, the table does not update until manual reload.
+
+---
+
 ## 💡 Solution
 
-This solution applies fixes in three files to resolve the identified issues.
+Apply the fixes below to address all identified issues. Keep prior hardening for SSE token timing and reconnection.
 
 ---
 
@@ -182,10 +209,13 @@ import { authClient } from '@/lib/auth-client';
           return;
         }
 
-        const delay = Math.min(reconnectDelayRef.current, 30000);
-        console.log(`[SSE] Reconnecting in ${delay}ms`);
+        // Exponential backoff with jitter
+        const baseDelay = Math.min(reconnectDelayRef.current, 30000);
+        const jitter = Math.random() * 1000;
+        const delay = baseDelay + jitter;
+        console.log(`[SSE] Reconnecting in ${Math.round(delay)}ms`);
         reconnectTimeoutRef.current = setTimeout(() => {
-          reconnectDelayRef.current = Math.min(delay * 2, 30000);
+          reconnectDelayRef.current = Math.min(baseDelay * 2, 30000);
           connect();
         }, delay);
       };
@@ -194,9 +224,9 @@ import { authClient } from '@/lib/auth-client';
 
 ---
 
-### **File 2: `/src/components/modals/notification-settings-dialog.tsx`**
+### **File 5: `/src/components/modals/notification-settings-dialog.tsx`**
 
-#### **Change 4: Make Browser Notification Test Robust**
+#### **Change 7: Make Browser Notification Test Robust**
 **Instruction**: Replace the `testBrowserNotification` function with a more robust version that includes `try...catch` error handling, provides clear user feedback via `alert()`, and handles cases where the page is not focused.
 
 **Replace the entire `testBrowserNotification` function:**
@@ -278,9 +308,9 @@ import { authClient } from '@/lib/auth-client';
 
 ---
 
-### **File 3: `/src/hooks/use-sse.ts`**
+### **File 6: `/src/hooks/use-sse.ts`**
 
-#### **Change 5: Remove Unused File**
+#### **Change 8: Remove Unused File**
 **Instruction**: This file is dead code and should be deleted.
 
 **Run this command from the `web-admin-v2` directory:**
@@ -299,7 +329,7 @@ rm src/hooks/use-sse.ts
 - [ ] Network tab shows SSE request with `?token=` parameter (not empty query string)
 - [ ] SSE connection returns 200 OK (not 401)
 - [ ] Console shows `[SSE] Connected` message
-- [ ] No `[SSE] No token available at connection time` errors
+- [ ] No `[SSE] Halting connection: No token available.` errors when logged in
 - [ ] Connection waits for auth initialization (no premature connection attempts)
 
 ### Token Expiration Handling
@@ -307,11 +337,11 @@ rm src/hooks/use-sse.ts
 - [ ] Console shows `[SSE] Token no longer available, stopping reconnection` when appropriate
 - [ ] No infinite reconnection loops with expired tokens
 
-### Real-time Notifications
-- [ ] Create new order → notification appears within 1 second
-- [ ] Console shows `[SSE] Message received:` and `[SSE] Parsed event:`
-- [ ] Toast notification displays with correct order ID and pickup address
-- [ ] Notifications work continuously for >30 minutes (test long-lived connection)
+### Real-time Notifications & Updates
+- [ ] Create new order → browser toast appears within 1 second
+- [ ] Orders table updates automatically (new row appears) without manual reload
+- [ ] Console shows `[SSE] Message received:` and `[SSE] Normalized event:`
+- [ ] Notifications work continuously for >30 minutes (long-lived connection)
 
 ### Browser Notification Test
 - [ ] Click "Test" button → see notification or alert message
@@ -324,6 +354,11 @@ rm src/hooks/use-sse.ts
 ### Code Cleanup
 - [ ] File `/src/hooks/use-sse.ts` is deleted
 - [ ] No references to the deleted file remain in the codebase
+
+### Cross-browser Behavior
+- [ ] Chrome/Brave: Orders appear automatically; SSE status is Connected
+- [ ] Firefox: After login, data loads (orders/couriers/stores) and SSE status is Connected
+- [ ] Safari: Login succeeds, navigates to `/dashboard`; `refresh_token` cookie present; SSE status is Connected
 
 ---
 
@@ -346,7 +381,7 @@ rm src/hooks/use-sse.ts
 [SSE] Connected
 ```
 
-### 2. Test Real-time Notifications
+### 2. Test Real-time Notifications and UI Refresh
 ```bash
 # 1. Keep browser open on /dashboard/orders
 # 2. Create test order via API:
@@ -355,7 +390,7 @@ curl -X POST http://localhost:8000/v1/orders \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"store_id": 1, "pickup_address": "Test Address", "delivery_address": "Test Delivery", "boxes_count": 1}'
 
-# 3. Check browser for notification toast
+# 3. Check browser for toast AND a new row in the table without reload
 ```
 
 ### 3. Test Browser Notifications
@@ -413,6 +448,8 @@ While the fixes in this ticket will solve the immediate issues, there are opport
 
 5. **Connection Health Monitoring**: Add periodic ping/pong to detect stale connections before they fail.
 
+6. **Unified Event Contract**: Consider updating backend to emit `{ event, data }` alongside or instead of `type` to reduce front-end normalization logic; update tests accordingly.
+
 ---
 
 ## 🔄 Rollback Plan
@@ -442,3 +479,96 @@ If the fix breaks SSE connections:
 **Alternative approach if main fix fails**: Instead of using `authClient.getAccessToken()` directly, add a `tokenVersion` state to `useAuth` that increments whenever the token changes, and use this as a dependency in `useAdminEvents` to force reconnection with the new token.
 
 ```
+#### **Change 3: Normalize Backend Event Shape**
+**Instruction**: Normalize incoming SSE messages so the rest of the app consistently receives `{ event, data }`, regardless of backend shape. This avoids changes in all downstream consumers (notification manager, UI components).
+
+**Before** (fragment):
+```typescript
+      eventSource.onmessage = (event) => {
+        console.log('[SSE] Message received:', event.data);
+        try {
+          const parsed = JSON.parse(event.data);
+          console.log('[SSE] Parsed event:', parsed);
+          if (parsed.event === 'order.created' && onEvent) {
+            console.log('[SSE] Calling onEvent handler');
+            onEvent(parsed);
+          }
+        } catch (err) {
+          console.error('[SSE] Parse error:', err);
+        }
+      };
+```
+
+**After**:
+```typescript
+      eventSource.onmessage = (event) => {
+        console.log('[SSE] Message received:', event.data);
+        try {
+          const raw = JSON.parse(event.data);
+          // Backend publishes { type, ...orderFields }. Normalize to { event, data }
+          const normalized = raw && (raw.event || raw.type)
+            ? { event: raw.event || raw.type, data: raw.data || raw }
+            : { event: 'unknown', data: raw };
+          console.log('[SSE] Normalized event:', normalized);
+          if (onEvent) onEvent(normalized as any);
+        } catch (err) {
+          console.error('[SSE] Parse error:', err);
+        }
+      };
+```
+
+**Why this fixes it**: Frontend stops depending on a specific backend field name and provides a stable `{ event, data }` contract to UI.
+
+---
+
+### **File 2: `/src/app/dashboard/orders/page.tsx`**
+
+#### **Change 4: Refresh list on `order.created`**
+**Instruction**: Subscribe to admin events and call `refresh()` when a new order event arrives. Keep existing manual actions intact.
+
+**Add near other imports**:
+```typescript
+import { useAdminEvents } from '@/hooks/use-admin-events';
+```
+
+**Add inside component, after `refresh` definition**:
+```typescript
+  useAdminEvents((evt) => {
+    if (evt.event === 'order.created') {
+      // Re-sync list so new order appears without reload
+      refresh();
+    }
+  });
+```
+
+**Why this fixes it**: The Orders table updates automatically when backend publishes the event.
+
+---
+
+### **File 3: `/src/app/api/auth/login/route.ts` and `/src/app/api/auth/refresh/route.ts` and `/src/app/api/auth/logout/route.ts`**
+
+#### **Change 5: Set `Secure` cookie only when actually on HTTPS**
+**Instruction**: In dev Docker, `NODE_ENV=production` is set, which currently forces `secure: true` and breaks cookies on `http://localhost`. Compute `secure` based on the effective scheme.
+
+**Replace cookie options `secure: process.env.NODE_ENV === 'production'` with**:
+```typescript
+const isHttps = req.headers.get('x-forwarded-proto') === 'https' || req.nextUrl.protocol === 'https:';
+// Local dev on http should NOT set Secure
+const secure = isHttps;
+```
+and pass `{ secure }` to `response.cookies.set(...)` in all three routes.
+
+Alternative: gate with an env var, e.g. `process.env.COOKIE_SECURE === '1'`.
+
+**Why this fixes it**: Safari (and often Firefox) rejects `Secure` cookies over HTTP; middleware then sees no `refresh_token` and bounces back to login.
+
+---
+
+### **File 4: `/src/middleware.ts`**
+
+#### **Change 6: Make dashboard access dev-friendly**
+**Instruction**: In local development, do not hard-fail on missing `refresh_token` cookie, since the client stores the access token in `localStorage` and will handle auth. Either:
+- Bypass the cookie check when `process.env.NODE_ENV !== 'production'`, or
+- Allow access if request originates from `localhost` and path starts with `/dashboard`.
+
+This avoids a confusing “nothing happens” login on Safari when dev cookies are rejected.

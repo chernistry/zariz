@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from './use-auth';
+import { authClient } from '@/lib/auth-client';
 import { API_BASE } from '@/lib/api';
 
 export type OrderEvent = {
@@ -34,13 +35,20 @@ export function useAdminEvents(onEvent?: (event: OrderEvent) => void) {
     }
 
     const connect = () => {
+      const currentToken = authClient.getAccessToken();
+      if (!currentToken) {
+        console.log('[SSE] Halting connection: No token available.');
+        setStatus('disconnected');
+        return;
+      }
+
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
       }
 
       setStatus('connecting');
-      const url = `${API_BASE}/events/sse?token=${token}`;
-      console.log('[SSE] Connecting to:', url.replace(token, 'TOKEN'));
+      const url = `${API_BASE}/events/sse?token=${currentToken}`;
+      console.log('[SSE] Connecting to:', url.replace(currentToken, 'TOKEN'));
       const eventSource = new EventSource(url);
       eventSourceRef.current = eventSource;
 
@@ -53,12 +61,12 @@ export function useAdminEvents(onEvent?: (event: OrderEvent) => void) {
       eventSource.onmessage = (event) => {
         console.log('[SSE] Message received:', event.data);
         try {
-          const parsed = JSON.parse(event.data);
-          console.log('[SSE] Parsed event:', parsed);
-          if (parsed.event === 'order.created' && onEvent) {
-            console.log('[SSE] Calling onEvent handler');
-            onEvent(parsed);
-          }
+          const raw = JSON.parse(event.data);
+          const normalized = raw && (raw.event || raw.type)
+            ? { event: raw.event || raw.type, data: raw.data || raw }
+            : { event: 'unknown', data: raw };
+          console.log('[SSE] Normalized event:', normalized);
+          if (onEvent) onEvent(normalized as any);
         } catch (err) {
           console.error('[SSE] Parse error:', err);
         }
@@ -69,10 +77,19 @@ export function useAdminEvents(onEvent?: (event: OrderEvent) => void) {
         eventSource.close();
         setStatus('disconnected');
 
-        const delay = Math.min(reconnectDelayRef.current, 30000);
-        console.log(`[SSE] Reconnecting in ${delay}ms`);
+        const currentToken = authClient.getAccessToken();
+        if (!currentToken) {
+          console.log('[SSE] Token no longer available, stopping reconnection.');
+          if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+          return;
+        }
+
+        const baseDelay = Math.min(reconnectDelayRef.current, 30000);
+        const jitter = Math.random() * 1000;
+        const delay = baseDelay + jitter;
+        console.log(`[SSE] Reconnecting in ${Math.round(delay)}ms`);
         reconnectTimeoutRef.current = setTimeout(() => {
-          reconnectDelayRef.current = Math.min(delay * 2, 30000);
+          reconnectDelayRef.current = Math.min(baseDelay * 2, 30000);
           connect();
         }, delay);
       };

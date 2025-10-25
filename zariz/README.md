@@ -5,7 +5,7 @@ Delivery management system with iOS app, web admin, and backend API.
 ## Quick Start
 
 ### Prerequisites
-- Docker Desktop
+- Docker Desktop (with BuildKit enabled)
 - Xcode 15+ (for iOS development)
 - XcodeGen (`brew install xcodegen`)
 
@@ -24,6 +24,14 @@ This will start:
 > ℹ️  Gorush is pre-configured in sandbox/mock mode, so push requests succeed without Apple
 > credentials. To send real APNs notifications drop your `.p8` key into `zariz/dev/ops/gorush/keys`
 > and set `APNS_KEY_ID`, `APNS_TEAM_ID`, and `APNS_TOPIC` in `.env`.
+
+### Build Performance
+
+**First build:** ~60-70 seconds  
+**Rebuild (no changes):** ~5-10 seconds ⚡  
+**Rebuild (code changes):** ~20-30 seconds ⚡
+
+See [QUICK-BUILD-GUIDE.md](QUICK-BUILD-GUIDE.md) for optimization details.
 
 ### Configure iOS App
 

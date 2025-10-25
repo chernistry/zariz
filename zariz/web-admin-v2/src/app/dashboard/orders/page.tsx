@@ -42,6 +42,7 @@ import { NewOrderDialog } from '@/components/modals/new-order-dialog';
 import { ViewOrderDialog } from '@/components/modals/view-order-dialog';
 import { toast } from 'sonner';
 import { IconDownload, IconPlus } from '@tabler/icons-react';
+import { useAdminEvents } from '@/hooks/use-admin-events';
 
 type Filter = {
   status: string;
@@ -81,6 +82,12 @@ export default function OrdersPage() {
       setLoading(false);
     }
   }, [filter]);
+  
+  useAdminEvents((evt) => {
+    if (evt.event === 'order.created') {
+      refresh();
+    }
+  });
   
   useEffect(() => {
     refresh();
