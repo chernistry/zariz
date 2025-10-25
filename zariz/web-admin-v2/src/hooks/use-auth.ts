@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 
 export function useAuth() {
-  const [token, setToken] = useState<string | null>(null);
-  const [claims, setClaims] = useState<any>(null);
+  const [token, setToken] = useState<string | null>(authClient.getAccessToken());
+  const [claims, setClaims] = useState<any>(authClient.getClaims());
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {

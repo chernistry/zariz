@@ -1,16 +1,32 @@
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
+from jose import JWTError, jwt
 
+from ...core.config import settings
 from ...services.events import events_bus
-from ..deps import require_role
 
 
 router = APIRouter(prefix="/events", tags=["events"])
+
+
+def get_identity_from_token(token: Optional[str] = Query(None)) -> dict:
+    """Extract identity from query parameter token for SSE (EventSource doesn't support headers)."""
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing token")
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algo])
+        role = payload.get("role")
+        sub = payload.get("sub")
+        if not role or not sub:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return {"role": role, "sub": sub, "store_ids": payload.get("store_ids")}
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 async def _event_stream(once: bool) -> AsyncGenerator[bytes, None]:
@@ -34,13 +50,18 @@ async def _event_stream(once: bool) -> AsyncGenerator[bytes, None]:
 @router.get("/sse")
 async def sse(
     once: bool = False,
-    identity: dict = Depends(require_role("admin", "store", "courier"))
+    identity: dict = Depends(get_identity_from_token)
 ) -> StreamingResponse:
     """Server-Sent Events stream for real-time order updates.
     
-    Requires authentication. Admin users receive all events.
-    Store/courier users receive filtered events (future enhancement).
+    Requires authentication via query parameter token (EventSource doesn't support headers).
+    Admin users receive all events. Store/courier users receive filtered events (future).
     """
+    # Verify role
+    role = identity.get("role")
+    if role not in ("admin", "store", "courier"):
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
     return StreamingResponse(
         _event_stream(once),
         media_type="text/event-stream",

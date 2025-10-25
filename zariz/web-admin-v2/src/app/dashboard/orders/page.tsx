@@ -7,10 +7,8 @@ import {
   assignOrder,
   cancelOrder,
   deleteOrder,
-  type Order,
-  API_BASE
+  type Order
 } from '@/lib/api';
-import { useSSE } from '@/hooks/use-sse';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -87,12 +85,6 @@ export default function OrdersPage() {
   useEffect(() => {
     refresh();
   }, [refresh]);
-  
-  useSSE(`${API_BASE}/events/sse`, (msg: any) => {
-    if (typeof msg?.type === 'string' && msg.type.startsWith('order.')) {
-      refresh();
-    }
-  });
   
   function exportCSV() {
     const header = ['id', 'status', 'store_id', 'courier_id', 'created_at'];

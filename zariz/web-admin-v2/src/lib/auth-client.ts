@@ -185,12 +185,32 @@ export const authClient = {
   },
   
   async login(identifier: string, password: string) {
-    const r = await proxy<{ access_token: string }>('login', {
-      method: 'POST',
-      body: JSON.stringify({ identifier, password })
-    });
-    setAccessToken(r.access_token);
-    return { token: r.access_token, claims };
+    try {
+      // Try API route first
+      const r = await proxy<{ access_token: string }>('login', {
+        method: 'POST',
+        body: JSON.stringify({ identifier, password })
+      });
+      setAccessToken(r.access_token);
+      return { token: r.access_token, claims };
+    } catch (err) {
+      // Fallback to direct backend call
+      console.log('[Auth] API route failed, trying direct backend');
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000/v1';
+      const res = await fetch(`${API_BASE}/auth/login_password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password })
+      });
+      
+      if (!res.ok) {
+        throw new Error('Login failed');
+      }
+      
+      const data = await res.json();
+      setAccessToken(data.access_token);
+      return { token: data.access_token, claims };
+    }
   },
   
   async refresh() {

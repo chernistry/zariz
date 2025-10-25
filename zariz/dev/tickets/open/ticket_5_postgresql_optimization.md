@@ -37,16 +37,11 @@ INCLUDE (id, pickup_address, delivery_address, boxes_count, courier_id);
 -- После: Index-only scan 5ms
 ```
 
-#### C. Index для atomic claim
+#### C. ~~Index для atomic claim~~ (УБРАНО - избыточно)
 ```sql
--- Partial index только для claimable заказов
-CREATE INDEX idx_orders_claimable 
-ON orders(id) 
-WHERE status = 'new' AND courier_id IS NULL;
-
--- Использование: SELECT FOR UPDATE SKIP LOCKED
--- До: Sequential scan 20ms
--- После: Index scan 1ms
+-- ❌ УБРАНО: Индекс на PRIMARY KEY бесполезен
+-- id уже имеет PK index, partial WHERE не поможет
+-- Для UPDATE ... WHERE id = X используется PK index автоматически
 ```
 
 #### D. Composite Index для courier orders
@@ -59,16 +54,12 @@ WHERE courier_id IS NOT NULL;
 -- Использование: GET /couriers/{id}/orders
 ```
 
-#### E. BRIN Index для timestamps
+#### E. ~~BRIN Index для timestamps~~ (УБРАНО - избыточно для MVP)
 ```sql
--- Block Range Index - компактный для больших таблиц
--- Размер: ~1% от B-tree, идеален для sorted data
-CREATE INDEX idx_orders_created_brin 
-ON orders USING BRIN(created_at) 
-WITH (pages_per_range = 128);
-
--- Использование: WHERE created_at > NOW() - INTERVAL '1 day'
--- Эффективен когда таблица растет (100k+ rows)
+-- ❌ УБРАНО: BRIN эффективен только для ОЧЕНЬ больших таблиц (millions rows)
+-- Для MVP с 10k-100k orders обычный B-tree индекс быстрее
+-- BRIN требует физической сортировки данных на диске
+-- Добавить позже при масштабировании до 500k+ orders
 ```
 
 #### F. Index для order_events (audit log)
@@ -85,43 +76,41 @@ WHERE created_at > NOW() - INTERVAL '1 hour';
 
 ### 2. Atomic Claim Query (Race-Free)
 
-#### Оптимизированный claim с SKIP LOCKED
-```sql
--- backend/app/routes/orders.py
+#### Оптимизированный claim с UPDATE ... RETURNING
+```python
+# backend/app/routes/orders.py
 async def claim_order(order_id: int, courier_id: int):
     async with pool.acquire() as conn:
-        async with conn.transaction():
-            # SKIP LOCKED предотвращает deadlocks
-            # FOR UPDATE блокирует строку атомарно
-            result = await conn.fetchrow("""
-                SELECT id, status, courier_id
-                FROM orders
-                WHERE id = $1
-                  AND status = 'new'
-                  AND courier_id IS NULL
-                FOR UPDATE SKIP LOCKED
-            """, order_id)
-            
-            if not result:
-                raise OrderNotAvailable()
-            
-            # Атомарное обновление
-            await conn.execute("""
-                UPDATE orders
-                SET status = 'assigned',
-                    courier_id = $1,
-                    assigned_at = NOW()
-                WHERE id = $2
-            """, courier_id, order_id)
-            
-            return result
+        # Атомарный UPDATE с проверкой условий
+        # RETURNING возвращает данные без дополнительного SELECT
+        result = await conn.fetchrow("""
+            UPDATE orders
+            SET status = 'assigned',
+                courier_id = $1,
+                assigned_at = NOW()
+            WHERE id = $2
+              AND status = 'new'
+              AND courier_id IS NULL
+            RETURNING id, status, courier_id, pickup_address, delivery_address
+        """, courier_id, order_id)
+        
+        if not result:
+            raise OrderNotAvailable("Order already claimed or not found")
+        
+        return result
 ```
 
 **Преимущества:**
-- `FOR UPDATE` - эксклюзивная блокировка строки
-- `SKIP LOCKED` - если заказ уже locked другим курьером, пропускаем (не ждем)
-- Нет deadlocks, нет race conditions
-- Latency: 1-3ms вместо 10-20ms без оптимизации
+- Атомарная операция (один query вместо SELECT + UPDATE)
+- Нет race conditions (UPDATE сам по себе атомарен)
+- Быстрее (один roundtrip вместо двух: -2-5ms)
+- WHERE условия гарантируют что заказ claimable
+- RETURNING избегает дополнительный SELECT
+
+**Почему не нужен FOR UPDATE SKIP LOCKED:**
+- UPDATE уже атомарен и блокирует строку
+- Если два курьера пытаются claim одновременно, только один UPDATE успешен
+- Второй получит 0 affected rows → result = None → OrderNotAvailable
 
 ### 3. Connection Pooling (asyncpg)
 
@@ -140,7 +129,6 @@ class DatabasePool:
             dsn=settings.DATABASE_URL,
             min_size=10,              # минимум connections
             max_size=20,              # максимум connections
-            max_queries=50000,        # recycle после 50k queries
             max_inactive_connection_lifetime=300,  # 5 min idle timeout
             command_timeout=60,       # query timeout
             server_settings={
@@ -183,7 +171,7 @@ app = FastAPI(lifespan=lifespan)
 shared_buffers = 1GB                    # 25% RAM (для 4GB VPS)
 effective_cache_size = 3GB              # 75% RAM (OS + PG cache)
 maintenance_work_mem = 256MB            # для VACUUM, CREATE INDEX
-work_mem = 16MB                         # per query (sort/hash operations)
+work_mem = 8MB                          # per query (8MB × 100 conn = 800MB max)
 temp_buffers = 8MB                      # для temp tables
 
 # === Connection Settings ===
@@ -326,69 +314,68 @@ Revises: 001
 Create Date: 2025-10-24
 """
 from alembic import op
+from sqlalchemy import text
 
 def upgrade():
+    # ВАЖНО: CONCURRENTLY требует autocommit mode
+    connection = op.get_bind()
+    connection.execution_options(isolation_level="AUTOCOMMIT")
+    
     # Partial index для активных заказов
-    op.execute("""
+    connection.execute(text("""
         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_active 
         ON orders(created_at DESC) 
         WHERE status IN ('new', 'assigned', 'accepted', 'picked_up')
-    """)
+    """))
     
     # Covering index для списка
-    op.execute("""
+    connection.execute(text("""
         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_list 
         ON orders(status, created_at DESC) 
         INCLUDE (id, pickup_address, delivery_address, boxes_count, courier_id)
-    """)
-    
-    # Index для claim
-    op.execute("""
-        CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_claimable 
-        ON orders(id) 
-        WHERE status = 'new' AND courier_id IS NULL
-    """)
+    """))
     
     # Composite index для courier
-    op.execute("""
+    connection.execute(text("""
         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_courier 
         ON orders(courier_id, status, created_at DESC) 
         WHERE courier_id IS NOT NULL
-    """)
-    
-    # BRIN для timestamps
-    op.execute("""
-        CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_created_brin 
-        ON orders USING BRIN(created_at) 
-        WITH (pages_per_range = 128)
-    """)
+    """))
     
     # Order events indexes
-    op.execute("""
+    connection.execute(text("""
         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_order_events_order 
         ON order_events(order_id, created_at DESC)
-    """)
+    """))
     
-    op.execute("""
+    connection.execute(text("""
         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_order_events_recent 
         ON order_events(created_at DESC) 
         WHERE created_at > NOW() - INTERVAL '1 hour'
-    """)
+    """))
     
-    # Enable pg_stat_statements
-    op.execute("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
+    # Enable pg_stat_statements (не требует CONCURRENTLY)
+    connection.execute(text("CREATE EXTENSION IF NOT EXISTS pg_stat_statements"))
+    
+    # VACUUM ANALYZE для обновления статистики
+    connection.execute(text("VACUUM ANALYZE orders"))
+    connection.execute(text("VACUUM ANALYZE order_events"))
 
 def downgrade():
-    op.execute("DROP INDEX CONCURRENTLY IF EXISTS idx_orders_active")
-    op.execute("DROP INDEX CONCURRENTLY IF EXISTS idx_orders_list")
-    op.execute("DROP INDEX CONCURRENTLY IF EXISTS idx_orders_claimable")
-    op.execute("DROP INDEX CONCURRENTLY IF EXISTS idx_orders_courier")
-    op.execute("DROP INDEX CONCURRENTLY IF EXISTS idx_orders_created_brin")
-    op.execute("DROP INDEX CONCURRENTLY IF EXISTS idx_order_events_order")
-    op.execute("DROP INDEX CONCURRENTLY IF EXISTS idx_order_events_recent")
+    connection = op.get_bind()
+    connection.execution_options(isolation_level="AUTOCOMMIT")
+    
+    connection.execute(text("DROP INDEX CONCURRENTLY IF EXISTS idx_orders_active"))
+    connection.execute(text("DROP INDEX CONCURRENTLY IF EXISTS idx_orders_list"))
+    connection.execute(text("DROP INDEX CONCURRENTLY IF EXISTS idx_orders_courier"))
+    connection.execute(text("DROP INDEX CONCURRENTLY IF EXISTS idx_order_events_order"))
+    connection.execute(text("DROP INDEX CONCURRENTLY IF EXISTS idx_order_events_recent"))
 ```
 
-**Примечание:** `CONCURRENTLY` позволяет создавать индексы без блокировки таблицы (production-safe).
+**Критично:** 
+- `execution_options(isolation_level="AUTOCOMMIT")` обязателен для CONCURRENTLY
+- Без этого migration упадет с ошибкой `cannot run inside a transaction block`
+- `VACUUM ANALYZE` после создания индексов обновляет статистику планировщика
 
 ### 7. Prepared Statements (Bonus)
 
@@ -432,13 +419,15 @@ async def get_orders(status: str):
 
 ## Ожидаемые результаты
 
-### Performance Improvements
-| Query | До | После | Speedup |
-|-------|-----|-------|---------|
-| GET /orders?status=new | 100ms | 5ms | 20x |
-| GET /orders/{id} | 30ms | 3ms | 10x |
-| POST /orders/{id}/claim | 50ms | 5ms | 10x |
-| POST /orders | 40ms | 10ms | 4x |
+### Performance Improvements (реалистичные для MVP)
+| Query | До | После | Speedup | Примечание |
+|-------|-----|-------|---------|------------|
+| GET /orders?status=new | 15-20ms | 3-5ms | 4-5x | С правильным индексом |
+| GET /orders/{id} | 10ms | 2-3ms | 3-4x | PK lookup уже быстрый |
+| POST /orders/{id}/claim | 20-30ms | 5-8ms | 3-4x | UPDATE RETURNING |
+| POST /orders | 30-40ms | 10-15ms | 2-3x | INSERT + indexes |
+
+**Примечание:** Цифры для MVP с ~10k orders. При росте до 100k+ orders speedup будет выше.
 
 ### Resource Usage
 - Index size: ~50-100MB (для 10k orders)

@@ -16,21 +16,21 @@ def test_sse_requires_auth(client: TestClient):
 def test_sse_admin_can_connect(client: TestClient):
     """Admin can connect to SSE endpoint."""
     admin_token = create_access_token(sub="1", role="admin")
-    resp = client.get("/v1/events/sse?once=true", headers={"Authorization": f"Bearer {admin_token}"})
+    resp = client.get(f"/v1/events/sse?once=true&token={admin_token}")
     assert resp.status_code == 200
     assert "text/event-stream" in resp.headers["content-type"]
 
 
 def test_sse_courier_can_connect(client: TestClient, courier_token: str):
     """Courier can connect to SSE endpoint."""
-    resp = client.get("/v1/events/sse?once=true", headers={"Authorization": f"Bearer {courier_token}"})
+    resp = client.get(f"/v1/events/sse?once=true&token={courier_token}")
     assert resp.status_code == 200
     assert "text/event-stream" in resp.headers["content-type"]
 
 
 def test_sse_store_can_connect(client: TestClient, store_token: str):
     """Store can connect to SSE endpoint."""
-    resp = client.get("/v1/events/sse?once=true", headers={"Authorization": f"Bearer {store_token}"})
+    resp = client.get(f"/v1/events/sse?once=true&token={store_token}")
     assert resp.status_code == 200
     assert "text/event-stream" in resp.headers["content-type"]
 
