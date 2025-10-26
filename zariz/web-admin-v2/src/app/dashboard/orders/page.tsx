@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   listOrders,
@@ -67,6 +67,7 @@ export default function OrdersPage() {
   const [showNewOrder, setShowNewOrder] = useState(false);
   const [viewOrderId, setViewOrderId] = useState<number | string | null>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<number | string | null>(null);
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   const refresh = useCallback(async () => {
     try {
@@ -83,28 +84,94 @@ export default function OrdersPage() {
     }
   }, [filter]);
 
-  const handleOrderEvent = useCallback((evt: any) => {
-    console.log('[Orders] Event received:', evt);
-    if ([
-      'order.created',
-      'order.deleted',
-      'order.assigned',
-      'order.accepted',
-      'order.status_changed',
-      'order.updated'
-    ].includes(evt.event)) {
-      console.log('[Orders] Refreshing on event:', evt.event);
-      refresh();
-    } else {
-      console.log('[Orders] Ignoring event:', evt.event);
-    }
+  const scheduleRefresh = useCallback((delay = 300) => {
+    if (refreshTimerRef.current) return;
+    refreshTimerRef.current = setTimeout(async () => {
+      refreshTimerRef.current = null;
+      await refresh();
+    }, delay);
   }, [refresh]);
+
+  const updateOrderInState = useCallback((patch: Partial<Order> & { id: number | string }) => {
+    setOrders((prev) => prev.map((o) => String(o.id) === String(patch.id) ? { ...o, ...patch } : o));
+  }, []);
+
+  const removeOrderFromState = useCallback((id: number | string) => {
+    setOrders((prev) => prev.filter((o) => String(o.id) !== String(id)));
+  }, []);
+
+  const maybeAddOrderToState = useCallback((data: any) => {
+    const newRow: Order = {
+      id: data.order_id,
+      status: 'new',
+      store_id: data.store_id,
+      courier_id: null,
+      created_at: data.created_at,
+      pickup_address: data.pickup_address,
+      delivery_address: data.delivery_address,
+      boxes_count: data.boxes_count,
+    };
+    setOrders((prev) => {
+      const exists = prev.some((o) => String(o.id) === String(newRow.id));
+      if (exists) return prev;
+      // prepend for quick feedback
+      return [newRow, ...prev];
+    });
+  }, []);
+
+  const handleOrderEvent = useCallback((evt: any) => {
+    if (!evt || !evt.event) return;
+    switch (evt.event) {
+      case 'order.created': {
+        // Optimistic add then resync
+        maybeAddOrderToState(evt.data || evt);
+        scheduleRefresh(500);
+        break;
+      }
+      case 'order.deleted': {
+        removeOrderFromState((evt.data || evt).order_id);
+        scheduleRefresh(400);
+        break;
+      }
+      case 'order.assigned': {
+        const d = evt.data || evt;
+        updateOrderInState({ id: d.order_id, courier_id: d.courier_id, status: 'assigned' });
+        scheduleRefresh(800);
+        break;
+      }
+      case 'order.accepted': {
+        const d = evt.data || evt;
+        updateOrderInState({ id: d.order_id, status: 'accepted' });
+        scheduleRefresh(800);
+        break;
+      }
+      case 'order.status_changed': {
+        const d = evt.data || evt;
+        updateOrderInState({ id: d.order_id, status: d.status });
+        scheduleRefresh(800);
+        break;
+      }
+      case 'order.updated': {
+        scheduleRefresh(300);
+        break;
+      }
+      default:
+        break;
+    }
+  }, [maybeAddOrderToState, removeOrderFromState, scheduleRefresh, updateOrderInState]);
   
   useOrderEvents(handleOrderEvent);
   
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useEffect(() => () => {
+    if (refreshTimerRef.current) {
+      clearTimeout(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+  }, []);
   
   function exportCSV() {
     const header = ['id', 'status', 'store_id', 'courier_id', 'created_at'];

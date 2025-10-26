@@ -1,4 +1,4 @@
-import type { OrderEvent } from '@/hooks/use-admin-events';
+import type { OrderEvent } from '@/types/events';
 
 type NotificationItem = {
   id: string;

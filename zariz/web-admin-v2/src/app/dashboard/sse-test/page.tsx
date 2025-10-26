@@ -94,7 +94,7 @@ export default function SSETestPage() {
 
           <div className="pt-4 border-t">
             <p className="text-sm text-muted-foreground">
-              Open DevTools → Network tab and filter for "sse". You should see exactly ONE
+              Open DevTools → Network tab and filter for &quot;sse&quot;. You should see exactly ONE
               connection regardless of how many subscribers are active.
             </p>
           </div>

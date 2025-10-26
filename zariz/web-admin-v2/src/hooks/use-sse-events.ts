@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { sseClient, type SSEEvent, type ConnectionStatus } from '@/lib/sse-client';
+import { sseClient } from '@/lib/sse-client';
+import type { SSEEvent, ConnectionStatus } from '@/types/events';
 
 export function useSSEEvents(handler?: (event: SSEEvent) => void) {
   const [status, setStatus] = useState<ConnectionStatus>(() => sseClient.getStatus());

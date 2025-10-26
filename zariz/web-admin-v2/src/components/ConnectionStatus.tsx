@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import type { ConnectionStatus as Status } from '@/hooks/use-admin-events';
+import type { ConnectionStatus as Status } from '@/types/events';
 
 type ConnectionStatusProps = {
   status: Status;
