@@ -1,12 +1,12 @@
 # Zariz
 
-Delivery management system with iOS app, web admin, and backend API.
+Full delivery ecosystem with iOS app, web admin, and backend API.
 
 ## Quick Start
 
 ### Prerequisites
-- Docker Desktop (with BuildKit enabled)
-- Xcode 15+ (for iOS development)
+- Docker Desktop
+- Xcode 15+
 - XcodeGen (`brew install xcodegen`)
 
 ### Start All Services
@@ -15,35 +15,16 @@ Delivery management system with iOS app, web admin, and backend API.
 ./run.sh start
 ```
 
-This will start:
-- **PostgreSQL** on `localhost:5433`
-- **Backend API** on `http://localhost:8000`
-- **Web Admin** on `http://localhost:3002`
-- **Gorush push gateway** on `http://localhost:8088`
-
-> ℹ️  Gorush is pre-configured in sandbox/mock mode, so push requests succeed without Apple
-> credentials. To send real APNs notifications drop your `.p8` key into `zariz/dev/ops/gorush/keys`
-> and set `APNS_KEY_ID`, `APNS_TEAM_ID`, and `APNS_TOPIC` in `.env`.
-
-### Build Performance
-
-**First build:** ~60-70 seconds  
-**Rebuild (no changes):** ~5-10 seconds ⚡  
-**Rebuild (code changes):** ~20-30 seconds ⚡
-
-See [QUICK-BUILD-GUIDE.md](QUICK-BUILD-GUIDE.md) for optimization details.
+Services:
+- PostgreSQL on `localhost:5433`
+- Backend API on `http://localhost:8000`
+- Web Admin on `http://localhost:3002`
+- Gorush push gateway on `http://localhost:8088`
 
 ### Configure iOS App
 
 ```bash
 ./run.sh ios:config
-```
-
-This configures the iOS app to connect to your local backend.
-
-### Build iOS Project
-
-```bash
 ./run.sh ios:build
 cd ios
 open Zariz.xcodeproj
@@ -61,8 +42,6 @@ open Zariz.xcodeproj
 ### Logs
 - `./run.sh logs` - Show all logs
 - `./run.sh logs backend` - Show backend logs only
-- `./run.sh logs postgres` - Show database logs only
-- `./run.sh logs web-admin` - Show web admin logs only
 
 ### Database
 - `./run.sh backend:migrate` - Run database migrations
@@ -81,7 +60,7 @@ zariz/
 ├── ios/              # iOS SwiftUI app
 ├── web-admin/        # Next.js admin panel
 ├── docker-compose.yml
-└── run.sh           # Management script
+└── run.sh
 ```
 
 ## API Endpoints
@@ -90,40 +69,20 @@ zariz/
 - API Docs: http://localhost:8000/docs
 - Web Admin: http://localhost:3002
 
-## iOS Development
+## Push Notifications
 
-The iOS app is configured to use your local IP address for backend connectivity, allowing you to test on physical devices.
+Gorush runs in mock mode by default. For real APNs:
 
-To change the backend URL manually, edit:
-```
-ios/Zariz/Data/API/Config.swift
-```
-
-## Environment Variables
-
-Backend environment variables are configured in `docker-compose.yml`:
-- `POSTGRES_USER=zariz`
-- `POSTGRES_PASSWORD=zariz`
-- `POSTGRES_DB=zariz`
-- `API_JWT_SECRET=dev_secret_change_me_in_production`
-
-### Push notifications (gorush)
-
-The stack includes a [gorush](https://github.com/appleboy/gorush) service for APNs delivery.  
-By default it runs in sandbox/mock mode so local development works without Apple credentials.
-
-1. Place your Apple `.p8` key into `zariz/dev/ops/gorush/keys/AuthKey.p8`.
-2. Set the following variables in `.env`:
-
+1. Place `.p8` key in `zariz/dev/ops/gorush/keys/AuthKey.p8`
+2. Set in `.env`:
 ```
 APNS_KEY_ID=XXXXXX
 APNS_TEAM_ID=YYYYYY
 APNS_TOPIC=com.your.bundle.id
 GORUSH_IOS_MOCK=false
-APNS_USE_SANDBOX=1            # set to 0 when you need production pushes
+APNS_USE_SANDBOX=1
 ```
-
-3. Restart the stack (`./run.sh restart`) and pushes routed through gorush will reach real devices.
+3. Restart: `./run.sh restart`
 
 ## Troubleshooting
 
@@ -139,10 +98,4 @@ APNS_USE_SANDBOX=1            # set to 0 when you need production pushes
 ./run.sh stop
 docker volume rm zariz_postgres_data
 ./run.sh start
-```
-
-### iOS build issues
-```bash
-cd ios
-xcodegen generate
 ```
