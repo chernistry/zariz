@@ -1,36 +1,36 @@
-# Zariz - Courier Delivery Tracking System
+# Zariz
 
-**A complete iOS application and web platform for tracking courier deliveries from stores**
+Full delivery ecosystem with iOS app, web admin, and backend API.
 
-## 🚀 What is Zariz?
+## Overview
 
-Zariz is a mobile and web application designed to streamline the courier delivery process. The system connects stores, couriers, and administrators in a unified platform where stores can create delivery orders, couriers can claim and track these orders, and administrators can monitor the entire operation.
+Zariz connects stores, couriers, and administrators in a unified platform. Stores create delivery orders, couriers claim and track orders via iOS app, and administrators monitor operations.
 
 ### Key Features
-- **For Stores**: Create delivery orders and monitor their status through a web dashboard
-- **For Couriers**: View, claim, and update delivery status via an iOS app
-- **For Administrators**: Manage users and monitor all activities across the system
+- **Stores**: Create delivery orders and monitor status through web dashboard
+- **Couriers**: View, claim, and update delivery status via iOS app
+- **Administrators**: Manage users and monitor all activities
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
-- **Framework**: FastAPI (Python 3.12)
-- **Database**: PostgreSQL with SQLAlchemy and Alembic
-- **Authentication**: JWT-based with role-based access control (RBAC)
-- **API**: RESTful endpoints with OpenAPI 3.1 specification
+- FastAPI (Python 3.12)
+- PostgreSQL with SQLAlchemy and Alembic
+- JWT authentication with RBAC
+- RESTful API with OpenAPI 3.1
 
 ### iOS Application
-- **Framework**: SwiftUI with MVVM architecture
-- **Data**: SwiftData for local caching and offline support
-- **Security**: Keychain with biometric authentication
-- **Real-time Updates**: Silent APNs pushes with background tasks
+- SwiftUI with MVVM architecture
+- SwiftData for local caching and offline support
+- Keychain with biometric authentication
+- Silent APNs pushes with background tasks
 
 ### Web Panel
-- **Framework**: Next.js with TypeScript
-- **Real-time**: Server-Sent Events (SSE) for live order updates
-- **Authentication**: Secure role-based access for stores and admins
+- Next.js with TypeScript
+- Server-Sent Events (SSE) for live order updates
+- Role-based access for stores and admins
 
-## 📋 Project Structure
+## Project Structure
 
 ```
 zariz/
@@ -42,58 +42,26 @@ zariz/
 └── tests/            # Test suite
 ```
 
-## 🎯 How It Works
+## How It Works
 
-1. **Store Creates Order**: Store users log into the web dashboard to create new delivery orders with pickup/dropoff addresses and item details
-2. **Courier Claims Order**: Courier receives notifications via the iOS app and can claim available orders
-3. **Track Delivery**: Courier updates the order status (claimed → picked_up → delivered) through the app
-4. **Real-time Monitoring**: Both stores and administrators can monitor delivery progress in real-time
+1. **Store Creates Order**: Store users log into web dashboard to create delivery orders
+2. **Courier Claims Order**: Courier receives notifications and claims available orders
+3. **Track Delivery**: Courier updates order status (claimed → picked_up → delivered)
+4. **Real-time Monitoring**: Stores and administrators monitor delivery progress in real-time
 
-## 📝 Development Status
+## Architecture Highlights
 
-- **Current Phase**: Active development
-- **MVP Scope**: Core functionality without geolocation
-- **Progress**: See [roadmap](dev/tickets/roadmap.md) for detailed progress tracking
+- **Atomic Order Claims**: PostgreSQL transactions ensure only one courier can claim an order
+- **Idempotency**: All write operations include Idempotency-Key headers
+- **Offline Support**: iOS app works offline with SwiftData caching
+- **Rate Limiting**: API includes rate limiting and error handling
+- **Security**: JWT authentication, BOLA protection, OWASP API security best practices
 
-## 🤝 Contributing
-
-The project is designed as a solo development effort with AI assistance. Tickets are tracked in the `dev/tickets/` directory and follow a structured workflow:
-
-- **Open Tickets**: [tickets/open/](dev/tickets/open/) - Current tasks to be completed
-- **Completed**: [tickets/closed/](dev/tickets/closed/) - Finished work items
-- **Roadmap**: [tickets/roadmap.md](dev/tickets/roadmap.md) - Overall project timeline and estimates
-
-## 🏗️ Architecture Highlights
-
-- **Atomic Order Claims**: Ensures only one courier can claim an order using PostgreSQL transactions
-- **Idempotency**: All write operations include Idempotency-Key headers to handle retries safely
-- **Offline Support**: iOS app can work offline with SwiftData caching and sync when online
-- **Rate Limiting**: API includes proper rate limiting and error handling
-- **Security**: JWT authentication, BOLA protection, and OWASP API security best practices
-
-## 📊 Non-functional Requirements
-
-- **Performance**: API response time under 300ms (p95 percentile)
-- **Scalability**: Supports up to 100 couriers and 50 stores
-- **Reliability**: 99% uptime SLA
-- **Security**: JWT authentication, HTTPS, and proper authorization checks
-
-## 🚀 Getting Started
-
-Choose your component to get started:
-
-- **[iOS App Setup](zariz/dev/docs/ios_getting_started.md)** - Build and run the iOS application
-- **[Backend Setup](zariz/dev/docs/backend_getting_started.md)** - Run the FastAPI backend locally or deploy
-- **[Web Panel Setup](zariz/dev/docs/web_getting_started.md)** - Set up the store dashboard
-- **[Infrastructure & Deployment](zariz/dev/docs/infra_getting_started.md)** - Deploy the complete stack
+## Getting Started
 
 ### Quick Start (All Components)
 
 ```bash
-# Clone and setup
-git clone <repository-url>
-cd zariz
-
 # Backend
 cd backend && python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
@@ -107,20 +75,16 @@ cd web && npm install && npm run dev
 open ios/Zariz.xcodeproj
 ```
 
-## 🔎 Observability
+## Observability
 
-- Backend logs are JSON-formatted to stdout with request IDs and latency metrics. Configure CORS via `CORS_ALLOW_ORIGINS`.
-- Optional OpenTelemetry tracing can be enabled by setting `OTEL_ENABLED=1` and configuring an OTLP collector. The app auto-instruments FastAPI if the packages are available.
-- Optional Sentry error tracking can be enabled with `SENTRY_DSN` (sampling via `SENTRY_TRACES_SAMPLE_RATE`, default 0.1).
-- See runbooks: `zariz/dev/docs/runbooks.md`.
+- Backend logs are JSON-formatted with request IDs and latency metrics
+- Optional OpenTelemetry tracing (set `OTEL_ENABLED=1`)
+- Optional Sentry error tracking (set `SENTRY_DSN`)
+- See runbooks: `zariz/dev/docs/runbooks.md`
 
-## 📚 Resources
+## Resources
 
-- [Technical Specification](dev/tech_task.md) - Complete system requirements
-- [Development Roadmap](dev/tickets/roadmap.md) - Project timeline and progress
-- [Coding Rules](dev/tickets/coding_rules.md) - Development standards
-- [Best Practices](dev/best_practices.md) - Implementation guidelines
-
----
-
-*Developed with FastAPI, SwiftUI, and Next.js following modern software engineering practices and security standards.*
+- [Technical Specification](dev/tech_task.md)
+- [Development Roadmap](dev/tickets/roadmap.md)
+- [Coding Rules](dev/tickets/coding_rules.md)
+- [Best Practices](dev/best_practices.md)
