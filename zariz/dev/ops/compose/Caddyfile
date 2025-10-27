@@ -1,9 +1,0 @@
-{
-  # Caddy will manage certificates automatically in production
-}
-
-# Replace your.domain.com with your real domain
-your.domain.com {
-  reverse_proxy api:8000
-}
-
